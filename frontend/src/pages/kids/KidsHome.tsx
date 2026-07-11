@@ -39,7 +39,7 @@ export default function KidsHome() {
           <div className="flex items-center gap-4">
             <div className="w-16 h-16 bg-gradient-to-tr from-blue-400 to-indigo-500 rounded-full border-4 border-white shadow-lg overflow-hidden flex items-center justify-center">
               {selectedStudent.avatar ? (
-                <img src={`http://localhost:3000${selectedStudent.avatar}`} alt={selectedStudent.name} className="w-full h-full object-cover" />
+                <img src={selectedStudent.avatar} alt={selectedStudent.name} className="w-full h-full object-cover" />
               ) : (
                 <span className="text-3xl">👦</span>
               )}

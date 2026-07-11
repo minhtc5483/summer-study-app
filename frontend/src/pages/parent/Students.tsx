@@ -102,7 +102,7 @@ export default function Students() {
             <div key={student.id} className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 flex flex-col items-center">
               <div className="w-24 h-24 rounded-full border-4 border-blue-50 overflow-hidden bg-slate-100 mb-4 shadow-sm flex items-center justify-center">
                 {student.avatar ? (
-                  <img src={`http://localhost:3000${student.avatar}`} alt={student.name} className="w-full h-full object-cover" />
+                  <img src={student.avatar} alt={student.name} className="w-full h-full object-cover" />
                 ) : (
                   <span className="text-4xl">👦</span>
                 )}

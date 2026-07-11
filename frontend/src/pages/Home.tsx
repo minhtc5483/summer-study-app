@@ -85,7 +85,7 @@ export default function Home() {
               >
                 <div className="w-32 h-32 md:w-40 md:h-40 rounded-3xl overflow-hidden border-4 border-transparent group-hover:border-primary transition-all bg-slate-800 flex items-center justify-center shadow-xl relative">
                   {student.avatar ? (
-                    <img src={`http://localhost:3000${student.avatar}`} alt={student.name} className="w-full h-full object-cover" />
+                    <img src={student.avatar} alt={student.name} className="w-full h-full object-cover" />
                   ) : (
                     <span className="text-6xl group-hover:scale-110 transition-transform">👦</span>
                   )}

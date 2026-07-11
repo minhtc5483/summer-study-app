@@ -27,8 +27,8 @@ export default function StudentModal({ isOpen, onClose, onSubmit, initialData }:
   useEffect(() => {
     if (initialData) {
       setName(initialData.name);
-      setGrade(initialData.grade);
-      setAvatarPreview(initialData.avatar ? `http://localhost:3000${initialData.avatar}` : null);
+      setGrade(initialData.grade.toString() as any);
+      setAvatarPreview(initialData.avatar ? initialData.avatar : null);
     } else {
       setName('');
       setGrade(1);
