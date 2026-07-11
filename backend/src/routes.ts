@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { register, login, getMe, refresh } from './controllers/authController';
-import { getStudents, createStudent, updateStudent, deleteStudent } from './controllers/studentController';
+import { getStudents, getPublicStudents, createStudent, updateStudent, deleteStudent } from './controllers/studentController';
 import { authenticate } from './middlewares/auth';
 import { upload } from './middlewares/upload';
 
@@ -12,6 +12,9 @@ router.post('/login', login); // Alias for login as per api.md
 router.post('/auth/login', login);
 router.post('/auth/refresh', refresh);
 router.get('/auth/me', authenticate, getMe);
+
+// Public routes
+router.get('/public/students', getPublicStudents);
 
 // Student routes
 router.get('/students', authenticate, getStudents);

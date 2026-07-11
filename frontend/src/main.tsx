@@ -8,8 +8,8 @@ import ParentDashboard from './pages/ParentDashboard'
 import Students from './pages/parent/Students'
 import KidsHome from './pages/kids/KidsHome'
 import Quiz from './pages/kids/Quiz'
-
 import Home from './pages/Home'
+import Overview from './pages/parent/Overview'
 
 const router = createBrowserRouter([
   {
@@ -22,7 +22,7 @@ const router = createBrowserRouter([
         path: "parent", 
         element: <ParentDashboard />,
         children: [
-          { index: true, element: <div>Overview Content</div> },
+          { index: true, element: <Overview /> },
           { path: "students", element: <Students /> },
           { path: "subjects", element: <div>Subjects Management</div> },
           { path: "settings", element: <div>Settings</div> },

@@ -1,0 +1,216 @@
+import { useState, useEffect } from 'react';
+import { api } from '../../lib/api';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { Users, Target, Brain, Award, Flame } from 'lucide-react';
+import { motion } from 'framer-motion';
+
+interface StudentStat {
+  studentId: string;
+  name: string;
+  currentStreak: number;
+  totalScore: number;
+  totalAttempted: number;
+  totalCorrect: number;
+  accuracy: number;
+  wrongQuestionsCount: number;
+}
+
+export default function Overview() {
+  const [stats, setStats] = useState<StudentStat[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const response = await api.get('/statistics');
+        setStats(response.data);
+      } catch (error) {
+        console.error('Failed to fetch statistics', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchStats();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
+  // Summary calculations
+  const totalStudents = stats.length;
+  const avgAccuracy = totalStudents > 0 
+    ? Math.round(stats.reduce((acc, curr) => acc + curr.accuracy, 0) / totalStudents)
+    : 0;
+  const totalQuestions = stats.reduce((acc, curr) => acc + curr.totalAttempted, 0);
+
+  return (
+    <div className="space-y-8">
+      <div>
+        <h2 className="text-3xl font-bold text-slate-800">Tổng Quan Tiến Độ</h2>
+        <p className="text-slate-500 mt-2">Theo dõi kết quả học tập của các bé trong mùa hè này.</p>
+      </div>
+
+      {/* Summary Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex items-center gap-4"
+        >
+          <div className="w-14 h-14 bg-blue-100 rounded-xl flex items-center justify-center text-blue-600">
+            <Users size={28} />
+          </div>
+          <div>
+            <p className="text-sm text-slate-500 font-medium">Số Học Sinh</p>
+            <p className="text-2xl font-bold text-slate-800">{totalStudents}</p>
+          </div>
+        </motion.div>
+
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+          className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex items-center gap-4"
+        >
+          <div className="w-14 h-14 bg-green-100 rounded-xl flex items-center justify-center text-green-600">
+            <Target size={28} />
+          </div>
+          <div>
+            <p className="text-sm text-slate-500 font-medium">Tỷ lệ Chính xác (TB)</p>
+            <p className="text-2xl font-bold text-slate-800">{avgAccuracy}%</p>
+          </div>
+        </motion.div>
+
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+          className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex items-center gap-4"
+        >
+          <div className="w-14 h-14 bg-purple-100 rounded-xl flex items-center justify-center text-purple-600">
+            <Brain size={28} />
+          </div>
+          <div>
+            <p className="text-sm text-slate-500 font-medium">Tổng Câu đã làm</p>
+            <p className="text-2xl font-bold text-slate-800">{totalQuestions}</p>
+          </div>
+        </motion.div>
+      </div>
+
+      {/* Charts Area */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+          <h3 className="text-lg font-bold text-slate-800 mb-6 flex items-center gap-2">
+            <Award className="text-yellow-500" /> Bảng Xếp Hạng Điểm Số
+          </h3>
+          <div className="h-80">
+            {stats.length > 0 ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={stats} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                  <XAxis dataKey="name" axisLine={false} tickLine={false} />
+                  <YAxis axisLine={false} tickLine={false} />
+                  <Tooltip 
+                    cursor={{fill: '#f8fafc'}}
+                    contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                  />
+                  <Bar dataKey="totalScore" name="Tổng Điểm" fill="#F59E0B" radius={[6, 6, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="h-full flex items-center justify-center text-slate-400">
+                Chưa có dữ liệu học tập
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+          <h3 className="text-lg font-bold text-slate-800 mb-6 flex items-center gap-2">
+            <Target className="text-blue-500" /> Tỷ lệ Chính xác (%)
+          </h3>
+          <div className="h-80">
+            {stats.length > 0 ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={stats} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                  <XAxis dataKey="name" axisLine={false} tickLine={false} />
+                  <YAxis axisLine={false} tickLine={false} domain={[0, 100]} />
+                  <Tooltip 
+                    cursor={{fill: '#f8fafc'}}
+                    contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                  />
+                  <Bar dataKey="accuracy" name="Độ Chính Xác (%)" fill="#3B82F6" radius={[6, 6, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="h-full flex items-center justify-center text-slate-400">
+                Chưa có dữ liệu học tập
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Detailed Table */}
+      <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+        <div className="p-6 border-b border-slate-100">
+          <h3 className="text-lg font-bold text-slate-800">Chi tiết Thành tích</h3>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full text-left">
+            <thead className="bg-slate-50 text-slate-500 text-sm">
+              <tr>
+                <th className="py-4 px-6 font-medium">Học sinh</th>
+                <th className="py-4 px-6 font-medium">Tổng điểm</th>
+                <th className="py-4 px-6 font-medium">Chuỗi ngày (Streak)</th>
+                <th className="py-4 px-6 font-medium">Đã làm</th>
+                <th className="py-4 px-6 font-medium">Độ chính xác</th>
+                <th className="py-4 px-6 font-medium">Câu sai</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {stats.map((student) => (
+                <tr key={student.studentId} className="hover:bg-slate-50 transition-colors">
+                  <td className="py-4 px-6 font-medium text-slate-800">{student.name}</td>
+                  <td className="py-4 px-6">
+                    <span className="flex items-center gap-1 font-bold text-yellow-500">
+                      {student.totalScore} <Award size={16} />
+                    </span>
+                  </td>
+                  <td className="py-4 px-6">
+                    <span className="flex items-center gap-1 text-orange-500 font-medium">
+                      {student.currentStreak} <Flame size={16} />
+                    </span>
+                  </td>
+                  <td className="py-4 px-6 text-slate-600">{student.totalAttempted} câu</td>
+                  <td className="py-4 px-6">
+                    <span className={`px-3 py-1 rounded-full text-sm font-medium ${
+                      student.accuracy >= 80 ? 'bg-green-100 text-green-700' :
+                      student.accuracy >= 50 ? 'bg-yellow-100 text-yellow-700' : 'bg-red-100 text-red-700'
+                    }`}>
+                      {student.accuracy}%
+                    </span>
+                  </td>
+                  <td className="py-4 px-6 text-slate-600">{student.wrongQuestionsCount} câu</td>
+                </tr>
+              ))}
+              {stats.length === 0 && (
+                <tr>
+                  <td colSpan={6} className="py-8 text-center text-slate-500">
+                    Chưa có học sinh nào. Hãy thêm học sinh và làm bài tập nhé!
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
+}

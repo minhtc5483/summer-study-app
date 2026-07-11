@@ -1,7 +1,18 @@
-import { Response } from 'express';
+import { Request, Response } from 'express';
 import { prisma } from '../index';
 import { AuthRequest } from '../middlewares/auth';
 import { z } from 'zod';
+
+export const getPublicStudents = async (req: Request, res: Response) => {
+  try {
+    const students = await prisma.student.findMany({
+      orderBy: { createdAt: 'asc' }
+    });
+    res.json(students);
+  } catch (error) {
+    res.status(500).json({ error: 'Server error' });
+  }
+};
 
 export const getStudents = async (req: AuthRequest, res: Response) => {
   try {
