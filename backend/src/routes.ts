@@ -27,7 +27,6 @@ import { getTopics, createTopic } from './controllers/topicController';
 import { getGrades, createGrade, deleteGrade } from './controllers/gradeController';
 import { getQuestions, createQuestion, importQuestions } from './controllers/questionController';
 import { saveProgress } from './controllers/progressController';
-import { getExam } from './controllers/examController';
 import { getStatistics } from './controllers/statisticsController';
 import { exportData } from './controllers/dataController';
 
@@ -44,8 +43,13 @@ router.delete('/subjects/:id', authenticate, deleteSubject);
 router.get('/topics', authenticate, getTopics);
 router.post('/topics', authenticate, createTopic);
 
+import { getExams, getExamById, createExam, deleteExam } from './controllers/examController';
+
 // Exam & Question routes
-router.get('/exam', authenticate, getExam);
+router.get('/exams', authenticate, getExams);
+router.get('/exams/:id', authenticate, getExamById);
+router.post('/exams', authenticate, createExam);
+router.delete('/exams/:id', authenticate, deleteExam);
 router.get('/questions', authenticate, getQuestions);
 router.post('/questions', authenticate, createQuestion);
 

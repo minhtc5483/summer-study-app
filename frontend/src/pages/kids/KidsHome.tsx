@@ -68,7 +68,7 @@ export default function KidsHome() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
           {selectedStudent.subjects && selectedStudent.subjects.length > 0 ? (
             selectedStudent.subjects.map((subject) => (
-              <Link key={subject.id} to={`/kids/quiz/${subject.id}`}>
+              <Link key={subject.id} to={`/kids/subject/${subject.id}`}>
                 <motion.div 
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}

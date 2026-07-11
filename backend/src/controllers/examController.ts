@@ -3,46 +3,111 @@ import { prisma } from '../index';
 import { AuthRequest } from '../middlewares/auth';
 import { z } from 'zod';
 
-const getExamSchema = z.object({
-  subjectId: z.string().optional(),
-  level: z.string().regex(/^\d+$/).transform(Number).optional(),
-  limit: z.string().regex(/^\d+$/).transform(Number).optional().default(10)
+// POST /exams
+const createExamSchema = z.object({
+  topicId: z.string(),
+  name: z.string(),
+  questionIds: z.array(z.string()).min(1)
 });
 
-export const getExam = async (req: AuthRequest, res: Response) => {
+export const createExam = async (req: AuthRequest, res: Response) => {
   try {
-    const parsed = getExamSchema.safeParse(req.query);
+    const parsed = createExamSchema.safeParse(req.body);
     if (!parsed.success) {
       return res.status(400).json({ error: 'Validation failed', details: parsed.error.issues });
     }
 
-    const { subjectId, level, limit } = parsed.data;
+    const { topicId, name, questionIds } = parsed.data;
 
-    let topics = await prisma.topic.findMany();
-    if (subjectId) {
-      topics = topics.filter(t => t.subjectId === subjectId);
-    }
-    const topicIds = topics.map(t => t.id);
-
-    const filter: Record<string, any> = {};
-    if (topicIds.length > 0) {
-      filter.topicId = { in: topicIds };
-    }
-    if (level) {
-      filter.level = level;
-    }
-
-    // SQLite doesn't natively support easy random sampling in Prisma without raw queries.
-    // For MVP, fetch a reasonable amount and randomize in memory.
-    const allMatching = await prisma.question.findMany({
-      where: filter,
-      take: 100 // Fetch up to 100 matching to shuffle
+    const exam = await prisma.exam.create({
+      data: {
+        topicId,
+        name,
+        questions: {
+          create: questionIds.map(qId => ({ questionId: qId }))
+        }
+      },
+      include: {
+        questions: true
+      }
     });
 
-    const shuffled = allMatching.sort(() => 0.5 - Math.random());
-    const examQuestions = shuffled.slice(0, limit);
+    res.json(exam);
+  } catch (error) {
+    res.status(500).json({ error: 'Server error' });
+  }
+};
 
-    res.json(examQuestions);
+// GET /exams?subjectId=... or /exams?topicId=...
+export const getExams = async (req: Request, res: Response) => {
+  try {
+    const subjectId = req.query.subjectId as string | undefined;
+    const topicId = req.query.topicId as string | undefined;
+
+    let filter: any = {};
+    if (topicId) {
+      filter.topicId = topicId;
+    } else if (subjectId) {
+      filter.topic = { subjectId: subjectId };
+    }
+
+    const exams = await prisma.exam.findMany({
+      where: filter,
+      include: {
+        topic: true,
+        _count: {
+          select: { questions: true }
+        }
+      },
+      orderBy: { createdAt: 'desc' }
+    });
+
+    res.json(exams);
+  } catch (error) {
+    res.status(500).json({ error: 'Server error' });
+  }
+};
+
+// GET /exams/:id
+export const getExamById = async (req: Request, res: Response) => {
+  try {
+    const id = req.params.id as string;
+
+    const exam = await prisma.exam.findUnique({
+      where: { id },
+      include: {
+        topic: true,
+        questions: {
+          include: {
+            question: true
+          }
+        }
+      }
+    });
+
+    if (!exam) {
+      return res.status(404).json({ error: 'Exam not found' });
+    }
+
+    // Transform response so the frontend gets an array of questions easily
+    const transformed = {
+      ...exam,
+      questionsList: exam.questions.map((eq: any) => eq.question)
+    };
+
+    res.json(transformed);
+  } catch (error) {
+    res.status(500).json({ error: 'Server error' });
+  }
+};
+
+export const deleteExam = async (req: AuthRequest, res: Response) => {
+  try {
+    const id = req.params.id as string;
+    await prisma.exam.delete({
+      where: { id }
+    });
+    res.json({ message: 'Deleted successfully' });
   } catch (error) {
     res.status(500).json({ error: 'Server error' });
   }

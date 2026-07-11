@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { api } from '../../lib/api';
 import { Folder, Upload, Plus, ChevronRight, BookOpen } from 'lucide-react';
 import ImportModal from './ImportModal';
+import CreateExamModal from './CreateExamModal';
 
 interface Subject {
   id: string;
@@ -28,8 +29,9 @@ export default function QuestionBank() {
   const [newTopicName, setNewTopicName] = useState('');
   const [newTopicGrade, setNewTopicGrade] = useState('');
   
-  // Import modal
+  // Modals
   const [importModalTopic, setImportModalTopic] = useState<Topic | null>(null);
+  const [createExamTopic, setCreateExamTopic] = useState<Topic | null>(null);
 
   useEffect(() => {
     fetchData();
@@ -182,12 +184,20 @@ export default function QuestionBank() {
                       </div>
                     </div>
                     
-                    <button
-                      onClick={() => setImportModalTopic(topic)}
-                      className="opacity-0 group-hover:opacity-100 px-4 py-2 bg-white border border-primary text-primary rounded-xl hover:bg-primary hover:text-white transition-all font-medium flex items-center gap-2 shadow-sm"
-                    >
-                      <Upload size={18} /> Nhập Bài Tập (CSV)
-                    </button>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => setCreateExamTopic(topic)}
+                        className="opacity-0 group-hover:opacity-100 px-4 py-2 bg-purple-50 text-purple-600 border border-purple-200 rounded-xl hover:bg-purple-600 hover:text-white transition-all font-medium flex items-center gap-2 shadow-sm"
+                      >
+                        <Plus size={18} /> Tạo Đề Bài
+                      </button>
+                      <button
+                        onClick={() => setImportModalTopic(topic)}
+                        className="opacity-0 group-hover:opacity-100 px-4 py-2 bg-white border border-primary text-primary rounded-xl hover:bg-primary hover:text-white transition-all font-medium flex items-center gap-2 shadow-sm"
+                      >
+                        <Upload size={18} /> Nhập (CSV)
+                      </button>
+                    </div>
                   </div>
                 ))}
 
@@ -217,6 +227,16 @@ export default function QuestionBank() {
         topicName={importModalTopic?.name || ''}
         onSuccess={() => {
           // You could optionally refresh some stats here
+        }}
+      />
+
+      <CreateExamModal
+        isOpen={!!createExamTopic}
+        onClose={() => setCreateExamTopic(null)}
+        topicId={createExamTopic?.id || ''}
+        topicName={createExamTopic?.name || ''}
+        onSuccess={() => {
+          alert('Tạo đề thi thành công! Bé đã có thể làm đề này.');
         }}
       />
     </div>
