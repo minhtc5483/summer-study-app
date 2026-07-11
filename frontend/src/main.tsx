@@ -11,6 +11,7 @@ import Quiz from './pages/kids/Quiz'
 import Home from './pages/Home'
 import Overview from './pages/parent/Overview'
 import Settings from './pages/parent/Settings'
+import QuestionBank from './pages/parent/QuestionBank'
 
 const router = createBrowserRouter([
   {
@@ -25,6 +26,7 @@ const router = createBrowserRouter([
         children: [
           { index: true, element: <Overview /> },
           { path: "students", element: <Students /> },
+          { path: "question-bank", element: <QuestionBank /> },
           { path: "settings", element: <Settings /> },
         ]
       },

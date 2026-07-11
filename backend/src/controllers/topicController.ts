@@ -4,7 +4,7 @@ import { z } from 'zod';
 
 const getTopicsSchema = z.object({
   subjectId: z.string().optional(),
-  grade: z.string().regex(/^\d+$/).transform(Number).optional()
+  grade: z.string().optional()
 });
 
 export const getTopics = async (req: Request, res: Response) => {
