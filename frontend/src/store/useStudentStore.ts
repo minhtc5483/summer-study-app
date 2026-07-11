@@ -8,6 +8,7 @@ export interface StudentProfile {
   avatar: string | null;
   totalScore: number;
   currentStreak: number;
+  subjects?: { id: string; name: string; icon: string | null; color: string | null }[];
 }
 
 interface StudentState {

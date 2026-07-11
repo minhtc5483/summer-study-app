@@ -32,6 +32,7 @@ model Student {
   progress      StudentProgress[]
   wrongAnswers  WrongQuestion[]
   rewards       Reward[]
+  subjects      Subject[]
 }
 
 model Subject {
@@ -40,6 +41,7 @@ model Subject {
   icon        String?
   color       String?
   topics      Topic[]
+  students    Student[]
 }
 
 model Topic {

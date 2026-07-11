@@ -66,29 +66,26 @@ export default function KidsHome() {
 
         {/* Subjects */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
-          <Link to="/kids/quiz/math">
-            <motion.div 
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className="bg-gradient-to-br from-blue-400 to-blue-600 rounded-3xl p-8 text-white shadow-xl shadow-blue-200 cursor-pointer text-center relative overflow-hidden"
-            >
-              <div className="absolute -right-10 -top-10 text-8xl opacity-20">🔢</div>
-              <h3 className="text-5xl font-extrabold mb-4 relative z-10">TOÁN</h3>
-              <p className="text-blue-100 text-xl font-medium relative z-10">Phép cộng, phép trừ...</p>
-            </motion.div>
-          </Link>
-          
-          <Link to="/kids/quiz/vietnamese">
-            <motion.div 
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className="bg-gradient-to-br from-emerald-400 to-green-500 rounded-3xl p-8 text-white shadow-xl shadow-green-200 cursor-pointer text-center relative overflow-hidden"
-            >
-              <div className="absolute -right-10 -top-10 text-8xl opacity-20">📖</div>
-              <h3 className="text-5xl font-extrabold mb-4 relative z-10">TIẾNG VIỆT</h3>
-              <p className="text-green-100 text-xl font-medium relative z-10">Chính tả, tập đọc...</p>
-            </motion.div>
-          </Link>
+          {selectedStudent.subjects && selectedStudent.subjects.length > 0 ? (
+            selectedStudent.subjects.map((subject) => (
+              <Link key={subject.id} to={`/kids/quiz/${subject.id}`}>
+                <motion.div 
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="rounded-3xl p-8 text-white shadow-xl shadow-slate-200 cursor-pointer text-center relative overflow-hidden"
+                  style={{ backgroundColor: subject.color || '#3B82F6' }}
+                >
+                  <div className="absolute -right-10 -top-10 text-8xl opacity-20">{subject.icon || '📚'}</div>
+                  <h3 className="text-5xl font-extrabold mb-4 relative z-10 uppercase drop-shadow-md">{subject.name}</h3>
+                  <p className="text-white/80 text-xl font-medium relative z-10">Bấm vào để bắt đầu!</p>
+                </motion.div>
+              </Link>
+            ))
+          ) : (
+            <div className="col-span-1 md:col-span-2 text-center py-12 bg-white/50 backdrop-blur-sm rounded-3xl border-2 border-dashed border-slate-300">
+              <p className="text-xl text-slate-500 font-medium">Ba mẹ chưa giao môn học nào cho con cả! 🚀</p>
+            </div>
+          )}
         </div>
 
         {/* Badges */}

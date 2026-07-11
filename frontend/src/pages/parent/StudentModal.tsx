@@ -6,6 +6,13 @@ interface Grade {
   name: string;
 }
 
+interface Subject {
+  id: string;
+  name: string;
+  icon: string | null;
+  color: string | null;
+}
+
 interface Student {
   id: string;
   name: string;
@@ -13,6 +20,7 @@ interface Student {
   avatar: string | null;
   totalScore: number;
   currentStreak: number;
+  subjects?: Subject[];
 }
 
 interface StudentModalProps {
@@ -25,15 +33,23 @@ interface StudentModalProps {
 export default function StudentModal({ isOpen, onClose, onSubmit, initialData }: StudentModalProps) {
   const [name, setName] = useState('');
   const [grade, setGrade] = useState<string>('');
+  const [selectedSubjects, setSelectedSubjects] = useState<string[]>([]);
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   const [availableGrades, setAvailableGrades] = useState<Grade[]>([]);
+  const [availableSubjects, setAvailableSubjects] = useState<Subject[]>([]);
 
   useEffect(() => {
     import('../../lib/api').then(({ api }) => {
-      api.get('/grades').then(res => setAvailableGrades(res.data)).catch(console.error);
+      Promise.all([
+        api.get('/grades'),
+        api.get('/subjects')
+      ]).then(([gradesRes, subjectsRes]) => {
+        setAvailableGrades(gradesRes.data);
+        setAvailableSubjects(subjectsRes.data);
+      }).catch(console.error);
     });
   }, []);
 
@@ -42,9 +58,15 @@ export default function StudentModal({ isOpen, onClose, onSubmit, initialData }:
       setName(initialData.name);
       setGrade(initialData.grade);
       setAvatarPreview(initialData.avatar ? initialData.avatar : null);
+      if (initialData.subjects) {
+        setSelectedSubjects(initialData.subjects.map(s => s.id));
+      } else {
+        setSelectedSubjects([]);
+      }
     } else {
       setName('');
       setGrade('');
+      setSelectedSubjects([]);
       setAvatarFile(null);
       setAvatarPreview(null);
     }
@@ -73,6 +95,7 @@ export default function StudentModal({ isOpen, onClose, onSubmit, initialData }:
     const formData = new FormData();
     formData.append('name', name);
     formData.append('grade', grade);
+    formData.append('subjectIds', JSON.stringify(selectedSubjects));
     if (avatarFile) {
       formData.append('avatar', avatarFile);
     }
@@ -154,6 +177,35 @@ export default function StudentModal({ isOpen, onClose, onSubmit, initialData }:
             ) : (
               <div className="p-3 bg-yellow-50 text-yellow-800 rounded-lg text-sm border border-yellow-200">
                 Chưa có lớp nào. Hãy vào mục Cài Đặt để thêm lớp.
+              </div>
+            )}
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-2">Môn học được phép làm</label>
+            {availableSubjects.length > 0 ? (
+              <div className="space-y-2 max-h-40 overflow-y-auto p-1">
+                {availableSubjects.map((s) => (
+                  <label key={s.id} className="flex items-center gap-3 p-3 bg-slate-50 border border-slate-200 rounded-xl cursor-pointer hover:bg-slate-100 transition-colors">
+                    <input 
+                      type="checkbox" 
+                      checked={selectedSubjects.includes(s.id)}
+                      onChange={(e) => {
+                        if (e.target.checked) setSelectedSubjects([...selectedSubjects, s.id]);
+                        else setSelectedSubjects(selectedSubjects.filter(id => id !== s.id));
+                      }}
+                      className="w-5 h-5 rounded border-slate-300 text-primary focus:ring-primary" 
+                    />
+                    <div className="flex items-center gap-2">
+                      <span className="text-xl">{s.icon}</span>
+                      <span className="font-semibold text-slate-700">{s.name}</span>
+                    </div>
+                  </label>
+                ))}
+              </div>
+            ) : (
+              <div className="p-3 bg-yellow-50 text-yellow-800 rounded-lg text-sm border border-yellow-200">
+                Chưa có môn học nào. Hãy vào mục Cài Đặt để thêm.
               </div>
             )}
           </div>
