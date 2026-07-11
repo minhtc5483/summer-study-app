@@ -11,6 +11,7 @@ interface Exam {
   topic: {
     name: string;
   };
+  timeLimit: number | null;
   _count: {
     questions: number;
   };
@@ -82,9 +83,14 @@ export default function SubjectExams() {
                     </div>
                     
                     <div className="relative z-10">
-                      <span className="inline-block px-3 py-1 bg-white/20 rounded-lg text-sm font-semibold mb-3 backdrop-blur-sm">
+                      <span className="inline-block px-3 py-1 bg-white/20 rounded-lg text-sm font-semibold mb-3 backdrop-blur-sm mr-2">
                         Chủ đề: {exam.topic.name}
                       </span>
+                      {exam.timeLimit && (
+                        <span className="inline-block px-3 py-1 bg-white/20 rounded-lg text-sm font-semibold mb-3 backdrop-blur-sm">
+                          ⏱ {exam.timeLimit} phút
+                        </span>
+                      )}
                       <h3 className="text-2xl font-bold mb-2">{exam.name}</h3>
                       <div className="flex items-center justify-between mt-6">
                         <span className="text-lg font-medium bg-black/20 px-4 py-2 rounded-xl">

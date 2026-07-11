@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, Star, Heart, Volume2 } from 'lucide-react';
+import { ArrowLeft, Star, Heart, Volume2, Timer } from 'lucide-react';
 import { useStudentStore } from '../../store/useStudentStore';
 import { api } from '../../lib/api';
 import confetti from 'canvas-confetti';
@@ -28,6 +28,10 @@ export default function Quiz() {
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
   const [loading, setLoading] = useState(true);
+
+  // Timer states
+  const [timeLeft, setTimeLeft] = useState<number | null>(null);
+  const [isTimeUp, setIsTimeUp] = useState(false);
 
   // Sound effects
   const playSound = (type: 'correct' | 'wrong' | 'complete') => {
@@ -64,6 +68,10 @@ export default function Quiz() {
           };
         });
         setQuestions(mapped);
+        
+        if (res.data.timeLimit && res.data.timeLimit > 0) {
+          setTimeLeft(res.data.timeLimit * 60);
+        }
       })
       .catch(console.error)
       .finally(() => setLoading(false));
@@ -129,6 +137,30 @@ export default function Quiz() {
     }
   };
 
+  // Timer Effect
+  useEffect(() => {
+    if (timeLeft === null || showResult || isTimeUp) return;
+
+    if (timeLeft <= 0) {
+      setIsTimeUp(true);
+      playSound('wrong'); // Play a sound for time up
+      finishQuiz();
+      return;
+    }
+
+    const timer = setInterval(() => {
+      setTimeLeft(prev => (prev !== null && prev > 0 ? prev - 1 : 0));
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [timeLeft, showResult, isTimeUp]);
+
+  const formatTime = (seconds: number) => {
+    const m = Math.floor(seconds / 60);
+    const s = seconds % 60;
+    return `${m}:${s.toString().padStart(2, '0')}`;
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-slate-50 flex items-center justify-center">
@@ -163,7 +195,15 @@ export default function Quiz() {
             <ArrowLeft size={24} />
           </button>
           
-          <div className="flex gap-4">
+          <div className="flex gap-4 items-center">
+            {timeLeft !== null && (
+              <div className={`bg-white px-6 py-3 rounded-2xl flex items-center gap-3 shadow-sm border ${timeLeft <= 60 ? 'border-red-500 animate-pulse' : 'border-slate-100'}`}>
+                <Timer className={`${timeLeft <= 60 ? 'text-red-500' : 'text-blue-500'}`} size={24} />
+                <span className={`font-extrabold text-xl ${timeLeft <= 60 ? 'text-red-500' : 'text-slate-800'}`}>
+                  {formatTime(timeLeft)}
+                </span>
+              </div>
+            )}
             <div className="bg-white px-6 py-3 rounded-2xl flex items-center gap-3 shadow-sm border border-slate-100">
               <Star className="text-yellow-400 fill-yellow-400" size={24} />
               <span className="font-extrabold text-xl text-slate-800">{selectedStudent?.totalScore}</span>
@@ -281,9 +321,14 @@ export default function Quiz() {
                 <Star className="text-yellow-500 fill-yellow-500 relative z-10" size={96} />
               </div>
               
-              <h2 className="text-5xl font-extrabold text-slate-800 mb-6">Xuất Sắc! 🎉</h2>
+              <h2 className="text-5xl font-extrabold text-slate-800 mb-6">
+                {isTimeUp ? 'Hết Giờ Rồi! ⏰' : 'Xuất Sắc! 🎉'}
+              </h2>
               <p className="text-2xl text-slate-600 font-medium mb-10">
-                Con đã hoàn thành bài tập và kiếm được <span className="text-yellow-500 font-bold">+{score} điểm</span>
+                {isTimeUp 
+                  ? <span>Bài làm của con đã được nộp tự động. Con kiếm được <span className="text-yellow-500 font-bold">+{score} điểm</span></span>
+                  : <span>Con đã hoàn thành bài tập và kiếm được <span className="text-yellow-500 font-bold">+{score} điểm</span></span>
+                }
               </p>
 
               <button

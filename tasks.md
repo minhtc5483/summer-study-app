@@ -65,3 +65,7 @@ Thêm phần thưởng khi làm đề xong nhanh trước thời hạn
 Task 15
 Thêm tính năng đổi điểm thưởng lấy thời gian sử dụng điện thoại, ví dụ: 1000 điểm được 1 giờ sử dụng
 Thêm thành số câu hỏi để bé có thể chọn các câu muốn làm trước bất kì (câu nào đã làm xong thì 1 màu, câu nào chưa làm thì 1 màu)
+Task 16
+chỉnh lại avatar của bé, nén lại dung lượng thấp để hiển thị ở bên trong, tránh bị lỗi hiển thị ảnh
+task 17
+Cập nhật thành tích của từng bé ở trang chủ

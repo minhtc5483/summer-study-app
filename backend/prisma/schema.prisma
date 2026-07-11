@@ -76,6 +76,7 @@ model Exam {
   topicId     String
   topic       Topic     @relation(fields: [topicId], references: [id], onDelete: Cascade)
   name        String
+  timeLimit   Int?      // time limit in minutes
   createdAt   DateTime  @default(now())
 
   questions   ExamQuestion[]

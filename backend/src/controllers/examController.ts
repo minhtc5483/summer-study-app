@@ -8,7 +8,8 @@ const createExamSchema = z.object({
   topicId: z.string(),
   name: z.string(),
   questionIds: z.array(z.string()).min(1),
-  studentIds: z.array(z.string()).optional()
+  studentIds: z.array(z.string()).optional(),
+  timeLimit: z.number().int().min(1).optional().nullable()
 });
 
 export const createExam = async (req: AuthRequest, res: Response) => {
@@ -18,7 +19,7 @@ export const createExam = async (req: AuthRequest, res: Response) => {
       return res.status(400).json({ error: 'Validation failed', details: parsed.error.issues });
     }
 
-    const { topicId, name, questionIds, studentIds } = parsed.data;
+    const { topicId, name, questionIds, studentIds, timeLimit } = parsed.data;
 
     let studentsConnect: any = undefined;
     if (studentIds && studentIds.length > 0) {
@@ -31,6 +32,7 @@ export const createExam = async (req: AuthRequest, res: Response) => {
       data: {
         topicId,
         name,
+        timeLimit,
         questions: {
           create: questionIds.map(qId => ({ questionId: qId }))
         },

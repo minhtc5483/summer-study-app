@@ -28,6 +28,7 @@ export default function CreateExamModal({ isOpen, onClose, topicId, topicName, o
   const [examName, setExamName] = useState('');
   const [questions, setQuestions] = useState<Question[]>([]);
   const [students, setStudents] = useState<Student[]>([]);
+  const [timeLimit, setTimeLimit] = useState<number | null>(null);
   
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [selectedStudentIds, setSelectedStudentIds] = useState<Set<string>>(new Set());
@@ -91,7 +92,8 @@ export default function CreateExamModal({ isOpen, onClose, topicId, topicName, o
         topicId,
         name: examName,
         questionIds: Array.from(selectedIds),
-        studentIds: Array.from(selectedStudentIds)
+        studentIds: Array.from(selectedStudentIds),
+        timeLimit: timeLimit
       });
       onSuccess();
       onClose();
@@ -128,6 +130,21 @@ export default function CreateExamModal({ isOpen, onClose, topicId, topicName, o
                 placeholder="Ví dụ: Ôn tập cuối tuần 1"
                 className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-primary shadow-sm"
               />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-2">Giới hạn thời gian</label>
+              <select 
+                value={timeLimit === null ? '' : timeLimit.toString()} 
+                onChange={e => setTimeLimit(e.target.value === '' ? null : parseInt(e.target.value))}
+                className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-primary shadow-sm bg-white"
+              >
+                <option value="">Không giới hạn</option>
+                <option value="5">5 phút</option>
+                <option value="10">10 phút</option>
+                <option value="15">15 phút</option>
+                <option value="30">30 phút</option>
+              </select>
             </div>
 
             <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200">
