@@ -55,3 +55,13 @@ Bắt buộc
 - Verify
 
 mới được chuyển sang task tiếp theo.
+Task 12
+Tính năng giao bài chưa hoạt động, bé chưa thấy bài sau khi giao
+Task 13
+Thêm đồng hồ đếm ngược thời gian cho từng đề bài (thiết kế thanh thời gian đồng hồ đếm ngược)
+Task 14
+Xây dựng lại huy hiệu 10 mức và chỉ tiết tiêu chí xếp hạng
+Thêm phần thưởng khi làm đề xong nhanh trước thời hạn
+Task 15
+Thêm tính năng đổi điểm thưởng lấy thời gian sử dụng điện thoại, ví dụ: 1000 điểm được 1 giờ sử dụng
+Thêm thành số câu hỏi để bé có thể chọn các câu muốn làm trước bất kì (câu nào đã làm xong thì 1 màu, câu nào chưa làm thì 1 màu)
