@@ -10,7 +10,7 @@ git push origin main
 
 echo.
 echo [2/3] Pulling and Rebuilding on Pi...
-ssh pi@192.168.10.121 "cd /home/pi/summer-study-app && git pull origin main && echo 'Building Backend...' && cd backend && npx tsc && echo 'Building Frontend...' && cd ../frontend && npm run build && cd .. && pm2 restart ecosystem.config.js"
+ssh pi@192.168.10.121 "cd /home/pi/summer-study-app && git reset --hard HEAD && git pull origin main && echo 'Building Backend...' && cd backend && npx tsc && echo 'Building Frontend...' && cd ../frontend && npm run build && cd .. && pm2 restart ecosystem.config.js"
 
 echo.
 echo ==========================================
