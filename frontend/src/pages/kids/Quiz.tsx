@@ -25,8 +25,8 @@ export default function Quiz() {
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [score, setScore] = useState(0);
   const [showResult, setShowResult] = useState(false);
-  const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
-  const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
+  const [answers, setAnswers] = useState<Record<number, string>>({});
+  const [correctness, setCorrectness] = useState<Record<number, boolean>>({});
   const [loading, setLoading] = useState(true);
 
   // Timer states
@@ -79,11 +79,12 @@ export default function Quiz() {
   }, [examId, selectedStudent, navigate]);
 
   const handleAnswer = (answer: string) => {
-    if (selectedAnswer !== null) return;
+    if (answers[currentQuestion] !== undefined) return;
     
-    setSelectedAnswer(answer);
     const correct = answer === questions[currentQuestion].correct;
-    setIsCorrect(correct);
+    
+    setAnswers(prev => ({ ...prev, [currentQuestion]: answer }));
+    setCorrectness(prev => ({ ...prev, [currentQuestion]: correct }));
     
     if (correct) {
       playSound('correct');
@@ -99,14 +100,25 @@ export default function Quiz() {
     }
 
     setTimeout(() => {
-      if (currentQuestion < questions.length - 1) {
-        setCurrentQuestion(c => c + 1);
-        setSelectedAnswer(null);
-        setIsCorrect(null);
-      } else {
-        finishQuiz();
+      // Find next unanswered question
+      let found = false;
+      for (let i = currentQuestion + 1; i < questions.length; i++) {
+        if (answers[i] === undefined && i !== currentQuestion) {
+          setCurrentQuestion(i);
+          found = true;
+          break;
+        }
       }
-    }, 2000);
+      if (!found) {
+        for (let i = 0; i < currentQuestion; i++) {
+          if (answers[i] === undefined && i !== currentQuestion) {
+            setCurrentQuestion(i);
+            found = true;
+            break;
+          }
+        }
+      }
+    }, 1500);
   };
 
   const finishQuiz = async () => {
@@ -267,13 +279,15 @@ export default function Quiz() {
 
               <div className="grid grid-cols-2 gap-4 w-full">
                 {questions[currentQuestion].options.map((option: string, idx: number) => {
-                  const isSelected = selectedAnswer === option;
+                  const currentSelectedAnswer = answers[currentQuestion];
+                  const currentIsCorrect = correctness[currentQuestion];
+                  const isSelected = currentSelectedAnswer === option;
                   const isActuallyCorrect = option === questions[currentQuestion].correct;
                   
                   let bgColor = 'bg-white hover:bg-blue-50 hover:border-blue-300 border-slate-200';
                   let textColor = 'text-slate-700';
 
-                  if (selectedAnswer !== null) {
+                  if (currentSelectedAnswer !== undefined) {
                     if (isActuallyCorrect) {
                       bgColor = 'bg-green-100 border-green-500 scale-105 shadow-lg shadow-green-200';
                       textColor = 'text-green-800';
@@ -288,14 +302,14 @@ export default function Quiz() {
                   return (
                     <motion.button
                       key={idx}
-                      whileHover={selectedAnswer === null ? { scale: 1.02 } : {}}
-                      whileTap={selectedAnswer === null ? { scale: 0.98 } : {}}
+                      whileHover={currentSelectedAnswer === undefined ? { scale: 1.02 } : {}}
+                      whileTap={currentSelectedAnswer === undefined ? { scale: 0.98 } : {}}
                       onClick={() => handleAnswer(option)}
-                      disabled={selectedAnswer !== null}
+                      disabled={currentSelectedAnswer !== undefined}
                       className={`relative p-8 rounded-3xl border-4 text-3xl font-bold transition-all duration-300 shadow-sm ${bgColor} ${textColor}`}
                     >
                       {option}
-                      {isSelected && isCorrect && (
+                      {isSelected && currentIsCorrect && (
                         <motion.div 
                           initial={{ scale: 0 }}
                           animate={{ scale: 1 }}
@@ -304,7 +318,7 @@ export default function Quiz() {
                           ✓
                         </motion.div>
                       )}
-                      {isSelected && !isCorrect && (
+                      {isSelected && currentIsCorrect === false && (
                         <motion.div 
                           initial={{ scale: 0 }}
                           animate={{ scale: 1 }}
@@ -366,6 +380,42 @@ export default function Quiz() {
             </motion.div>
           )}
         </AnimatePresence>
+
+        {/* Navigation Bar */}
+        {!showResult && questions.length > 0 && (
+          <motion.div 
+            initial={{ y: 50, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            className="bg-white/80 backdrop-blur-md p-4 rounded-3xl mt-4 flex justify-between items-center shadow-sm border border-slate-200 relative z-20"
+          >
+            <div className="flex gap-3 overflow-x-auto pb-2 custom-scrollbar">
+              {questions.map((_, idx) => {
+                let bg = 'bg-slate-100 text-slate-500 border-slate-200';
+                if (correctness[idx] === true) bg = 'bg-green-100 text-green-600 border-green-500';
+                else if (correctness[idx] === false) bg = 'bg-red-100 text-red-600 border-red-500';
+                
+                const isCurrent = currentQuestion === idx;
+
+                return (
+                  <button
+                    key={idx}
+                    onClick={() => setCurrentQuestion(idx)}
+                    className={`min-w-[3rem] h-12 rounded-2xl font-bold flex items-center justify-center border-2 transition-all ${bg} ${isCurrent ? 'ring-4 ring-blue-300 scale-110 shadow-lg' : ''}`}
+                  >
+                    {idx + 1}
+                  </button>
+                )
+              })}
+            </div>
+
+            <button
+              onClick={finishQuiz}
+              className="px-6 py-3 bg-gradient-to-r from-blue-500 to-indigo-500 text-white font-bold rounded-2xl whitespace-nowrap ml-4 hover:shadow-lg hover:scale-105 transition-all shadow-md"
+            >
+              Nộp Bài
+            </button>
+          </motion.div>
+        )}
       </div>
     </div>
   );

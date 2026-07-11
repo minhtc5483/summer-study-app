@@ -29,7 +29,7 @@ import { getQuestions, createQuestion, importQuestions, importPDF } from './cont
 import { saveProgress, savePublicProgress } from './controllers/progressController';
 import { getStatistics } from './controllers/statisticsController';
 import { exportData } from './controllers/dataController';
-import { getRewards } from './controllers/rewardController';
+import { getRewards, exchangePoints } from './controllers/rewardController';
 
 // Grade routes
 router.get('/grades', authenticate, getGrades);
@@ -75,5 +75,6 @@ router.get('/public/exams', getExams);
 router.get('/public/exams/:id', getExamById);
 router.post('/public/submit', savePublicProgress);
 router.get('/public/rewards/:studentId', getRewards);
+router.post('/public/exchange-points', exchangePoints);
 
 export default router;

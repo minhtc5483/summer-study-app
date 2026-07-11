@@ -68,3 +68,46 @@ export const getRewards = async (req: Request, res: Response) => {
     res.status(500).json({ error: 'Internal server error' });
   }
 };
+
+export const exchangePoints = async (req: Request, res: Response) => {
+  try {
+    const { studentId, cost, itemName } = req.body;
+
+    if (!studentId || cost === undefined || !itemName) {
+      return res.status(400).json({ error: 'Missing parameters' });
+    }
+
+    const student = await prisma.student.findUnique({
+      where: { id: studentId }
+    });
+
+    if (!student) {
+      return res.status(404).json({ error: 'Student not found' });
+    }
+
+    if (student.totalScore < cost) {
+      return res.status(400).json({ error: 'Not enough points' });
+    }
+
+    // Deduct points
+    const updatedStudent = await prisma.student.update({
+      where: { id: studentId },
+      data: {
+        totalScore: student.totalScore - cost
+      }
+    });
+
+    // Record the transaction
+    await prisma.reward.create({
+      data: {
+        studentId,
+        badgeType: itemName
+      }
+    });
+
+    res.json({ success: true, newTotalScore: updatedStudent.totalScore });
+  } catch (error) {
+    console.error('Exchange points error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};

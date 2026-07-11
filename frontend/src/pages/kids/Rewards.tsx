@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Star, Flame, Trophy, Lock } from 'lucide-react';
+import { ArrowLeft, Star, Flame, Trophy, Lock, ShoppingBag, Tv, Smartphone, Gamepad2 } from 'lucide-react';
 import { useStudentStore } from '../../store/useStudentStore';
 import { api } from '../../lib/api';
 import confetti from 'canvas-confetti';
@@ -20,9 +20,57 @@ interface Badge {
 
 export default function Rewards() {
   const navigate = useNavigate();
-  const { selectedStudent } = useStudentStore();
+  const { selectedStudent, setSelectedStudent } = useStudentStore();
   const [badges, setBadges] = useState<Badge[]>([]);
   const [loading, setLoading] = useState(true);
+  const [exchanging, setExchanging] = useState<string | null>(null);
+
+  const STORE_ITEMS = [
+    { id: '15_min_tv', name: '15 Phút Xem TV', cost: 500, icon: <Tv size={32} />, color: 'bg-blue-100 text-blue-600 border-blue-200' },
+    { id: '30_min_ipad', name: '30 Phút iPad', cost: 1000, icon: <Smartphone size={32} />, color: 'bg-purple-100 text-purple-600 border-purple-200' },
+    { id: '1_hr_game', name: '1 Giờ Chơi Game', cost: 2000, icon: <Gamepad2 size={32} />, color: 'bg-rose-100 text-rose-600 border-rose-200' },
+  ];
+
+  const handleExchange = async (item: typeof STORE_ITEMS[0]) => {
+    if (!selectedStudent || selectedStudent.totalScore < item.cost) {
+      alert("Con chưa đủ điểm để đổi món này rùi!");
+      return;
+    }
+    
+    if (!window.confirm(`Con có chắc muốn dùng ${item.cost} điểm để đổi "${item.name}" không?`)) return;
+
+    setExchanging(item.id);
+    try {
+      const res = await api.post('/public/exchange-points', {
+        studentId: selectedStudent.id,
+        cost: item.cost,
+        itemName: item.name
+      });
+      
+      if (res.data.success) {
+        setSelectedStudent({
+          ...selectedStudent,
+          totalScore: res.data.newTotalScore
+        });
+        
+        confetti({
+          particleCount: 200,
+          spread: 100,
+          origin: { y: 0.5 },
+          colors: ['#FBBF24', '#F87171', '#60A5FA', '#34D399']
+        });
+        
+        setTimeout(() => {
+          alert(`Chúc mừng con đã đổi thành công "${item.name}"! Hãy đưa màn hình này cho Ba Mẹ xem nhé.`);
+        }, 500);
+      }
+    } catch (error) {
+      console.error(error);
+      alert("Có lỗi xảy ra khi đổi quà!");
+    } finally {
+      setExchanging(null);
+    }
+  };
 
   useEffect(() => {
     if (!selectedStudent) {
@@ -150,6 +198,55 @@ export default function Rewards() {
               )}
             </motion.div>
           ))}
+        </div>
+
+        {/* Store Section */}
+        <div className="mt-20">
+          <div className="text-center mb-10">
+            <div className="w-20 h-20 bg-gradient-to-tr from-pink-400 to-rose-500 rounded-full mx-auto flex items-center justify-center mb-4 shadow-lg shadow-pink-200">
+              <ShoppingBag size={40} className="text-white" />
+            </div>
+            <h2 className="text-4xl font-extrabold text-slate-800 mb-3">Cửa Hàng Đổi Thưởng</h2>
+            <p className="text-lg text-slate-600">Dùng điểm thưởng của con để đổi lấy thời gian giải trí nhé!</p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {STORE_ITEMS.map((item, idx) => {
+              const canAfford = (selectedStudent?.totalScore || 0) >= item.cost;
+              
+              return (
+                <motion.div
+                  key={item.id}
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: idx * 0.1 }}
+                  className={`bg-white rounded-3xl p-6 shadow-sm border-2 text-center flex flex-col items-center relative overflow-hidden ${item.color} ${!canAfford ? 'opacity-70 grayscale-[0.3]' : 'hover:-translate-y-1 hover:shadow-lg transition-all duration-300'}`}
+                >
+                  <div className="w-20 h-20 bg-white rounded-2xl flex items-center justify-center mb-4 shadow-inner text-current">
+                    {item.icon}
+                  </div>
+                  <h3 className="text-2xl font-bold mb-2 text-slate-800">{item.name}</h3>
+                  <div className="flex items-center gap-1 font-bold text-lg mb-6 bg-white/50 px-4 py-1 rounded-full text-slate-700">
+                    <Star size={20} className="text-yellow-500 fill-yellow-500" /> {item.cost} điểm
+                  </div>
+                  
+                  <button
+                    onClick={() => handleExchange(item)}
+                    disabled={!canAfford || exchanging === item.id}
+                    className={`mt-auto w-full py-4 rounded-2xl font-bold text-lg transition-all ${
+                      exchanging === item.id 
+                        ? 'bg-slate-200 text-slate-500' 
+                        : canAfford 
+                          ? 'bg-gradient-to-r from-blue-500 to-indigo-500 text-white shadow-md hover:shadow-xl hover:scale-[1.02]' 
+                          : 'bg-slate-100 text-slate-400 cursor-not-allowed'
+                    }`}
+                  >
+                    {exchanging === item.id ? 'Đang Đổi...' : canAfford ? 'Đổi Ngay' : 'Chưa đủ điểm'}
+                  </button>
+                </motion.div>
+              );
+            })}
+          </div>
         </div>
       </div>
     </div>
