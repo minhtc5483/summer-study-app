@@ -4,7 +4,7 @@ import { persist } from 'zustand/middleware';
 export interface StudentProfile {
   id: string;
   name: string;
-  grade: number;
+  grade: string;
   avatar: string | null;
   totalScore: number;
   currentStreak: number;

@@ -1,7 +1,7 @@
 
 import { useAuthStore } from '../store/useAuthStore';
 import { Navigate, Outlet, Link } from 'react-router-dom';
-import { Users, BookOpen, LogOut, Settings, BarChart } from 'lucide-react';
+import { Users, LogOut, Settings, BarChart } from 'lucide-react';
 
 export default function ParentDashboard() {
   const { token, logout } = useAuthStore();
@@ -24,9 +24,7 @@ export default function ParentDashboard() {
           <Link to="/parent/students" className="flex items-center gap-3 px-4 py-3 text-slate-700 rounded-xl hover:bg-slate-100 transition-colors">
             <Users size={20} /> Học Sinh
           </Link>
-          <Link to="/parent/subjects" className="flex items-center gap-3 px-4 py-3 text-slate-700 rounded-xl hover:bg-slate-100 transition-colors">
-            <BookOpen size={20} /> Môn Học
-          </Link>
+
           <Link to="/parent/settings" className="flex items-center gap-3 px-4 py-3 text-slate-700 rounded-xl hover:bg-slate-100 transition-colors">
             <Settings size={20} /> Cài Đặt
           </Link>

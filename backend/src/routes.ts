@@ -22,17 +22,25 @@ router.post('/students', authenticate, upload.single('avatar'), createStudent);
 router.put('/students/:id', authenticate, upload.single('avatar'), updateStudent);
 router.delete('/students/:id', authenticate, deleteStudent);
 
-import { getSubjects, createSubject } from './controllers/subjectController';
+import { getSubjects, createSubject, updateSubject, deleteSubject } from './controllers/subjectController';
 import { getTopics, createTopic } from './controllers/topicController';
+import { getGrades, createGrade, deleteGrade } from './controllers/gradeController';
 import { getQuestions, createQuestion, importQuestions } from './controllers/questionController';
 import { saveProgress } from './controllers/progressController';
 import { getExam } from './controllers/examController';
 import { getStatistics } from './controllers/statisticsController';
 import { exportData } from './controllers/dataController';
 
+// Grade routes
+router.get('/grades', authenticate, getGrades);
+router.post('/grades', authenticate, createGrade);
+router.delete('/grades/:id', authenticate, deleteGrade);
+
 // Subject & Topic routes
 router.get('/subjects', authenticate, getSubjects);
 router.post('/subjects', authenticate, createSubject);
+router.put('/subjects/:id', authenticate, updateSubject);
+router.delete('/subjects/:id', authenticate, deleteSubject);
 router.get('/topics', authenticate, getTopics);
 router.post('/topics', authenticate, createTopic);
 

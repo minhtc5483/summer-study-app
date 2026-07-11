@@ -46,7 +46,7 @@ export default function KidsHome() {
             </div>
             <div>
               <h1 className="text-2xl font-bold text-slate-800">Xin chào, {selectedStudent.name}!</h1>
-              <p className="text-slate-500 font-medium">Lớp {selectedStudent.grade}</p>
+              <p className="text-slate-500 font-medium">{selectedStudent.grade}</p>
             </div>
           </div>
           

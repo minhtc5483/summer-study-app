@@ -32,7 +32,7 @@ export const getTopics = async (req: Request, res: Response) => {
 const createTopicSchema = z.object({
   subjectId: z.string(),
   name: z.string().min(1),
-  grade: z.union([z.string().regex(/^\d+$/).transform(Number), z.number()]),
+  grade: z.string(),
   description: z.string().optional()
 });
 

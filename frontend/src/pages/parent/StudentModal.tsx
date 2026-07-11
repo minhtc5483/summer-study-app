@@ -1,10 +1,15 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { Camera } from 'lucide-react';
 
+interface Grade {
+  id: string;
+  name: string;
+}
+
 interface Student {
   id: string;
   name: string;
-  grade: number;
+  grade: string;
   avatar: string | null;
   totalScore: number;
   currentStreak: number;
@@ -19,19 +24,27 @@ interface StudentModalProps {
 
 export default function StudentModal({ isOpen, onClose, onSubmit, initialData }: StudentModalProps) {
   const [name, setName] = useState('');
-  const [grade, setGrade] = useState<number>(1);
+  const [grade, setGrade] = useState<string>('');
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  
+  const [availableGrades, setAvailableGrades] = useState<Grade[]>([]);
+
+  useEffect(() => {
+    import('../../lib/api').then(({ api }) => {
+      api.get('/grades').then(res => setAvailableGrades(res.data)).catch(console.error);
+    });
+  }, []);
 
   useEffect(() => {
     if (initialData) {
       setName(initialData.name);
-      setGrade(initialData.grade.toString() as any);
+      setGrade(initialData.grade);
       setAvatarPreview(initialData.avatar ? initialData.avatar : null);
     } else {
       setName('');
-      setGrade(1);
+      setGrade('');
       setAvatarFile(null);
       setAvatarPreview(null);
     }
@@ -53,9 +66,13 @@ export default function StudentModal({ isOpen, onClose, onSubmit, initialData }:
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!grade) {
+      alert('Vui lòng chọn khối lớp');
+      return;
+    }
     const formData = new FormData();
     formData.append('name', name);
-    formData.append('grade', grade.toString());
+    formData.append('grade', grade);
     if (avatarFile) {
       formData.append('avatar', avatarFile);
     }
@@ -116,34 +133,29 @@ export default function StudentModal({ isOpen, onClose, onSubmit, initialData }:
 
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-2">Lớp</label>
-            <div className="flex gap-4">
-              <label className="flex-1 cursor-pointer">
-                <input 
-                  type="radio" 
-                  name="grade" 
-                  value={1} 
-                  checked={grade === 1}
-                  onChange={() => setGrade(1)}
-                  className="hidden peer" 
-                />
-                <div className="text-center py-3 rounded-xl border-2 border-slate-200 peer-checked:border-primary peer-checked:bg-blue-50 peer-checked:text-primary-dark font-bold text-slate-600 transition-all">
-                  Lớp 1
-                </div>
-              </label>
-              <label className="flex-1 cursor-pointer">
-                <input 
-                  type="radio" 
-                  name="grade" 
-                  value={2} 
-                  checked={grade === 2}
-                  onChange={() => setGrade(2)}
-                  className="hidden peer" 
-                />
-                <div className="text-center py-3 rounded-xl border-2 border-slate-200 peer-checked:border-primary peer-checked:bg-blue-50 peer-checked:text-primary-dark font-bold text-slate-600 transition-all">
-                  Lớp 2
-                </div>
-              </label>
-            </div>
+            {availableGrades.length > 0 ? (
+              <div className="grid grid-cols-3 gap-3 max-h-40 overflow-y-auto p-1">
+                {availableGrades.map((g) => (
+                  <label key={g.id} className="cursor-pointer">
+                    <input 
+                      type="radio" 
+                      name="grade" 
+                      value={g.name} 
+                      checked={grade === g.name}
+                      onChange={() => setGrade(g.name)}
+                      className="hidden peer" 
+                    />
+                    <div className="text-center py-2 px-2 rounded-xl border-2 border-slate-200 peer-checked:border-primary peer-checked:bg-blue-50 peer-checked:text-primary-dark font-bold text-slate-600 transition-all text-sm">
+                      {g.name}
+                    </div>
+                  </label>
+                ))}
+              </div>
+            ) : (
+              <div className="p-3 bg-yellow-50 text-yellow-800 rounded-lg text-sm border border-yellow-200">
+                Chưa có lớp nào. Hãy vào mục Cài Đặt để thêm lớp.
+              </div>
+            )}
           </div>
 
           <div className="pt-4 flex gap-4">

@@ -6,7 +6,7 @@ import StudentModal from './StudentModal';
 interface Student {
   id: string;
   name: string;
-  grade: number;
+  grade: string;
   avatar: string | null;
   totalScore: number;
   currentStreak: number;

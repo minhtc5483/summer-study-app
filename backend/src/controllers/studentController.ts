@@ -29,7 +29,7 @@ export const getStudents = async (req: AuthRequest, res: Response) => {
 
 const studentSchema = z.object({
   name: z.string().min(1),
-  grade: z.string().regex(/^\d+$/).transform(Number),
+  grade: z.string(),
 });
 
 export const createStudent = async (req: AuthRequest, res: Response) => {
