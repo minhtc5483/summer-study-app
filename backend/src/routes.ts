@@ -25,7 +25,7 @@ router.delete('/students/:id', authenticate, deleteStudent);
 import { getSubjects, createSubject, updateSubject, deleteSubject } from './controllers/subjectController';
 import { getTopics, createTopic } from './controllers/topicController';
 import { getGrades, createGrade, deleteGrade } from './controllers/gradeController';
-import { getQuestions, createQuestion, importQuestions } from './controllers/questionController';
+import { getQuestions, createQuestion, importQuestions, importPDF } from './controllers/questionController';
 import { saveProgress } from './controllers/progressController';
 import { getStatistics } from './controllers/statisticsController';
 import { exportData } from './controllers/dataController';
@@ -57,6 +57,7 @@ router.post('/questions', authenticate, createQuestion);
 
 // Import / Export
 router.post('/import', authenticate, importQuestions);
+router.post('/import-pdf', authenticate, upload.single('file'), importPDF);
 router.post('/export', authenticate, exportData);
 
 // Submit (formerly progress)

@@ -1,7 +1,8 @@
 import { Request, Response } from 'express';
 import { prisma } from '../index';
 import { z } from 'zod';
-
+import { GoogleGenerativeAI } from '@google/generative-ai';
+import fs from 'fs';
 const getQuestionsSchema = z.object({
   topicId: z.string().optional(),
   level: z.string().regex(/^\d+$/).transform(Number).optional()
@@ -94,5 +95,88 @@ export const importQuestions = async (req: Request, res: Response) => {
     res.json({ message: 'Import successful', count: result.count });
   } catch (error) {
     res.status(500).json({ error: 'Server error' });
+  }
+};
+
+export const importPDF = async (req: Request, res: Response) => {
+  try {
+    const { topicId } = req.body;
+    const file = req.file;
+
+    if (!file || !topicId) {
+      return res.status(400).json({ error: 'Missing file or topicId' });
+    }
+
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey) {
+      return res.status(500).json({ error: 'GEMINI_API_KEY is not set' });
+    }
+
+    const genAI = new GoogleGenerativeAI(apiKey);
+    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+
+    const fileBytes = fs.readFileSync(file.path);
+    const base64Data = fileBytes.toString('base64');
+
+    const prompt = `Bạn là một trợ lý giáo dục AI. Hãy đọc nội dung trong hình ảnh hoặc tài liệu PDF được cung cấp (thường là bài tập cho trẻ tiểu học) và trích xuất tất cả các câu hỏi trắc nghiệm ra định dạng JSON.
+
+Yêu cầu định dạng bắt buộc cho output:
+[
+  {
+    "type": "MULTIPLE_CHOICE",
+    "level": 1,
+    "points": 10,
+    "content": {
+      "text": "Câu hỏi là gì?",
+      "options": ["Đáp án 1", "Đáp án 2", "Đáp án 3", "Đáp án 4"],
+      "correct": "Đáp án đúng"
+    }
+  }
+]
+
+Quy tắc:
+1. 'correct' phải khớp hoàn toàn (exact match) với một trong các chuỗi nằm trong mảng 'options'. Không ghi A, B, C, D nếu mảng options chứa giá trị nội dung.
+2. Output CHỈ LÀ MỘT CHUỖI JSON HỢP LỆ, không được có thẻ \`\`\`json ở đầu và \`\`\` ở cuối, không được có bất kỳ bình luận nào.`;
+
+    const result = await model.generateContent([
+      prompt,
+      {
+        inlineData: {
+          mimeType: file.mimetype,
+          data: base64Data
+        }
+      }
+    ]);
+
+    let responseText = result.response.text();
+    responseText = responseText.replace(/```json/gi, '').replace(/```/g, '').trim();
+
+    let questionsParsed = [];
+    try {
+      questionsParsed = JSON.parse(responseText);
+    } catch (parseError) {
+      console.error('Failed to parse AI response:', responseText);
+      return res.status(400).json({ error: 'AI trả về dữ liệu không đúng định dạng JSON' });
+    }
+
+    const data = questionsParsed.map((q: any) => ({
+      topicId,
+      type: q.type || 'MULTIPLE_CHOICE',
+      content: JSON.stringify(q.content),
+      level: q.level || 1,
+      points: q.points || 10
+    }));
+
+    const createResult = await prisma.question.createMany({
+      data
+    });
+    
+    fs.unlinkSync(file.path);
+
+    res.json({ message: 'Import successful', count: createResult.count });
+
+  } catch (error) {
+    console.error('Import PDF Error:', error);
+    res.status(500).json({ error: 'Server error parsing AI' });
   }
 };
