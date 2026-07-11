@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useStudentStore } from '../../store/useStudentStore';
 import { api } from '../../lib/api';
 import { motion } from 'framer-motion';
 import { ArrowLeft, Star, Play } from 'lucide-react';
@@ -18,15 +19,21 @@ interface Exam {
 export default function SubjectExams() {
   const { subjectId } = useParams();
   const navigate = useNavigate();
+  const { selectedStudent } = useStudentStore();
   const [exams, setExams] = useState<Exam[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    api.get(`/exams?subjectId=${subjectId}`)
+    if (!selectedStudent) {
+      navigate('/');
+      return;
+    }
+
+    api.get(`/exams?subjectId=${subjectId}&studentId=${selectedStudent.id}`)
       .then(res => setExams(res.data))
       .catch(console.error)
       .finally(() => setLoading(false));
-  }, [subjectId]);
+  }, [subjectId, selectedStudent, navigate]);
 
   return (
     <div className="min-h-screen p-6 md:p-12 relative overflow-hidden">

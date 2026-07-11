@@ -7,7 +7,8 @@ import { z } from 'zod';
 const createExamSchema = z.object({
   topicId: z.string(),
   name: z.string(),
-  questionIds: z.array(z.string()).min(1)
+  questionIds: z.array(z.string()).min(1),
+  studentIds: z.array(z.string()).optional()
 });
 
 export const createExam = async (req: AuthRequest, res: Response) => {
@@ -17,7 +18,14 @@ export const createExam = async (req: AuthRequest, res: Response) => {
       return res.status(400).json({ error: 'Validation failed', details: parsed.error.issues });
     }
 
-    const { topicId, name, questionIds } = parsed.data;
+    const { topicId, name, questionIds, studentIds } = parsed.data;
+
+    let studentsConnect: any = undefined;
+    if (studentIds && studentIds.length > 0) {
+      studentsConnect = {
+        connect: studentIds.map(id => ({ id }))
+      };
+    }
 
     const exam = await prisma.exam.create({
       data: {
@@ -25,10 +33,12 @@ export const createExam = async (req: AuthRequest, res: Response) => {
         name,
         questions: {
           create: questionIds.map(qId => ({ questionId: qId }))
-        }
+        },
+        ...(studentsConnect && { students: studentsConnect })
       },
       include: {
-        questions: true
+        questions: true,
+        students: true
       }
     });
 
@@ -38,11 +48,12 @@ export const createExam = async (req: AuthRequest, res: Response) => {
   }
 };
 
-// GET /exams?subjectId=... or /exams?topicId=...
+// GET /exams?subjectId=... or /exams?topicId=... or /exams?studentId=...
 export const getExams = async (req: Request, res: Response) => {
   try {
     const subjectId = req.query.subjectId as string | undefined;
     const topicId = req.query.topicId as string | undefined;
+    const studentId = req.query.studentId as string | undefined;
 
     let filter: any = {};
     if (topicId) {
@@ -50,11 +61,22 @@ export const getExams = async (req: Request, res: Response) => {
     } else if (subjectId) {
       filter.topic = { subjectId: subjectId };
     }
+    
+    if (studentId) {
+      filter.students = { some: { id: studentId } };
+    }
 
     const exams = await prisma.exam.findMany({
       where: filter,
       include: {
         topic: true,
+        students: {
+          select: {
+            id: true,
+            name: true,
+            avatar: true
+          }
+        },
         _count: {
           select: { questions: true }
         }
@@ -96,6 +118,40 @@ export const getExamById = async (req: Request, res: Response) => {
     };
 
     res.json(transformed);
+  } catch (error) {
+    res.status(500).json({ error: 'Server error' });
+  }
+};
+
+const updateExamSchema = z.object({
+  studentIds: z.array(z.string())
+});
+
+export const updateExam = async (req: AuthRequest, res: Response) => {
+  try {
+    const id = req.params.id as string;
+    const parsed = updateExamSchema.safeParse(req.body);
+    if (!parsed.success) {
+      return res.status(400).json({ error: 'Validation failed', details: parsed.error.issues });
+    }
+
+    const { studentIds } = parsed.data;
+
+    const exam = await prisma.exam.update({
+      where: { id },
+      data: {
+        students: {
+          set: studentIds.map(sId => ({ id: sId }))
+        }
+      },
+      include: {
+        students: {
+          select: { id: true, name: true, avatar: true }
+        }
+      }
+    });
+
+    res.json(exam);
   } catch (error) {
     res.status(500).json({ error: 'Server error' });
   }

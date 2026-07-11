@@ -33,6 +33,7 @@ model Student {
   wrongAnswers  WrongQuestion[]
   rewards       Reward[]
   subjects      Subject[]
+  exams         Exam[]
 }
 
 model Subject {
@@ -78,6 +79,7 @@ model Exam {
   createdAt   DateTime  @default(now())
 
   questions   ExamQuestion[]
+  students    Student[]
 }
 
 model ExamQuestion {
