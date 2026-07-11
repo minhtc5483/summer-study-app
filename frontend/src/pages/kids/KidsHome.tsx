@@ -88,17 +88,26 @@ export default function KidsHome() {
           )}
         </div>
 
-        {/* Badges */}
-        <div className="bg-white/80 backdrop-blur-md rounded-3xl p-6 shadow-sm mb-8">
-          <h3 className="text-xl font-bold text-slate-700 mb-4 flex items-center gap-2">
-            <Trophy className="text-yellow-500" /> Huy hiệu của con
-          </h3>
-          <div className="flex gap-4">
-            <div className="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center text-3xl shadow-sm tooltip" title="Chăm chỉ 3 ngày liên tiếp">🔥</div>
-            <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center text-3xl shadow-sm tooltip" title="Làm đúng 10 câu Toán">🧮</div>
-            <div className="w-16 h-16 border-2 border-dashed border-slate-300 rounded-full flex items-center justify-center text-slate-300 text-xl">?</div>
-          </div>
-        </div>
+        {/* Badges Link */}
+        <Link to="/kids/rewards">
+          <motion.div 
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            className="bg-white/90 backdrop-blur-md rounded-3xl p-6 shadow-sm mb-8 flex items-center justify-between cursor-pointer border-2 border-transparent hover:border-yellow-400 transition-colors"
+          >
+            <div>
+              <h3 className="text-2xl font-bold text-slate-800 mb-2 flex items-center gap-2">
+                <Trophy className="text-yellow-500 fill-yellow-500" size={28} /> Góc Phần Thưởng
+              </h3>
+              <p className="text-slate-500 font-medium">Bấm vào đây để xem các huy hiệu con đã đạt được nhé!</p>
+            </div>
+            <div className="flex gap-2">
+              <div className="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center text-2xl shadow-sm tooltip">🔥</div>
+              <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center text-2xl shadow-sm tooltip">🌟</div>
+              <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center text-2xl shadow-sm tooltip">👑</div>
+            </div>
+          </motion.div>
+        </Link>
       </div>
     </div>
   );

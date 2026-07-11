@@ -29,6 +29,7 @@ import { getQuestions, createQuestion, importQuestions } from './controllers/que
 import { saveProgress } from './controllers/progressController';
 import { getStatistics } from './controllers/statisticsController';
 import { exportData } from './controllers/dataController';
+import { getRewards } from './controllers/rewardController';
 
 // Grade routes
 router.get('/grades', authenticate, getGrades);
@@ -64,5 +65,8 @@ router.post('/progress', authenticate, saveProgress); // keep old for backward c
 
 // Statistics
 router.get('/statistics', authenticate, getStatistics);
+
+// Rewards
+router.get('/rewards/:studentId', authenticate, getRewards);
 
 export default router;
