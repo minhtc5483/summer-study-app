@@ -26,7 +26,7 @@ import { getSubjects, createSubject, updateSubject, deleteSubject } from './cont
 import { getTopics, createTopic } from './controllers/topicController';
 import { getGrades, createGrade, deleteGrade } from './controllers/gradeController';
 import { getQuestions, createQuestion, importQuestions, importPDF } from './controllers/questionController';
-import { saveProgress } from './controllers/progressController';
+import { saveProgress, savePublicProgress } from './controllers/progressController';
 import { getStatistics } from './controllers/statisticsController';
 import { exportData } from './controllers/dataController';
 import { getRewards } from './controllers/rewardController';
@@ -69,5 +69,11 @@ router.get('/statistics', authenticate, getStatistics);
 
 // Rewards
 router.get('/rewards/:studentId', authenticate, getRewards);
+
+// Public routes (Kids App)
+router.get('/public/exams', getExams);
+router.get('/public/exams/:id', getExamById);
+router.post('/public/submit', savePublicProgress);
+router.get('/public/rewards/:studentId', getRewards);
 
 export default router;

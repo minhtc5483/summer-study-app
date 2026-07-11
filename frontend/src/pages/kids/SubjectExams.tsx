@@ -29,7 +29,7 @@ export default function SubjectExams() {
       return;
     }
 
-    api.get(`/exams?subjectId=${subjectId}&studentId=${selectedStudent.id}`)
+    api.get(`/public/exams?subjectId=${subjectId}&studentId=${selectedStudent.id}`)
       .then(res => setExams(res.data))
       .catch(console.error)
       .finally(() => setLoading(false));

@@ -46,7 +46,7 @@ export default function Quiz() {
     }
     
     setLoading(true);
-    api.get(`/exams/${examId}`)
+    api.get(`/public/exams/${examId}`)
       .then(res => {
         setExamName(res.data.name);
         const mapped = res.data.questionsList.map((q: Question) => {
@@ -118,7 +118,7 @@ export default function Quiz() {
 
       // Sync with server
       try {
-        await api.post('/submit', {
+        await api.post('/public/submit', {
           studentId: selectedStudent.id,
           score,
           streak: newStreak

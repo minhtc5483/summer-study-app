@@ -32,7 +32,7 @@ export default function Rewards() {
 
     const fetchRewards = async () => {
       try {
-        const response = await api.get(`/rewards/${selectedStudent.id}`);
+        const response = await api.get(`/public/rewards/${selectedStudent.id}`);
         setBadges(response.data.badges);
         
         // Cùng check xem nếu có badge mới thì bắn pháo hoa
