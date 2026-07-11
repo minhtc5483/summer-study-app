@@ -1,0 +1,19 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", "Outfit", system-ui, sans-serif;
+  
+  --color-primary-light: #60a5fa; /* blue-400 */
+  --color-primary: #3b82f6;       /* blue-500 */
+  --color-primary-dark: #2563eb;  /* blue-600 */
+  
+  --color-success: #22c55e;       /* green-500 */
+  --color-warning: #f59e0b;       /* amber-500 */
+  --color-danger: #ef4444;        /* red-500 */
+}
+
+@layer base {
+  body {
+    @apply bg-slate-50 text-slate-900;
+  }
+}

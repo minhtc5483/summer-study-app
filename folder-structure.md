@@ -1,0 +1,12 @@
+src/
+  components/
+    common/
+    student/
+    parent/
+  pages/
+  hooks/
+  services/
+  api/
+  store/
+  types/
+  utils/

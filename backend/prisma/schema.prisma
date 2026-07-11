@@ -1,0 +1,121 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model Parent {
+  id           String    @id @default(uuid())
+  username     String    @unique
+  passwordHash String
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  students     Student[]
+}
+
+model Student {
+  id            String    @id @default(uuid())
+  parentId      String
+  parent        Parent    @relation(fields: [parentId], references: [id], onDelete: Cascade)
+  name          String
+  grade         Int
+  avatar        String?
+  totalScore    Int       @default(0)
+  currentStreak Int       @default(0)
+  lastActive    DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  progress      StudentProgress[]
+  wrongAnswers  WrongQuestion[]
+  rewards       Reward[]
+}
+
+model Subject {
+  id          String    @id @default(uuid())
+  name        String
+  icon        String?
+  color       String?
+  topics      Topic[]
+}
+
+model Topic {
+  id          String    @id @default(uuid())
+  subjectId   String
+  subject     Subject   @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  name        String
+  grade       Int
+  description String?
+  questions   Question[]
+  exams       Exam[]
+  progress    StudentProgress[]
+}
+
+model Question {
+  id          String    @id @default(uuid())
+  topicId     String
+  topic       Topic     @relation(fields: [topicId], references: [id], onDelete: Cascade)
+  type        String    // MULTIPLE_CHOICE, FILL_BLANK, TRUE_FALSE, MATCHING
+  content     String    // JSON string containing question details
+  level       Int       @default(1)
+  points      Int       @default(10)
+  createdAt   DateTime  @default(now())
+
+  wrongAnswers WrongQuestion[]
+  examQuestions ExamQuestion[]
+}
+
+model Exam {
+  id          String    @id @default(uuid())
+  topicId     String
+  topic       Topic     @relation(fields: [topicId], references: [id], onDelete: Cascade)
+  name        String
+  createdAt   DateTime  @default(now())
+
+  questions   ExamQuestion[]
+}
+
+model ExamQuestion {
+  examId      String
+  questionId  String
+  exam        Exam      @relation(fields: [examId], references: [id], onDelete: Cascade)
+  question    Question  @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@id([examId, questionId])
+}
+
+model StudentProgress {
+  id                 String    @id @default(uuid())
+  studentId          String
+  student            Student   @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  topicId            String
+  topic              Topic     @relation(fields: [topicId], references: [id], onDelete: Cascade)
+  questionsAttempted Int       @default(0)
+  questionsCorrect   Int       @default(0)
+  score              Int       @default(0)
+  updatedAt          DateTime  @updatedAt
+
+  @@unique([studentId, topicId])
+}
+
+model WrongQuestion {
+  id          String    @id @default(uuid())
+  studentId   String
+  student     Student   @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  questionId  String
+  question    Question  @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  userAnswer  String?   // JSON string storing what they answered
+  isResolved  Boolean   @default(false)
+  createdAt   DateTime  @default(now())
+}
+
+model Reward {
+  id          String    @id @default(uuid())
+  studentId   String
+  student     Student   @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  badgeType   String    // "HARD_WORK", "SUPER_STUDENT"
+  earnedAt    DateTime  @default(now())
+}
