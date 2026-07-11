@@ -69,3 +69,7 @@ Task 16
 chỉnh lại avatar của bé, nén lại dung lượng thấp để hiển thị ở bên trong, tránh bị lỗi hiển thị ảnh
 task 17
 Cập nhật thành tích của từng bé ở trang chủ
+task 18
+Cập nhật thành tích của bé ở trang tổng quan của phụ huynh ngay lập tức
+task 19
+thêm nút chuông ở góc phải trên cùng để báo khi nào bé nào làm xong đề bài, kèm theo thành tích được bao nhiêu điểm, làm trong bao lâu

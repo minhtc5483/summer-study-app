@@ -32,6 +32,7 @@ export default function Quiz() {
   // Timer states
   const [timeLeft, setTimeLeft] = useState<number | null>(null);
   const [isTimeUp, setIsTimeUp] = useState(false);
+  const [timeBonus, setTimeBonus] = useState(0);
 
   // Sound effects
   const playSound = (type: 'correct' | 'wrong' | 'complete') => {
@@ -112,15 +113,22 @@ export default function Quiz() {
     playSound('complete');
     setShowResult(true);
     
+    let bonus = 0;
+    if (timeLeft !== null && timeLeft > 0 && !isTimeUp) {
+      bonus = Math.floor(timeLeft / 10);
+      setTimeBonus(bonus);
+    }
+    const finalScore = score + bonus;
+    
     // Auto-calculate current streak just based on score > 0 for this demo
-    const isPassing = score > 0; // Or some threshold
+    const isPassing = finalScore > 0; // Or some threshold
     const newStreak = isPassing ? (selectedStudent?.currentStreak || 0) + 1 : 0;
     
     if (selectedStudent) {
       // Predict state to make UI snappy
       setSelectedStudent({
         ...selectedStudent,
-        totalScore: selectedStudent.totalScore + score,
+        totalScore: selectedStudent.totalScore + finalScore,
         currentStreak: newStreak
       });
 
@@ -128,7 +136,7 @@ export default function Quiz() {
       try {
         await api.post('/public/submit', {
           studentId: selectedStudent.id,
-          score,
+          score: finalScore,
           streak: newStreak
         });
       } catch (error) {
@@ -324,12 +332,30 @@ export default function Quiz() {
               <h2 className="text-5xl font-extrabold text-slate-800 mb-6">
                 {isTimeUp ? 'Hết Giờ Rồi! ⏰' : 'Xuất Sắc! 🎉'}
               </h2>
-              <p className="text-2xl text-slate-600 font-medium mb-10">
+              <div className="text-xl text-slate-600 font-medium mb-10 flex flex-col items-center">
                 {isTimeUp 
-                  ? <span>Bài làm của con đã được nộp tự động. Con kiếm được <span className="text-yellow-500 font-bold">+{score} điểm</span></span>
-                  : <span>Con đã hoàn thành bài tập và kiếm được <span className="text-yellow-500 font-bold">+{score} điểm</span></span>
+                  ? <p className="mb-4">Bài làm của con đã được nộp tự động.</p>
+                  : <p className="mb-4">Con đã hoàn thành bài tập siêu nhanh!</p>
                 }
-              </p>
+                
+                <div className="bg-white/60 backdrop-blur-md p-6 rounded-3xl inline-block border-2 border-slate-200 shadow-sm text-left min-w-[300px]">
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="text-slate-500">Điểm bài tập:</span>
+                    <span className="text-blue-600 font-extrabold text-2xl">{score}</span>
+                  </div>
+                  {timeBonus > 0 && (
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="text-slate-500">Thưởng tốc độ:</span>
+                      <span className="text-green-500 font-extrabold text-2xl">+{timeBonus}</span>
+                    </div>
+                  )}
+                  <div className="w-full h-px bg-slate-300 my-4"></div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-slate-800 font-bold text-2xl">Tổng điểm:</span>
+                    <span className="text-yellow-500 font-black text-4xl">+{score + timeBonus}</span>
+                  </div>
+                </div>
+              </div>
 
               <button
                 onClick={() => navigate('/kids')}
