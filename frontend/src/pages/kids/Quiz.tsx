@@ -168,7 +168,6 @@ export default function Quiz() {
         let timeSpent = Math.floor((Date.now() - startTime) / 1000);
         await api.post('/public/submit', {
           studentId: selectedStudent.id,
-          topicId: 'exam',
           questionsAttempted: questions.length,
           questionsCorrect: Object.values(correctness).filter(Boolean).length,
           score: finalScore,
