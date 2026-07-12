@@ -126,7 +126,7 @@ export const savePublicProgress = async (req: Request, res: Response) => {
       return res.status(400).json({ error: 'Validation failed', details: parsed.error.issues });
     }
 
-    const { studentId, topicId, questionsAttempted, questionsCorrect, score, wrongQuestions, examId, answers } = parsed.data;
+    const { studentId, topicId, questionsAttempted, questionsCorrect, score, wrongQuestions, examId, answers, timeSpent } = parsed.data;
 
     // Verify student exists (Public version, no parent check)
     const student = await prisma.student.findUnique({ where: { id: studentId } });
