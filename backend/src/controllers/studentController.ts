@@ -2,6 +2,8 @@ import { Request, Response } from 'express';
 import { prisma } from '../index';
 import { AuthRequest } from '../middlewares/auth';
 import { z } from 'zod';
+import sharp from 'sharp';
+import fs from 'fs';
 
 export const getPublicStudents = async (req: Request, res: Response) => {
   try {
@@ -48,7 +50,18 @@ export const createStudent = async (req: AuthRequest, res: Response) => {
     let avatarUrl = null;
 
     if (req.file) {
-      avatarUrl = `/uploads/${req.file.filename}`;
+      if (req.file.mimetype.startsWith('image/')) {
+        const compressedPath = req.file.path + '.webp';
+        await sharp(req.file.path)
+          .resize(300, 300, { fit: 'cover' })
+          .webp({ quality: 75 })
+          .toFile(compressedPath);
+          
+        fs.unlinkSync(req.file.path);
+        avatarUrl = `/uploads/${req.file.filename}.webp`;
+      } else {
+        avatarUrl = `/uploads/${req.file.filename}`;
+      }
     }
 
     let subjectsConnect: { id: string }[] = [];
@@ -93,7 +106,18 @@ export const updateStudent = async (req: AuthRequest, res: Response) => {
     let avatarUrl = undefined;
 
     if (req.file) {
-      avatarUrl = `/uploads/${req.file.filename}`;
+      if (req.file.mimetype.startsWith('image/')) {
+        const compressedPath = req.file.path + '.webp';
+        await sharp(req.file.path)
+          .resize(300, 300, { fit: 'cover' })
+          .webp({ quality: 75 })
+          .toFile(compressedPath);
+          
+        fs.unlinkSync(req.file.path);
+        avatarUrl = `/uploads/${req.file.filename}.webp`;
+      } else {
+        avatarUrl = `/uploads/${req.file.filename}`;
+      }
     }
 
     let subjectsSet: { id: string }[] | undefined = undefined;
