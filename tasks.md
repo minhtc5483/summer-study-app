@@ -83,18 +83,23 @@ task 23
 Đề thi nào đã nộp thì chỉ được xem lại, không được làm lại
 task 24
 Các câu hỏi cần nhập số để trả lời, thì chỉ hiển thị bàn phím số trên điện thoại để nhập nhanh nhất
-task 24
+
+task 25
+Thêm tính năng giao hạn làm để (ngày nào cần hoàn thành)
+
+task 26
 Chỉnh lại giao diện của bé
 - Thêm nút đổi điểm ngay sau điểm thành tích
 - Đưa Góc phần thưởng lên trên (Dưới bảng Xin chào bé, hiển thị toàn bộ cả 10 huy hiệu và chỉ sáng lên các huy hiệu bé đang có, và hiển thị số điểm cần để đạt bên dưới từng huy hiệu tiếp theo
 - Tên môn học chuyển sang slide bên trái
 - Bên phải dùng liệt kê toàn bộ các đề bài, sắp xếp theo thứ tự cần làm gần nhất tới xa nhất, đề đã xong ở dưới
-task 25
-Thêm tính năng giao hạn làm để (ngày nào cần hoàn thành)
-task 26:
-Tính năng tạo đề nhanh bằng AI cho phép thêm thời hạn và lên lịch hàng ngày để AI tự tạo ra đề mới, cho phép chọn chủ đề của môn học để AI tạo đề mới
+
 
 task 27
+Tính năng tạo đề nhanh bằng AI cho phép thêm thời hạn và lên lịch hàng ngày để AI tự tạo ra đề mới, cho phép chọn chủ đề của môn học để AI tạo đề mới
+
+task 28
 Thêm 1 bảng Dashboard hiển thị chi tiết thông tin làm bài của bé: thống kê theo ngày, theo độ khó bài, theo môn học, số câu đúng, sai, thời gian hoàn thành
+
 task 28
 Khi bé đổi điểm lấy thời gian dùng điện thoại, phụ huynh sẽ nhận được thông báo và có 1 bảng tóm tắt lưu lại các lần đổi điểm và thêm nút xác nhận của phụ huynh đã cho phép chơi đủ thời gian
