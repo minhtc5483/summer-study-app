@@ -118,25 +118,37 @@ export const importPDF = async (req: Request, res: Response) => {
     const fileBytes = fs.readFileSync(file.path);
     const base64Data = fileBytes.toString('base64');
 
-    const prompt = `Bạn là một trợ lý giáo dục AI. Hãy đọc nội dung trong hình ảnh hoặc tài liệu PDF được cung cấp (thường là bài tập cho trẻ tiểu học) và trích xuất tất cả các câu hỏi trắc nghiệm ra định dạng JSON.
+    const prompt = `Bạn là một trợ lý giáo dục AI. Hãy đọc nội dung trong hình ảnh hoặc tài liệu PDF được cung cấp (thường là bài tập cho trẻ tiểu học) và trích xuất tất cả các câu hỏi (cả trắc nghiệm và tự luận) ra định dạng JSON.
 
-Yêu cầu định dạng bắt buộc cho output:
+Yêu cầu định dạng bắt buộc cho output là một mảng JSON:
 [
+  // Ví dụ 1: Câu trắc nghiệm
   {
     "type": "MULTIPLE_CHOICE",
     "level": 1,
     "points": 10,
     "content": {
-      "text": "Câu hỏi là gì?",
+      "text": "Câu hỏi trắc nghiệm là gì?",
       "options": ["Đáp án 1", "Đáp án 2", "Đáp án 3", "Đáp án 4"],
       "correct": "Đáp án đúng"
+    }
+  },
+  // Ví dụ 2: Câu tự luận (chỉ cần điền số hoặc chữ ngắn)
+  {
+    "type": "FILL_BLANK",
+    "level": 2,
+    "points": 20,
+    "content": {
+      "text": "Nội dung câu hỏi tự luận/đặt tính rồi tính...",
+      "correct": "Kết quả đúng (chỉ ghi số hoặc đáp án ngắn)"
     }
   }
 ]
 
 Quy tắc:
-1. 'correct' phải khớp hoàn toàn (exact match) với một trong các chuỗi nằm trong mảng 'options'. Không ghi A, B, C, D nếu mảng options chứa giá trị nội dung.
-2. Output CHỈ LÀ MỘT CHUỖI JSON HỢP LỆ, không được có thẻ \`\`\`json ở đầu và \`\`\` ở cuối, không được có bất kỳ bình luận nào.`;
+1. Đối với MULTIPLE_CHOICE, 'correct' phải khớp hoàn toàn (exact match) với một trong các chuỗi nằm trong mảng 'options'. Không ghi A, B, C, D nếu mảng options chứa giá trị nội dung.
+2. Đối với FILL_BLANK (Tự luận), tuyệt đối không trả về trường 'options'. Trường 'correct' chỉ chứa kết quả cuối cùng (ví dụ: "45", "15 cm").
+3. Output CHỈ LÀ MỘT CHUỖI JSON HỢP LỆ, không được có thẻ \`\`\`json ở đầu và \`\`\` ở cuối, không được có bất kỳ bình luận nào.`;
 
     const result = await model.generateContent([
       prompt,
