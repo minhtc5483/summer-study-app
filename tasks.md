@@ -103,3 +103,9 @@ Thêm 1 bảng Dashboard hiển thị chi tiết thông tin làm bài của bé:
 
 task 28
 Khi bé đổi điểm lấy thời gian dùng điện thoại, phụ huynh sẽ nhận được thông báo và có 1 bảng tóm tắt lưu lại các lần đổi điểm và thêm nút xác nhận của phụ huynh đã cho phép chơi đủ thời gian
+
+Task 29
+số điểm bé đạt được, khi click vào sẽ cho phép bé coi lịch sử tích điểm: Ngày giờ hoàn thành bài, đề bài, số điểm, số câu đúng/tổng số câu
+
+Task 30
+Thay đổi biểu tượng môn học - tìm kiếm trên internet
