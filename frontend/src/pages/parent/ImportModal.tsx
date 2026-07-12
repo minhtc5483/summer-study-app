@@ -70,8 +70,8 @@ export default function ImportModal({ isOpen, onClose, topicId, topicName, onSuc
 
             return {
               type: 'MULTIPLE_CHOICE',
-              level: parseInt(row.DoKho || '1'),
-              points: parseInt(row.Diem || '10'),
+              level: isNaN(parseInt(row.DoKho)) ? 1 : parseInt(row.DoKho),
+              points: isNaN(parseInt(row.Diem)) ? 10 : parseInt(row.Diem),
               content: {
                 text: row.CauHoi.toString(),
                 options: options,
@@ -84,7 +84,7 @@ export default function ImportModal({ isOpen, onClose, topicId, topicName, onSuc
           setSuccessCount(res.data.count);
           onSuccess(res.data.count);
         } catch (err: any) {
-          setError(err.message || 'Có lỗi xảy ra khi xử lý file');
+          setError(err.response?.data?.error ? `${err.response.data.error}: ${JSON.stringify(err.response.data.details || '')}` : (err.message || 'Có lỗi xảy ra khi xử lý file'));
         } finally {
           setLoading(false);
         }
