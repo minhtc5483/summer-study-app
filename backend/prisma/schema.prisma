@@ -14,6 +14,7 @@ model Parent {
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
   students     Student[]
+  notifications Notification[]
 }
 
 model Student {
@@ -128,4 +129,14 @@ model Reward {
 model Grade {
   id    String @id @default(uuid())
   name  String @unique
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  parentId  String
+  parent    Parent   @relation(fields: [parentId], references: [id], onDelete: Cascade)
+  title     String
+  message   String
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
 }

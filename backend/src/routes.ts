@@ -30,6 +30,11 @@ import { saveProgress, savePublicProgress } from './controllers/progressControll
 import { getStatistics } from './controllers/statisticsController';
 import { exportData } from './controllers/dataController';
 import { getRewards, exchangePoints } from './controllers/rewardController';
+import { getNotifications, markAsRead } from './controllers/notificationController';
+
+// Notifications
+router.get('/notifications', authenticate, getNotifications);
+router.put('/notifications/:id/read', authenticate, markAsRead);
 
 // Grade routes
 router.get('/grades', authenticate, getGrades);
@@ -44,12 +49,13 @@ router.delete('/subjects/:id', authenticate, deleteSubject);
 router.get('/topics', authenticate, getTopics);
 router.post('/topics', authenticate, createTopic);
 
-import { getExams, getExamById, createExam, updateExam, deleteExam } from './controllers/examController';
+import { getExams, getExamById, createExam, updateExam, deleteExam, quickCreateExam } from './controllers/examController';
 
 // Exam & Question routes
 router.get('/exams', authenticate, getExams);
 router.get('/exams/:id', authenticate, getExamById);
 router.post('/exams', authenticate, createExam);
+router.post('/exams/quick-create', authenticate, quickCreateExam);
 router.put('/exams/:id', authenticate, updateExam);
 router.delete('/exams/:id', authenticate, deleteExam);
 router.get('/questions', authenticate, getQuestions);

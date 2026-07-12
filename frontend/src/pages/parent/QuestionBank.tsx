@@ -3,6 +3,8 @@ import { api } from '../../lib/api';
 import { Folder, Upload, Plus, BookOpen, Trash2, Users } from 'lucide-react';
 import ImportModal from './ImportModal';
 import CreateExamModal from './CreateExamModal';
+import QuickCreateExamModal from './QuickCreateExamModal';
+import { Bot } from 'lucide-react';
 
 interface Subject {
   id: string;
@@ -44,6 +46,7 @@ export default function QuestionBank() {
   // Modals
   const [importModalTopic, setImportModalTopic] = useState<Topic | null>(null);
   const [createExamTopic, setCreateExamTopic] = useState<Topic | null>(null);
+  const [isQuickCreateOpen, setIsQuickCreateOpen] = useState(false);
 
   useEffect(() => {
     fetchData();
@@ -135,12 +138,20 @@ export default function QuestionBank() {
               <Folder className="text-primary" /> 
               Chủ đề môn {selectedSubject?.name}
             </h2>
-            <button 
-              onClick={() => setIsCreatingTopic(true)}
-              className="px-4 py-2 bg-slate-100 text-slate-700 hover:bg-slate-200 rounded-xl font-medium flex items-center gap-2 transition-colors"
-            >
-              <Plus size={18} /> Thêm Chủ Đề
-            </button>
+            <div className="flex gap-2">
+              <button 
+                onClick={() => setIsQuickCreateOpen(true)}
+                className="px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl font-bold flex items-center gap-2 hover:opacity-90 transition-opacity shadow-md"
+              >
+                <Bot size={18} /> Tạo Nhanh (AI)
+              </button>
+              <button 
+                onClick={() => setIsCreatingTopic(true)}
+                className="px-4 py-2 bg-slate-100 text-slate-700 hover:bg-slate-200 rounded-xl font-medium flex items-center gap-2 transition-colors"
+              >
+                <Plus size={18} /> Thêm Chủ Đề
+              </button>
+            </div>
           </div>
 
           {isCreatingTopic && (
@@ -288,6 +299,19 @@ export default function QuestionBank() {
           alert('Tạo đề thi thành công! Bé đã có thể làm đề này.');
         }}
       />
+
+      {selectedSubject && (
+        <QuickCreateExamModal
+          isOpen={isQuickCreateOpen}
+          onClose={() => setIsQuickCreateOpen(false)}
+          subjectId={selectedSubject.id}
+          subjectName={selectedSubject.name}
+          onSuccess={() => {
+            fetchData();
+            alert('AI đã tạo đề bài thành công!');
+          }}
+        />
+      )}
     </div>
   );
 }

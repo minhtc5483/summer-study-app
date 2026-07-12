@@ -173,6 +173,17 @@ export const savePublicProgress = async (req: Request, res: Response) => {
       await prisma.wrongQuestion.createMany({ data: wrongData });
     }
 
+    // 4. Create Notification for Parent
+    const minToMS = 60000;
+    // We assume the user finished recently. If we tracked exact time we could say "in X mins".
+    await prisma.notification.create({
+      data: {
+        parentId: student.parentId,
+        title: `🎉 ${student.name} vừa nộp bài!`,
+        message: `Bé đạt được ${score} điểm với ${questionsCorrect}/${questionsAttempted} câu đúng.`,
+      }
+    });
+
     res.json({ message: 'Progress saved successfully', newStreak });
   } catch (error) {
     res.status(500).json({ error: 'Server error' });
