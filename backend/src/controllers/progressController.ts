@@ -16,7 +16,7 @@ const progressSchema = z.object({
   score: z.number().int().min(0),
   wrongQuestions: z.array(wrongQuestionSchema).optional(),
   examId: z.string().optional(),
-  answers: z.record(z.string()).optional() // e.g. { "0": "Option A", "1": "Option B" }
+  answers: z.record(z.string(), z.string()).optional() // e.g. { "0": "Option A", "1": "Option B" }
 });
 
 export const saveProgress = async (req: AuthRequest, res: Response) => {

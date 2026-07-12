@@ -98,6 +98,7 @@ export const getExams = async (req: Request, res: Response) => {
 export const getExamById = async (req: Request, res: Response) => {
   try {
     const id = req.params.id as string;
+    const studentId = req.query.studentId as string | undefined;
 
     const exam = await prisma.exam.findUnique({
       where: { id },
@@ -115,10 +116,19 @@ export const getExamById = async (req: Request, res: Response) => {
       return res.status(404).json({ error: 'Exam not found' });
     }
 
+    // Fetch exam result if studentId provided
+    let examResult = null;
+    if (studentId) {
+      examResult = await prisma.examResult.findUnique({
+        where: { studentId_examId: { studentId, examId: id } }
+      });
+    }
+
     // Transform response so the frontend gets an array of questions easily
     const transformed = {
       ...exam,
-      questionsList: exam.questions.map((eq: any) => eq.question)
+      questionsList: exam.questions.map((eq: any) => eq.question),
+      examResult
     };
 
     res.json(transformed);

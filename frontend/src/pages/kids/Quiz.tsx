@@ -53,7 +53,7 @@ export default function Quiz() {
     }
     
     setLoading(true);
-    api.get(`/public/exams/${examId}`)
+    api.get(`/public/exams/${examId}?studentId=${selectedStudent.id}`)
       .then(res => {
         setExamName(res.data.name);
         const mapped = res.data.questionsList.map((q: Question) => {
@@ -72,13 +72,28 @@ export default function Quiz() {
         });
         setQuestions(mapped);
         
+        if (isReview && res.data.examResult?.answers) {
+          try {
+            const savedAnswers = JSON.parse(res.data.examResult.answers);
+            setAnswers(savedAnswers);
+            const newCorrectness: Record<number, boolean> = {};
+            Object.keys(savedAnswers).forEach(idxStr => {
+              const idx = parseInt(idxStr);
+              if (mapped[idx]) {
+                newCorrectness[idx] = savedAnswers[idxStr] === mapped[idx].correct;
+              }
+            });
+            setCorrectness(newCorrectness);
+          } catch(e) {}
+        }
+
         if (res.data.timeLimit && res.data.timeLimit > 0) {
           setTimeLeft(res.data.timeLimit * 60);
         }
       })
       .catch(console.error)
       .finally(() => setLoading(false));
-  }, [examId, selectedStudent, navigate]);
+  }, [examId, selectedStudent, navigate, isReview]);
 
   const handleAnswer = (answer: string) => {
     if (isReview) return;
@@ -157,7 +172,8 @@ export default function Quiz() {
           questionsCorrect: correctCount,
           score: finalScore,
           streak: newStreak,
-          examId: examId
+          examId: examId,
+          answers: answers
         });
       } catch (error) {
         console.error('Failed to save progress', error);
@@ -466,7 +482,9 @@ export default function Quiz() {
                 let bg = 'bg-slate-100 text-slate-500 border-slate-200';
                 
                 if (isReview) {
-                  bg = 'bg-green-100 text-green-600 border-green-500 opacity-60'; // Highlight all as viewed
+                  if (correctness[idx] === true) bg = 'bg-green-100 text-green-600 border-green-500';
+                  else if (correctness[idx] === false) bg = 'bg-red-100 text-red-600 border-red-500';
+                  else bg = 'bg-slate-100 text-slate-500 border-slate-200 opacity-60'; // Not answered
                 } else if (correctness[idx] === true) {
                   bg = 'bg-green-100 text-green-600 border-green-500';
                 } else if (correctness[idx] === false) {
