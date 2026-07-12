@@ -34,10 +34,28 @@ export const saveProgress = async (req: AuthRequest, res: Response) => {
       return res.status(403).json({ error: 'Unauthorized access to student' });
     }
 
+    // Resolve topicId
+    let actualTopicId = topicId;
+    if (!actualTopicId) {
+      const fallbackTopic = await prisma.topic.upsert({
+        where: { id: 'default-topic-for-exam' },
+        update: {},
+        create: {
+          id: 'default-topic-for-exam',
+          name: 'Bài tập tổng hợp',
+          grade: '1',
+          subject: {
+            create: { name: 'Khác' }
+          }
+        }
+      });
+      actualTopicId = fallbackTopic.id;
+    }
+
     // 1. Update Student Progress
     await prisma.studentProgress.upsert({
       where: {
-        studentId_topicId: { studentId, topicId: topicId || 'default-topic-for-exam' }
+        studentId_topicId: { studentId, topicId: actualTopicId }
       },
       update: {
         questionsAttempted: { increment: questionsAttempted },
@@ -46,7 +64,7 @@ export const saveProgress = async (req: AuthRequest, res: Response) => {
       },
       create: {
         studentId,
-        topicId: topicId || 'default-topic-for-exam',
+        topicId: actualTopicId,
         questionsAttempted,
         questionsCorrect,
         score
@@ -115,10 +133,36 @@ export const savePublicProgress = async (req: Request, res: Response) => {
       return res.status(404).json({ error: 'Student not found' });
     }
 
+    // Resolve topicId from examId if not provided
+    let actualTopicId = topicId;
+    if (!actualTopicId && examId) {
+      const exam = await prisma.exam.findUnique({ where: { id: examId } });
+      if (exam) {
+        actualTopicId = exam.topicId;
+      }
+    }
+
+    if (!actualTopicId) {
+      // Create a fallback topic if it doesn't exist
+      const fallbackTopic = await prisma.topic.upsert({
+        where: { id: 'default-topic-for-exam' },
+        update: {},
+        create: {
+          id: 'default-topic-for-exam',
+          name: 'Bài tập tổng hợp',
+          grade: '1',
+          subject: {
+            create: { name: 'Khác' }
+          }
+        }
+      });
+      actualTopicId = fallbackTopic.id;
+    }
+
     // 1. Update Student Progress
     await prisma.studentProgress.upsert({
       where: {
-        studentId_topicId: { studentId, topicId: topicId || 'default-topic-for-exam' } // Use default if topicId not provided
+        studentId_topicId: { studentId, topicId: actualTopicId }
       },
       update: {
         questionsAttempted: { increment: questionsAttempted },
@@ -127,7 +171,7 @@ export const savePublicProgress = async (req: Request, res: Response) => {
       },
       create: {
         studentId,
-        topicId: topicId || 'default-topic-for-exam',
+        topicId: actualTopicId,
         questionsAttempted,
         questionsCorrect,
         score
