@@ -12,6 +12,7 @@ interface Exam {
     name: string;
   };
   timeLimit: number | null;
+  dueDate: string | null;
   _count: {
     questions: number;
   };
@@ -73,6 +74,17 @@ export default function SubjectExams() {
               // Phân loại đề
               const pendingExams = exams.filter(e => !e.examResults || e.examResults.length === 0);
               const completedExams = exams.filter(e => e.examResults && e.examResults.length > 0);
+              
+              // Sắp xếp pendingExams: có hạn chót lên đầu (gần nhất -> xa nhất), không có hạn chót xuống dưới
+              pendingExams.sort((a, b) => {
+                if (a.dueDate && b.dueDate) {
+                  return new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime();
+                }
+                if (a.dueDate) return -1;
+                if (b.dueDate) return 1;
+                return 0;
+              });
+
               const sortedExams = [...pendingExams, ...completedExams];
 
               return sortedExams.map((exam, index) => {
@@ -100,8 +112,13 @@ export default function SubjectExams() {
                           Chủ đề: {exam.topic.name}
                         </span>
                         {exam.timeLimit && (
-                          <span className="inline-block px-3 py-1 bg-white/20 rounded-lg text-sm font-semibold mb-3 backdrop-blur-sm">
+                          <span className="inline-block px-3 py-1 bg-white/20 rounded-lg text-sm font-semibold mb-3 backdrop-blur-sm mr-2">
                             ⏱ {exam.timeLimit} phút
+                          </span>
+                        )}
+                        {exam.dueDate && !isCompleted && (
+                          <span className="inline-block px-3 py-1 bg-red-500/80 rounded-lg text-sm font-semibold mb-3 backdrop-blur-sm text-white">
+                            ⏰ Hạn: {new Date(exam.dueDate).toLocaleDateString('vi-VN')}
                           </span>
                         )}
                         <h3 className="text-2xl font-bold mb-2">{exam.name}</h3>

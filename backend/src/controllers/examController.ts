@@ -10,7 +10,8 @@ const createExamSchema = z.object({
   name: z.string(),
   questionIds: z.array(z.string()).min(1),
   studentIds: z.array(z.string()).optional(),
-  timeLimit: z.number().int().min(1).optional().nullable()
+  timeLimit: z.number().int().min(1).optional().nullable(),
+  dueDate: z.string().optional().nullable()
 });
 
 export const createExam = async (req: AuthRequest, res: Response) => {
@@ -20,7 +21,7 @@ export const createExam = async (req: AuthRequest, res: Response) => {
       return res.status(400).json({ error: 'Validation failed', details: parsed.error.issues });
     }
 
-    const { topicId, name, questionIds, studentIds, timeLimit } = parsed.data;
+    const { topicId, name, questionIds, studentIds, timeLimit, dueDate } = parsed.data;
 
     let studentsConnect: any = undefined;
     if (studentIds && studentIds.length > 0) {
@@ -34,6 +35,7 @@ export const createExam = async (req: AuthRequest, res: Response) => {
         topicId,
         name,
         timeLimit,
+        dueDate: dueDate ? new Date(dueDate) : null,
         questions: {
           create: questionIds.map(qId => ({ questionId: qId }))
         },
@@ -187,7 +189,8 @@ const quickCreateSchema = z.object({
   subjectId: z.string(),
   studentIds: z.array(z.string()),
   numberOfQuestions: z.number().int().min(1).max(50),
-  timeLimit: z.number().int().min(1).optional()
+  timeLimit: z.number().int().min(1).optional(),
+  dueDate: z.string().optional().nullable()
 });
 
 export const quickCreateExam = async (req: AuthRequest, res: Response) => {
@@ -197,7 +200,7 @@ export const quickCreateExam = async (req: AuthRequest, res: Response) => {
       return res.status(400).json({ error: 'Validation failed', details: parsed.error.issues });
     }
 
-    const { subjectId, studentIds, numberOfQuestions, timeLimit } = parsed.data;
+    const { subjectId, studentIds, numberOfQuestions, timeLimit, dueDate } = parsed.data;
 
     // Lấy tất cả câu hỏi thuộc môn học này
     const topics = await prisma.topic.findMany({
@@ -267,6 +270,7 @@ Ví dụ: ["id1", "id2", "id3"]`;
         topicId: finalTopicId,
         name: `Đề Thi Nhanh AI - ${new Date().toLocaleDateString('vi-VN')}`,
         timeLimit: timeLimit || 15,
+        dueDate: dueDate ? new Date(dueDate) : null,
         questions: {
           create: selectedIds.map(qId => ({ questionId: qId }))
         },

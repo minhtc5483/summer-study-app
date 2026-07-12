@@ -29,6 +29,7 @@ export default function CreateExamModal({ isOpen, onClose, topicId, topicName, o
   const [questions, setQuestions] = useState<Question[]>([]);
   const [students, setStudents] = useState<Student[]>([]);
   const [timeLimit, setTimeLimit] = useState<number | null>(null);
+  const [dueDate, setDueDate] = useState<string>('');
   
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [selectedStudentIds, setSelectedStudentIds] = useState<Set<string>>(new Set());
@@ -48,6 +49,8 @@ export default function CreateExamModal({ isOpen, onClose, topicId, topicName, o
           setSelectedIds(new Set());
           setSelectedStudentIds(new Set());
           setExamName('');
+          setTimeLimit(null);
+          setDueDate('');
         })
         .catch(console.error)
         .finally(() => setFetching(false));
@@ -93,7 +96,8 @@ export default function CreateExamModal({ isOpen, onClose, topicId, topicName, o
         name: examName,
         questionIds: Array.from(selectedIds),
         studentIds: Array.from(selectedStudentIds),
-        timeLimit: timeLimit
+        timeLimit: timeLimit,
+        dueDate: dueDate || null
       });
       onSuccess();
       onClose();
@@ -145,6 +149,16 @@ export default function CreateExamModal({ isOpen, onClose, topicId, topicName, o
                 <option value="15">15 phút</option>
                 <option value="30">30 phút</option>
               </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-2">Hạn chót (Tùy chọn)</label>
+              <input
+                type="date"
+                value={dueDate}
+                onChange={e => setDueDate(e.target.value)}
+                className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-primary shadow-sm bg-white"
+              />
             </div>
 
             <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200">

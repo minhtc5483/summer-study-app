@@ -79,6 +79,7 @@ model Exam {
   topic       Topic     @relation(fields: [topicId], references: [id], onDelete: Cascade)
   name        String
   timeLimit   Int?      // time limit in minutes
+  dueDate     DateTime? // deadline for the exam
   createdAt   DateTime  @default(now())
 
   questions   ExamQuestion[]

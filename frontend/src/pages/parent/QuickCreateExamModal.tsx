@@ -15,6 +15,7 @@ export default function QuickCreateExamModal({ isOpen, onClose, subjectId, subje
   const [selectedStudents, setSelectedStudents] = useState<string[]>([]);
   const [numberOfQuestions, setNumberOfQuestions] = useState(10);
   const [timeLimit, setTimeLimit] = useState(15);
+  const [dueDate, setDueDate] = useState<string>('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -24,6 +25,7 @@ export default function QuickCreateExamModal({ isOpen, onClose, subjectId, subje
       setSelectedStudents([]);
       setNumberOfQuestions(10);
       setTimeLimit(15);
+      setDueDate('');
       setError('');
     }
   }, [isOpen]);
@@ -47,7 +49,8 @@ export default function QuickCreateExamModal({ isOpen, onClose, subjectId, subje
         subjectId,
         studentIds: selectedStudents,
         numberOfQuestions,
-        timeLimit
+        timeLimit,
+        dueDate: dueDate || null
       });
       onSuccess();
       onClose();
@@ -107,6 +110,17 @@ export default function QuickCreateExamModal({ isOpen, onClose, subjectId, subje
                 />
               </div>
             </div>
+            
+            <div className="mt-4">
+              <label className="block text-xs font-medium text-slate-500 mb-1">Hạn chót (Tùy chọn)</label>
+              <input 
+                type="date" 
+                value={dueDate}
+                onChange={e => setDueDate(e.target.value)}
+                className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-primary font-bold text-slate-700 bg-white"
+              />
+            </div>
+
             <p className="text-xs text-slate-400 mt-2 italic">
               AI sẽ tự động chọn lọc các câu hỏi phù hợp và cân bằng nhất từ các chủ đề.
             </p>

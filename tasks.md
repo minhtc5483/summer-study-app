@@ -93,3 +93,6 @@ task 25
 Thêm tính năng giao hạn làm để (ngày nào cần hoàn thành)
 task 26:
 Tính năng tạo đề nhanh bằng AI cho phép thêm thời hạn và lên lịch hàng ngày để AI tự tạo ra đề mới, cho phép chọn chủ đề của môn học để AI tạo đề mới
+
+task 27
+Thêm 1 bảng Dashboard hiển thị chi tiết thông tin làm bài của bé: thống kê theo ngày, theo độ khó bài, theo môn học, số câu đúng, sai, thời gian hoàn thành
