@@ -19,7 +19,7 @@ const COLORS = [
 
 export const BADGES: any[] = [];
 let currentScore = 100;
-for (let i = 1; i <= 100; i++) {
+for (let i = 1; i <= 40; i++) {
   BADGES.push({
     id: `score_lv${i}`,
     name: `Hạng ${i}`,
