@@ -148,6 +148,7 @@ model ExamResult {
   studentId  String
   examId     String
   score      Int
+  answers    String?  // JSON string storing the dictionary of answers
   createdAt  DateTime @default(now())
 
   student    Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)

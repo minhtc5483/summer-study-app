@@ -15,7 +15,8 @@ const progressSchema = z.object({
   questionsCorrect: z.number().int().min(0).optional().default(0),
   score: z.number().int().min(0),
   wrongQuestions: z.array(wrongQuestionSchema).optional(),
-  examId: z.string().optional()
+  examId: z.string().optional(),
+  answers: z.record(z.string()).optional() // e.g. { "0": "Option A", "1": "Option B" }
 });
 
 export const saveProgress = async (req: AuthRequest, res: Response) => {
@@ -106,7 +107,7 @@ export const savePublicProgress = async (req: Request, res: Response) => {
       return res.status(400).json({ error: 'Validation failed', details: parsed.error.issues });
     }
 
-    const { studentId, topicId, questionsAttempted, questionsCorrect, score, wrongQuestions, examId } = parsed.data;
+    const { studentId, topicId, questionsAttempted, questionsCorrect, score, wrongQuestions, examId, answers } = parsed.data;
 
     // Verify student exists (Public version, no parent check)
     const student = await prisma.student.findUnique({ where: { id: studentId } });
@@ -184,12 +185,14 @@ export const savePublicProgress = async (req: Request, res: Response) => {
           }
         },
         update: {
-          score: Math.max(score, 0) // Cập nhật điểm cao nhất nếu cần, hoặc ghi đè
+          score: Math.max(score, 0), // Cập nhật điểm cao nhất nếu cần, hoặc ghi đè
+          answers: answers ? JSON.stringify(answers) : undefined
         },
         create: {
           studentId,
           examId,
-          score
+          score,
+          answers: answers ? JSON.stringify(answers) : null
         }
       });
     }
