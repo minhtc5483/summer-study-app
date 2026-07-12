@@ -28,10 +28,11 @@ export default function Overview() {
     let isMounted = true;
     const fetchStats = async () => {
       try {
+        const timestamp = Date.now();
         const [statRes, scheduleRes, exchangeRes] = await Promise.all([
-          api.get('/statistics'),
-          api.get('/exams/ai-schedules'),
-          api.get('/point-exchanges')
+          api.get(`/statistics?_t=${timestamp}`),
+          api.get(`/exams/ai-schedules?_t=${timestamp}`),
+          api.get(`/point-exchanges?_t=${timestamp}`)
         ]);
         if (isMounted) {
           setStats(statRes.data);

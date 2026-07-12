@@ -18,7 +18,7 @@ export default function Home() {
     let isMounted = true;
     
     const fetchStudents = () => {
-      api.get('/public/students')
+      api.get(`/public/students?_t=${Date.now()}`)
         .then(res => {
           if (isMounted) {
             setStudents(res.data);
