@@ -10,7 +10,8 @@ export async function generateAiExam(
   timeLimit?: number | null, 
   dueDate?: Date | null,
   targetTopicId?: string | null,
-  useInternetSearch?: boolean
+  useInternetSearch?: boolean,
+  difficulty?: number
 ) {
   // Lấy tất cả câu hỏi thuộc môn học (hoặc cụ thể một topic)
   let filter: any = { subjectId };
@@ -45,12 +46,13 @@ export async function generateAiExam(
         const subject = await prisma.subject.findUnique({ where: { id: subjectId } });
         const topicName = targetTopicId ? topics.find(t => t.id === targetTopicId)?.name : 'tổng hợp';
         
+        const diffString = difficulty === 3 ? "Khó" : difficulty === 2 ? "Trung bình" : "Dễ";
         const prompt = `Bạn là một chuyên gia giáo dục. Hãy tìm kiếm trên internet các dạng bài tập mới nhất, chuẩn nhất theo sách giáo khoa để tạo ra ${numberOfQuestions} câu hỏi trắc nghiệm môn ${subject?.name}, chủ đề ${topicName}.
-        Yêu cầu đa dạng mức độ (Dễ, Trung bình, Khó).
+        Yêu cầu mức độ: ${difficulty ? diffString : 'Đa dạng mức độ (Dễ, Trung bình, Khó)'}.
         Trả về DUY NHẤT một mảng JSON các object câu hỏi theo định dạng:
         [{
           "content": "Nội dung câu hỏi",
-          "level": "EASY" | "MEDIUM" | "HARD",
+          "level": ${difficulty ? difficulty : '1, 2 hoặc 3'},
           "type": "MULTIPLE_CHOICE",
           "options": [{"text": "Đáp án A", "isCorrect": true}, {"text": "Đáp án B", "isCorrect": false}]
         }]`;
@@ -80,7 +82,13 @@ export async function generateAiExam(
         }
         selectedIds = savedQuestions;
       } else {
-        const questionInfo = allQuestions.map((q, idx) => `[${idx}] ID: ${q.id} | Chủ đề: ${q.topicName} | Mức độ: ${q.level}`).join('\n');
+        const filteredQuestions = difficulty ? allQuestions.filter(q => q.level === difficulty) : allQuestions;
+        if (filteredQuestions.length < numberOfQuestions) {
+           console.warn("Không đủ câu hỏi ở độ khó này, dùng toàn bộ kho câu hỏi");
+        }
+        const pool = filteredQuestions.length >= numberOfQuestions ? filteredQuestions : allQuestions;
+        
+        const questionInfo = pool.map((q, idx) => `[${idx}] ID: ${q.id} | Chủ đề: ${q.topicName} | Mức độ: ${q.level}`).join('\n');
         
         const prompt = `Bạn là một chuyên gia giáo dục AI. Hãy chọn ra đúng ${numberOfQuestions} câu hỏi từ danh sách dưới đây để tạo thành một đề thi cân bằng, đa dạng chủ đề và độ khó phù hợp.
         
@@ -105,7 +113,9 @@ export async function generateAiExam(
 
   // Nếu Gemini lỗi hoặc không đủ câu do hallucination, fallback về random
   if (!useInternetSearch && selectedIds.length < numberOfQuestions) {
-    const shuffled = [...allQuestions].sort(() => 0.5 - Math.random());
+    const pool = difficulty ? allQuestions.filter(q => q.level === difficulty) : allQuestions;
+    const fallbackPool = pool.length >= numberOfQuestions ? pool : allQuestions;
+    const shuffled = [...fallbackPool].sort(() => 0.5 - Math.random());
     selectedIds = shuffled.slice(0, numberOfQuestions).map(q => q.id);
   }
 

@@ -142,6 +142,29 @@ export const getStudentDetailedStats = async (req: AuthRequest, res: Response) =
       { name: 'Sai', value: totalAttempted - totalCorrect, fill: '#f87171' }
     ];
 
+    // Chart 4: Thống kê lỗi sai theo độ khó
+    const difficultyStats: Record<number, number> = { 1: 0, 2: 0, 3: 0 };
+    s.wrongAnswers.forEach((wa: any) => {
+      const level = wa.question?.level || 1;
+      difficultyStats[level] = (difficultyStats[level] || 0) + 1;
+    });
+    const difficultyData = [
+      { name: 'Dễ', value: difficultyStats[1], fill: '#60a5fa' },
+      { name: 'Trung bình', value: difficultyStats[2], fill: '#fbbf24' },
+      { name: 'Khó', value: difficultyStats[3], fill: '#f87171' }
+    ];
+
+    // Thời gian trung bình
+    let totalTimeSpent = 0;
+    let examsWithTime = 0;
+    s.examResults.forEach((er: any) => {
+      if (typeof er.timeSpent === 'number') {
+        totalTimeSpent += er.timeSpent;
+        examsWithTime++;
+      }
+    });
+    const avgTimeSpent = examsWithTime > 0 ? Math.round(totalTimeSpent / examsWithTime) : 0;
+
     res.json({
       student: {
         id: student.id,
@@ -153,11 +176,13 @@ export const getStudentDetailedStats = async (req: AuthRequest, res: Response) =
       timelineData,
       subjectData,
       accuracyData,
+      difficultyData,
       summary: {
         totalExams: s.examResults.length,
         totalQuestions: totalAttempted,
         avgAccuracy: totalAttempted > 0 ? Math.round((totalCorrect / totalAttempted) * 100) : 0,
-        wrongCount: s.wrongAnswers.length
+        wrongCount: s.wrongAnswers.length,
+        avgTimeSpent
       }
     });
 

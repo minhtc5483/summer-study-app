@@ -1,129 +1,124 @@
-Task 1
+Quy tắc thực hiện
 
-Tạo giao diện Login.
+Chỉ thực hiện 01 task tại một thời điểm.
 
-Task 2
+Không tự ý thay đổi chức năng khác ngoài task được giao.
 
-Tạo Dashboard.
+Sau khi hoàn thành mỗi task bắt buộc phải:
+Build project.
+Chạy ứng dụng.
+Kiểm tra chức năng vừa sửa.
+Kiểm tra không làm hỏng chức năng cũ (Regression Test).
+Chỉ chuyển sang task tiếp theo khi toàn bộ kiểm thử thành công.
 
-Task 3
+EPIC 1 - Hệ thống cơ bản
 
-Tạo Student.
+T1. Xây dựng giao diện đăng nhập.
+T2. Dashboard học sinh.
+T3. Quản lý hồ sơ học sinh.
+T4. Danh sách môn học.
+T5. Màn hình làm bài.
+T6. Màn hình kết quả.
+T7. Dashboard phụ huynh.
+T8. Import đề từ Excel.
+T9. Import đề từ PDF.
+T10. Trang thống kê.
 
-Task 4
+EPIC 2 - Quản lý bài tập
 
-Tạo danh sách môn học.
+T11. Sửa lỗi giao bài, học sinh phải nhìn thấy bài ngay sau khi được giao.
+T12. Đề đã hoàn thành:
+Hiển thị màu khác.
+Hiển thị điểm đạt.
+Đưa xuống cuối danh sách.
+Ưu tiên đề chưa làm.
+T13. Sau khi nộp bài:
+Chỉ được xem lại.
+Không được làm lại.
+T14. Cho phép chỉnh sửa đề đã tạo.
+T15. Tự động nộp bài khi đã trả lời hết.
+T16. Thêm hạn hoàn thành cho đề.
+EPIC 3 - Giao diện làm bài
+T17. Đồng hồ đếm ngược với thanh tiến trình.
+T18. Danh sách số câu hỏi:
+Không dùng thanh cuộn.
+Đã làm và chưa làm có màu khác.
+T19. Câu nhập số:
+Điện thoại chỉ hiện bàn phím số.
 
-Task 5
+EPIC 4 - AI tạo đề
 
-Tạo màn hình làm bài.
+T20. Tạo đề nhanh bằng AI:
+Chọn môn.
+Chọn học sinh.
+Số câu.
+Thời gian.
+AI lấy câu hỏi ngẫu nhiên.
+T21. AI tạo đề theo:
+Chủ đề.
+Độ khó.
+Hạn làm bài.
+T22. AI tự tạo đề theo lịch hàng ngày.
+T23. AI có thể tìm câu hỏi trên Internet và tạo đề bám sát chương trình học.
 
-Task 6
+EPIC 5 - Hệ thống điểm thưởng
 
-Tạo màn hình kết quả.
+T24. Thiết kế lại hệ thống huy hiệu:
+40 cấp.
 
-Task 7
+Hiển thị tiến trình.
+Định dạng điểm #,##0.
+T25. Thưởng thêm điểm khi hoàn thành bài trước thời gian.
+T26. Đổi điểm lấy thời gian sử dụng điện thoại.
+T27. Phụ huynh xác nhận đổi thưởng và lưu lịch sử đổi điểm.
 
-Tạo Parent Dashboard.
+EPIC 6 - Thành tích & Thống kê
 
-Task 8
+T28. Cập nhật thành tích học sinh theo thời gian thực.
+T29. Dashboard phụ huynh cập nhật tức thì.
+T30. Trang lịch sử tích điểm:
+Ngày giờ.
+Đề bài.
+Điểm.
+Số câu đúng.
+Thời gian làm.
+T31. Dashboard thống kê:
+Theo ngày.
+Theo môn.
+Theo độ khó.
+Đúng/Sai.
+Thời gian hoàn thành.
 
-Import Excel.
+EPIC 7 - Thông báo
 
-Task 9
+T32. Thêm Notification Center.
 
-Import PDF.
+Thông báo khi học sinh:
 
-Task 10
+Hoàn thành bài.
+Đạt điểm.
+Thời gian làm.
+Đổi thưởng.
 
-Statistics.
+EPIC 8 - Cải tiến giao diện
 
-Task 11
+T33. Tối ưu avatar học sinh.
+T34. Thiết kế lại giao diện học sinh:
+Góc phần thưởng.
+Nút đổi điểm.
+Danh sách môn học dạng slide.
+Danh sách đề theo hạn hoàn thành.
+T35. Hiển thị toàn bộ đề của tất cả môn học, lọc theo môn.
+T36. Thay đổi icon môn học bằng bộ icon phù hợp.
+Quy tắc hoàn thành
 
-Tạo Reward Page
+Một task chỉ được đánh dấu hoàn thành khi:
 
-Sau khi hoàn thành
-
-Bắt buộc
-
-- Build
-
-- Run
-
-- Test
-
-- Verify
-
-mới được chuyển sang task tiếp theo.
-Task 12
-Tính năng giao bài chưa hoạt động, bé chưa thấy bài sau khi giao
-Task 13
-Thêm đồng hồ đếm ngược thời gian cho từng đề bài (thiết kế thanh thời gian đồng hồ đếm ngược)
-Task 14
-Xây dựng lại huy hiệu 10 mức và chỉ tiết tiêu chí xếp hạng
-Thêm phần thưởng khi làm đề xong nhanh trước thời hạn
-Task 15
-Thêm tính năng đổi điểm thưởng lấy thời gian sử dụng điện thoại, ví dụ: 1000 điểm được 1 giờ sử dụng
-Thêm thành số câu hỏi để bé có thể chọn các câu muốn làm trước bất kì (câu nào đã làm xong thì 1 màu, câu nào chưa làm thì 1 màu)
-Task 16
-chỉnh lại avatar của bé, nén lại dung lượng thấp để hiển thị ở bên trong, tránh bị lỗi hiển thị ảnh
-task 17
-Cập nhật thành tích của từng bé ở trang chủ
-task 18
-Cập nhật thành tích của bé ở trang tổng quan của phụ huynh ngay lập tức
-task 19
-thêm nút chuông ở góc phải trên cùng để báo khi nào bé nào làm xong đề bài, kèm theo thành tích được bao nhiêu điểm, làm trong bao lâu
-Task 20
-Thêm nút cho phép tạo đề nhanh: chỉ cần chọn môn học, chọn bé, số lượng câu hỏi, thời gian, số lượng câu hỏi, còn lại Gemini sẽ tự động lấy câu hỏi ngẫu nhiên từ kho bài tập của môn học đó
-task 21
-Đề bái nào đã làm xong thì sẽ hiển thị 1 màu khác và xếp xuống dưới, ưu tiên hiện đề chưa làm bên trên; hiển thị só điểm đạt được của đề bài đó
-task 22
-chỉnh lại phần hiển thị số lượng câu hỏi của từng đề khi làm bài, bỏ thanh scroll
-task 23
-Đề thi nào đã nộp thì chỉ được xem lại, không được làm lại
-task 24
-Các câu hỏi cần nhập số để trả lời, thì chỉ hiển thị bàn phím số trên điện thoại để nhập nhanh nhất
-
-task 25
-Thêm tính năng giao hạn làm để (ngày nào cần hoàn thành)
-
-task 26
-Chỉnh lại giao diện của bé
-- Thêm nút đổi điểm ngay sau điểm thành tích
-- Đưa Góc phần thưởng lên trên (Dưới bảng Xin chào bé, hiển thị toàn bộ cả 10 huy hiệu và chỉ sáng lên các huy hiệu bé đang có, và hiển thị số điểm cần để đạt bên dưới từng huy hiệu tiếp theo
-- Tên môn học chuyển sang slide bên trái
-- Bên phải dùng liệt kê toàn bộ các đề bài, sắp xếp theo thứ tự cần làm gần nhất tới xa nhất, đề đã xong ở dưới
-
-
-task 27
-Tính năng tạo đề nhanh bằng AI cho phép thêm thời hạn và lên lịch hàng ngày để AI tự tạo ra đề mới, cho phép chọn chủ đề của môn học để AI tạo đề mới
-
-task 28
-Thêm 1 bảng Dashboard hiển thị chi tiết thông tin làm bài của bé: thống kê theo ngày, theo độ khó bài, theo môn học, số câu đúng, sai, thời gian hoàn thành
-
-task 28
-Khi bé đổi điểm lấy thời gian dùng điện thoại, phụ huynh sẽ nhận được thông báo và có 1 bảng tóm tắt lưu lại các lần đổi điểm và thêm nút xác nhận của phụ huynh đã cho phép chơi đủ thời gian
-
-Task 29
-số điểm bé đạt được, khi click vào sẽ cho phép bé coi lịch sử tích điểm: Ngày giờ hoàn thành bài, đề bài, số điểm, số câu đúng/tổng số câu
-
-Task 30
-Thay đổi biểu tượng môn học - tìm kiếm trên internet
-
-Task 31:
-Tính năng tạo đề bằng AI: thêm tùy chọn AI tự tìm đề trên internet và tạo đề, chỉ cần chọn số câu và thời gian; đề bài phải đủ yêu cầu gồm nhiều mức độ,trải dài tất cả các nội dung trong sách giáo khoa của lớp đó
-
-task 32
-Tự động nộp bài khi bé đã trả lời hết câu hỏi
-
-Task 33
-CHỉnh giao diện bé: Liệt kê toàn bộ đề bài của tất cả các môn, khi click vào môn bên trái thì sẽ hiện các đề bài của môn đó
-
-Task 34:
-Sửa lại task 29: hiển thị hẳn 1 trang thông tin thành tích đạt được, ko phải dạng popup
-
-Task 35
-Cho phép sửa đề đã tạo (mở lại giao diện edit để chỉnh)
-
-task 36
-Tăng mức huy hiệu lên 100 mức, tăng mức điểm cần nâng mỗi hạng cao hơn gấp đôi, định dạng số #0,000
+Build thành công.
+Không có lỗi TypeScript.
+Không có lỗi Runtime.
+Không có lỗi Console.
+Responsive trên Mobile, Tablet và Desktop.
+Chức năng mới hoạt động đúng.
+Không làm hỏng chức năng cũ.
+Đã tự kiểm thử trước khi bàn giao.

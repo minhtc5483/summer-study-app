@@ -71,19 +71,26 @@ export default function KidsHome() {
     fetchRewards();
   }, [selectedStudent, navigate]);
 
-  // Fetch Exams when subject changes
+  // Fetch Exams when subject changes with Polling
   useEffect(() => {
     if (!selectedStudent || !selectedSubjectId) return;
 
+    const fetchExams = () => {
+      const query = selectedSubjectId === 'ALL' 
+        ? `/public/exams?studentId=${selectedStudent.id}` 
+        : `/public/exams?subjectId=${selectedSubjectId}&studentId=${selectedStudent.id}`;
+        
+      api.get(query)
+        .then(res => setExams(res.data))
+        .catch(console.error)
+        .finally(() => setLoadingExams(false));
+    };
+
     setLoadingExams(true);
-    const query = selectedSubjectId === 'ALL' 
-      ? `/public/exams?studentId=${selectedStudent.id}` 
-      : `/public/exams?subjectId=${selectedSubjectId}&studentId=${selectedStudent.id}`;
-      
-    api.get(query)
-      .then(res => setExams(res.data))
-      .catch(console.error)
-      .finally(() => setLoadingExams(false));
+    fetchExams();
+    
+    const interval = setInterval(fetchExams, 10000);
+    return () => clearInterval(interval);
   }, [selectedSubjectId, selectedStudent]);
 
   if (!selectedStudent) return null;
@@ -187,60 +194,46 @@ export default function KidsHome() {
           )}
         </div>
 
-        {/* Bố cục 2 cột: Môn học và Đề bài */}
-        <div className="flex flex-col md:flex-row gap-6 flex-1 min-h-0">
-          
-          {/* Cột Trái: Danh sách Môn Học */}
-          <div className="w-full md:w-1/4 flex flex-col gap-3 overflow-y-auto pr-2 pb-6">
-            <h3 className="font-bold text-slate-700 ml-2 mb-1">Chọn Môn Học</h3>
-            
+        {/* Chọn Môn Học (Slide ngang) */}
+        <div className="mb-6 shrink-0">
+          <h3 className="font-bold text-slate-700 ml-2 mb-3">Chọn Môn Học</h3>
+          <div className="flex gap-4 overflow-x-auto pb-4 snap-x hide-scrollbar">
             <button
               onClick={() => setSelectedSubjectId('ALL')}
-              className={`w-full text-left p-4 rounded-2xl flex items-center gap-3 transition-all ${
+              className={`flex-shrink-0 w-32 snap-start flex flex-col items-center justify-center p-4 rounded-2xl border-2 transition-all ${
                 selectedSubjectId === 'ALL'
-                  ? 'bg-gradient-to-r from-orange-400 to-rose-400 text-white shadow-lg shadow-rose-200 scale-105 ml-2'
-                  : 'bg-white text-slate-600 hover:bg-slate-50 border-2 border-transparent hover:border-orange-100'
+                  ? 'bg-gradient-to-br from-orange-400 to-rose-400 text-white border-transparent shadow-lg shadow-rose-200 scale-105'
+                  : 'bg-white text-slate-600 hover:bg-slate-50 border-slate-100 hover:border-orange-200'
               }`}
             >
-              <span className="text-2xl">🌟</span>
-              <span className="font-bold">Tất cả các môn</span>
-              {selectedSubjectId === 'ALL' && (
-                <ArrowRight size={18} className="ml-auto" />
-              )}
+              <span className="text-3xl mb-2">🌟</span>
+              <span className="font-bold text-sm text-center">Tất cả</span>
             </button>
-
-            {selectedStudent.subjects && selectedStudent.subjects.length > 0 && (
-              selectedStudent.subjects.map(subject => (
-                <button
-                  key={subject.id}
-                  onClick={() => setSelectedSubjectId(subject.id)}
-                  className={`w-full text-left p-4 rounded-2xl flex items-center gap-3 transition-all ${
-                    selectedSubjectId === subject.id
-                      ? 'bg-blue-600 text-white shadow-lg shadow-blue-200 scale-105 ml-2'
-                      : 'bg-white text-slate-600 hover:bg-slate-50 border-2 border-transparent hover:border-blue-100'
-                  }`}
-                  style={selectedSubjectId === subject.id ? { backgroundColor: subject.color || '#2563EB' } : {}}
-                >
-                  {subject.icon?.startsWith('http') ? (
-                    <img src={subject.icon} alt="icon" className="w-8 h-8 rounded-lg object-cover" />
-                  ) : (
-                    <span className="text-2xl">{subject.icon || '📚'}</span>
-                  )}
-                  <span className="font-bold">{subject.name}</span>
-                  {selectedSubjectId === subject.id && (
-                    <ArrowRight size={18} className="ml-auto" />
-                  )}
-                </button>
-              ))
-            )}
             
-            {(!selectedStudent.subjects || selectedStudent.subjects.length === 0) && (
-              <p className="text-sm text-slate-500 italic">Chưa đăng ký môn học nào.</p>
-            )}
+            {selectedStudent.subjects && selectedStudent.subjects.map(subject => (
+              <button
+                key={subject.id}
+                onClick={() => setSelectedSubjectId(subject.id)}
+                className={`flex-shrink-0 w-32 snap-start flex flex-col items-center justify-center p-4 rounded-2xl border-2 transition-all ${
+                  selectedSubjectId === subject.id
+                    ? 'text-white border-transparent shadow-lg scale-105'
+                    : 'bg-white text-slate-600 hover:bg-slate-50 border-slate-100 hover:border-blue-200'
+                }`}
+                style={selectedSubjectId === subject.id ? { backgroundColor: subject.color || '#2563EB', boxShadow: `0 10px 15px -3px ${subject.color}40` } : {}}
+              >
+                {subject.icon?.startsWith('http') ? (
+                  <img src={subject.icon} alt="icon" className="w-10 h-10 rounded-lg object-cover mb-2" />
+                ) : (
+                  <span className="text-3xl mb-2">{subject.icon || '📚'}</span>
+                )}
+                <span className="font-bold text-sm text-center line-clamp-2">{subject.name}</span>
+              </button>
+            ))}
           </div>
+        </div>
 
-          {/* Cột Phải: Danh sách Đề Bài */}
-          <div className="w-full md:w-3/4 bg-white/50 backdrop-blur-sm rounded-3xl border-2 border-white p-4 md:p-6 overflow-y-auto">
+        {/* Danh sách Đề Bài */}
+        <div className="flex-1 bg-white/50 backdrop-blur-sm rounded-3xl border-2 border-white p-4 md:p-6 overflow-y-auto min-h-0">
             {loadingExams ? (
               <div className="flex justify-center items-center h-full">
                 <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
@@ -331,10 +324,9 @@ export default function KidsHome() {
               </div>
             )}
           </div>
-          
         </div>
       </div>
-
+      
       <style>{`
         .hide-scrollbar::-webkit-scrollbar {
           display: none;

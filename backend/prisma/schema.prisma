@@ -153,6 +153,7 @@ model ExamResult {
   examId     String
   score      Int
   answers    String?  // JSON string storing the dictionary of answers
+  timeSpent  Int?     // Time spent in seconds
   createdAt  DateTime @default(now())
 
   student    Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
@@ -171,6 +172,8 @@ model AiExamSchedule {
   numberOfQuestions Int
   timeLimit         Int?
   dueDays           Int?      // How many days to complete the exam
+  difficulty        Int?
+  useInternetSearch Boolean   @default(false)
   isActive          Boolean   @default(true)
   createdAt         DateTime  @default(now())
 }

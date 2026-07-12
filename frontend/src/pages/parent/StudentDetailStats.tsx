@@ -5,7 +5,7 @@ import {
   LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, 
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend 
 } from 'recharts';
-import { ArrowLeft, Target, Award, Brain, Target as TargetIcon } from 'lucide-react';
+import { ArrowLeft, Target, Award, Brain, Target as TargetIcon, Clock } from 'lucide-react';
 
 export default function StudentDetailStats() {
   const { id } = useParams();
@@ -63,7 +63,7 @@ export default function StudentDetailStats() {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-6">
         <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm flex flex-col gap-2">
           <TargetIcon className="text-blue-500" size={28} />
           <p className="text-sm text-slate-500 font-bold uppercase">Tổng Số Bài Thi</p>
@@ -78,6 +78,11 @@ export default function StudentDetailStats() {
           <Award className="text-green-500" size={28} />
           <p className="text-sm text-slate-500 font-bold uppercase">Độ Chính Xác</p>
           <p className="text-3xl font-black text-slate-800">{data.summary.avgAccuracy}%</p>
+        </div>
+        <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm flex flex-col gap-2">
+          <Clock className="text-orange-500" size={28} />
+          <p className="text-sm text-slate-500 font-bold uppercase">TG TB/Bài</p>
+          <p className="text-3xl font-black text-slate-800">{Math.floor(data.summary.avgTimeSpent / 60)}m {data.summary.avgTimeSpent % 60}s</p>
         </div>
         <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm flex flex-col gap-2">
           <Target className="text-red-500" size={28} />
@@ -133,32 +138,60 @@ export default function StudentDetailStats() {
         </div>
       </div>
 
-      <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm">
-        <h3 className="text-lg font-bold text-slate-800 mb-6">Tỉ Lệ Đúng Sai Tổng Quan</h3>
-        <div className="h-64 flex justify-center">
-          {data.accuracyData[0].value > 0 || data.accuracyData[1].value > 0 ? (
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={data.accuracyData}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={60}
-                  outerRadius={100}
-                  paddingAngle={5}
-                  dataKey="value"
-                >
-                  {data.accuracyData.map((entry: any, index: number) => (
-                    <Cell key={`cell-${index}`} fill={entry.fill} />
-                  ))}
-                </Pie>
-                <Tooltip contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} />
-                <Legend verticalAlign="bottom" height={36} iconType="circle" />
-              </PieChart>
-            </ResponsiveContainer>
-          ) : (
-             <div className="h-full flex items-center justify-center text-slate-400">Chưa có dữ liệu</div>
-          )}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm">
+          <h3 className="text-lg font-bold text-slate-800 mb-6">Lỗi Sai Theo Độ Khó</h3>
+          <div className="h-64 flex justify-center">
+            {data.difficultyData && data.difficultyData.some((d: any) => d.value > 0) ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={data.difficultyData} margin={{ top: 5, right: 20, left: -20, bottom: 5 }}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                  <XAxis dataKey="name" tick={{fontSize: 12, fill: '#64748b'}} axisLine={false} tickLine={false} />
+                  <YAxis tick={{fontSize: 12, fill: '#64748b'}} axisLine={false} tickLine={false} allowDecimals={false} />
+                  <Tooltip 
+                    cursor={{fill: '#f8fafc'}}
+                    contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                  />
+                  <Bar dataKey="value" name="Số câu sai" radius={[4, 4, 0, 0]} barSize={40}>
+                    {data.difficultyData.map((entry: any, index: number) => (
+                      <Cell key={`cell-${index}`} fill={entry.fill} />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            ) : (
+               <div className="h-full flex items-center justify-center text-slate-400">Chưa có dữ liệu</div>
+            )}
+          </div>
+        </div>
+
+        <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm">
+          <h3 className="text-lg font-bold text-slate-800 mb-6">Tỉ Lệ Đúng Sai Tổng Quan</h3>
+          <div className="h-64 flex justify-center">
+            {data.accuracyData[0].value > 0 || data.accuracyData[1].value > 0 ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={data.accuracyData}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={60}
+                    outerRadius={100}
+                    paddingAngle={5}
+                    dataKey="value"
+                  >
+                    {data.accuracyData.map((entry: any, index: number) => (
+                      <Cell key={`cell-${index}`} fill={entry.fill} />
+                    ))}
+                  </Pie>
+                  <Tooltip contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} />
+                  <Legend verticalAlign="bottom" height={36} iconType="circle" />
+                </PieChart>
+              </ResponsiveContainer>
+            ) : (
+               <div className="h-full flex items-center justify-center text-slate-400">Chưa có dữ liệu</div>
+            )}
+          </div>
         </div>
       </div>
     </div>

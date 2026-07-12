@@ -29,7 +29,7 @@ for (let i = 1; i <= 40; i++) {
     icon: ICONS[(i - 1) % ICONS.length],
     color: COLORS[(i - 1) % COLORS.length]
   });
-  currentScore = Math.ceil((currentScore * 1.2) / 10) * 10; // Tăng 1.2 lần mỗi cấp
+  currentScore = currentScore * 2; // Tăng gấp đôi mỗi cấp
 }
 
 // Thêm các huy hiệu chuỗi ngày

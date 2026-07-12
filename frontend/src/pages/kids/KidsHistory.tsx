@@ -93,10 +93,18 @@ export default function KidsHistory() {
                         })}
                       </span>
                       {item.type === 'EXAM' && (
-                        <span className="flex items-center gap-2 text-blue-600 font-bold bg-blue-50 px-3 py-1 rounded-lg">
-                          <Target size={16} />
-                          {item.details}
-                        </span>
+                        <>
+                          <span className="flex items-center gap-2 text-blue-600 font-bold bg-blue-50 px-3 py-1 rounded-lg">
+                            <Target size={16} />
+                            {item.details}
+                          </span>
+                          {item.timeSpent !== null && item.timeSpent !== undefined && (
+                            <span className="flex items-center gap-2 text-purple-600 font-bold bg-purple-50 px-3 py-1 rounded-lg">
+                              <Clock size={16} />
+                              {Math.floor(item.timeSpent / 60)} phút {item.timeSpent % 60} giây
+                            </span>
+                          )}
+                        </>
                       )}
                       {item.type === 'EXCHANGE' && (
                         <span className="font-bold text-slate-600 bg-slate-100 px-3 py-1 rounded-lg">{item.details}</span>

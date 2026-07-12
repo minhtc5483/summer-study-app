@@ -56,14 +56,14 @@ export const getStudentHistory = async (req: Request, res: Response) => {
       const totalQuestions = er.exam?.questions?.length || 0;
       // Estimate correct answers based on total score / 10 if standard points
       const correctAnswers = Math.round(er.score / 10);
-      
       history.push({
         id: er.id,
         type: 'EXAM',
         title: er.exam?.name || 'Đề thi',
         score: er.score,
         date: er.createdAt,
-        details: `${correctAnswers}/${totalQuestions} câu đúng`
+        details: `${correctAnswers}/${totalQuestions} câu đúng`,
+        timeSpent: er.timeSpent
       });
     });
 

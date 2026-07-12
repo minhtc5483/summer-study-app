@@ -29,7 +29,9 @@ cron.schedule('0 6 * * *', async () => {
           schedule.numberOfQuestions,
           schedule.timeLimit,
           dueDate,
-          schedule.topicId
+          schedule.topicId,
+          schedule.useInternetSearch,
+          schedule.difficulty !== null ? schedule.difficulty : undefined
         );
         
         console.log(`[Success] Generated AI Exam for schedule ${schedule.id}`);

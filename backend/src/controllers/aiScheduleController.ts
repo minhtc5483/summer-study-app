@@ -13,7 +13,9 @@ const createScheduleSchema = z.object({
   studentIds: z.array(z.string()),
   numberOfQuestions: z.number().int().min(1).max(50),
   timeLimit: z.number().int().min(1).optional(),
-  dueDays: z.number().int().min(1).optional()
+  dueDays: z.number().int().min(1).optional(),
+  difficulty: z.number().int().min(1).max(3).optional(),
+  useInternetSearch: z.boolean().optional()
 });
 
 export const createAiSchedule = async (req: AuthRequest, res: Response) => {
@@ -23,7 +25,7 @@ export const createAiSchedule = async (req: AuthRequest, res: Response) => {
       return res.status(400).json({ error: 'Validation failed', details: parsed.error.issues });
     }
 
-    const { subjectId, topicId, studentIds, numberOfQuestions, timeLimit, dueDays } = parsed.data;
+    const { subjectId, topicId, studentIds, numberOfQuestions, timeLimit, dueDays, difficulty, useInternetSearch } = parsed.data;
 
     const schedule = await prisma.aiExamSchedule.create({
       data: {
@@ -32,7 +34,9 @@ export const createAiSchedule = async (req: AuthRequest, res: Response) => {
         studentIds: JSON.stringify(studentIds),
         numberOfQuestions,
         timeLimit,
-        dueDays
+        dueDays,
+        difficulty,
+        useInternetSearch
       },
       include: {
         subject: true,

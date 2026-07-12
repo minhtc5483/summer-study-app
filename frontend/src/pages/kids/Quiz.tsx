@@ -32,6 +32,7 @@ export default function Quiz() {
   const [loading, setLoading] = useState(true);
 
   // Timer states
+  const [startTime] = useState<number>(Date.now());
   const [timeLeft, setTimeLeft] = useState<number | null>(null);
   const [isTimeUp, setIsTimeUp] = useState(false);
   const [timeBonus, setTimeBonus] = useState(0);
@@ -164,16 +165,17 @@ export default function Quiz() {
 
       // Sync with server
       try {
-        const correctCount = Object.values(correctness).filter(Boolean).length;
+        let timeSpent = Math.floor((Date.now() - startTime) / 1000);
         await api.post('/public/submit', {
           studentId: selectedStudent.id,
-          topicId: undefined,
+          topicId: 'exam',
           questionsAttempted: questions.length,
-          questionsCorrect: correctCount,
+          questionsCorrect: Object.values(correctness).filter(Boolean).length,
           score: finalScore,
           streak: newStreak,
           examId: examId,
-          answers: answers
+          answers: answers,
+          timeSpent: timeSpent
         });
       } catch (error) {
         console.error('Failed to save progress', error);

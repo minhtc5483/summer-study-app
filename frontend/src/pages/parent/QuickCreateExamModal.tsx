@@ -21,6 +21,7 @@ export default function QuickCreateExamModal({ isOpen, onClose, subjectId, subje
   const [dueDate, setDueDate] = useState<string>('');
   const [selectedTopicId, setSelectedTopicId] = useState<string>('');
   const [useInternetSearch, setUseInternetSearch] = useState(false);
+  const [difficulty, setDifficulty] = useState<number | ''>('');
   
   // States for scheduling
   const [isScheduled, setIsScheduled] = useState(false);
@@ -40,6 +41,7 @@ export default function QuickCreateExamModal({ isOpen, onClose, subjectId, subje
       setDueDate('');
       setSelectedTopicId('');
       setUseInternetSearch(false);
+      setDifficulty('');
       setIsScheduled(false);
       setDueDays(3);
       setError('');
@@ -69,7 +71,8 @@ export default function QuickCreateExamModal({ isOpen, onClose, subjectId, subje
           numberOfQuestions,
           timeLimit,
           dueDays,
-          useInternetSearch
+          useInternetSearch,
+          difficulty: difficulty || undefined
         });
         alert('Lên lịch tự động thành công! AI sẽ giao bài vào 6h sáng mỗi ngày.');
       } else {
@@ -80,7 +83,8 @@ export default function QuickCreateExamModal({ isOpen, onClose, subjectId, subje
           numberOfQuestions,
           timeLimit,
           dueDate: dueDate || null,
-          useInternetSearch
+          useInternetSearch,
+          difficulty: difficulty || undefined
         });
       }
       onSuccess();
@@ -131,6 +135,34 @@ export default function QuickCreateExamModal({ isOpen, onClose, subjectId, subje
                   <option key={t.id} value={t.id}>{t.name}</option>
                 ))}
               </select>
+            </div>
+
+            <div className="mb-4">
+              <label className="block text-xs font-medium text-slate-500 mb-1">Độ khó (Tùy chọn)</label>
+              <select 
+                value={difficulty}
+                onChange={e => setDifficulty(e.target.value ? Number(e.target.value) : '')}
+                className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-primary font-bold text-slate-700 bg-white"
+              >
+                <option value="">-- Đa dạng mức độ --</option>
+                <option value={1}>Dễ</option>
+                <option value={2}>Trung bình</option>
+                <option value={3}>Khó</option>
+              </select>
+            </div>
+
+            <div className="mb-4">
+              <label className="flex items-center gap-3 cursor-pointer">
+                <input 
+                  type="checkbox" 
+                  checked={useInternetSearch} 
+                  onChange={e => setUseInternetSearch(e.target.checked)}
+                  className="w-5 h-5 text-primary rounded focus:ring-primary"
+                />
+                <span className="font-bold text-slate-700 flex items-center gap-2">
+                  Tìm kiếm bài tập mới trên Internet
+                </span>
+              </label>
             </div>
 
             <div className="grid grid-cols-2 gap-4">

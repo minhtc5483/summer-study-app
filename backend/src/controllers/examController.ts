@@ -211,7 +211,8 @@ const quickCreateSchema = z.object({
   numberOfQuestions: z.number().int().min(1).max(50),
   timeLimit: z.number().int().min(1).optional(),
   dueDate: z.string().optional().nullable(),
-  useInternetSearch: z.boolean().optional()
+  useInternetSearch: z.boolean().optional(),
+  difficulty: z.number().int().min(1).max(3).optional()
 });
 
 export const quickCreateExam = async (req: AuthRequest, res: Response) => {
@@ -221,7 +222,7 @@ export const quickCreateExam = async (req: AuthRequest, res: Response) => {
       return res.status(400).json({ error: 'Validation failed', details: parsed.error.issues });
     }
 
-    const { subjectId, topicId, studentIds, numberOfQuestions, timeLimit, dueDate, useInternetSearch } = parsed.data;
+    const { subjectId, topicId, studentIds, numberOfQuestions, timeLimit, dueDate, useInternetSearch, difficulty } = parsed.data;
 
     const exam = await generateAiExam(
       subjectId,
@@ -230,7 +231,8 @@ export const quickCreateExam = async (req: AuthRequest, res: Response) => {
       timeLimit,
       dueDate ? new Date(dueDate) : null,
       topicId,
-      useInternetSearch
+      useInternetSearch,
+      difficulty
     );
 
     res.status(201).json(exam);
