@@ -13,6 +13,7 @@ interface StudentStat {
   totalCorrect: number;
   accuracy: number;
   wrongQuestionsCount: number;
+  earnedBadges?: { id: string; name: string; icon: string; color: string }[];
 }
 
 export default function Overview() {
@@ -20,18 +21,28 @@ export default function Overview() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let isMounted = true;
     const fetchStats = async () => {
       try {
         const response = await api.get('/statistics');
-        setStats(response.data);
+        if (isMounted) setStats(response.data);
       } catch (error) {
         console.error('Failed to fetch statistics', error);
       } finally {
-        setLoading(false);
+        if (isMounted && loading) setLoading(false);
       }
     };
-    fetchStats();
-  }, []);
+    
+    fetchStats(); // Initial fetch
+    
+    // Polling every 3 seconds for instant updates
+    const intervalId = setInterval(fetchStats, 3000);
+    
+    return () => {
+      isMounted = false;
+      clearInterval(intervalId);
+    };
+  }, [loading]);
 
   if (loading) {
     return (
@@ -169,6 +180,7 @@ export default function Overview() {
                 <th className="py-4 px-6 font-medium">Học sinh</th>
                 <th className="py-4 px-6 font-medium">Tổng điểm</th>
                 <th className="py-4 px-6 font-medium">Chuỗi ngày (Streak)</th>
+                <th className="py-4 px-6 font-medium">Huy hiệu</th>
                 <th className="py-4 px-6 font-medium">Đã làm</th>
                 <th className="py-4 px-6 font-medium">Độ chính xác</th>
                 <th className="py-4 px-6 font-medium">Câu sai</th>
@@ -188,6 +200,20 @@ export default function Overview() {
                       {student.currentStreak} <Flame size={16} />
                     </span>
                   </td>
+                  <td className="py-4 px-6">
+                    <div className="flex gap-1 flex-wrap max-w-[120px]">
+                      {student.earnedBadges && student.earnedBadges.slice(0, 3).map(badge => (
+                        <div key={badge.id} className={`w-6 h-6 rounded-full flex items-center justify-center text-xs shadow-sm border border-slate-700/50 ${badge.color}`} title={badge.name}>
+                          {badge.icon}
+                        </div>
+                      ))}
+                      {student.earnedBadges && student.earnedBadges.length > 3 && (
+                        <div className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold bg-slate-700 text-slate-300 shadow-sm border border-slate-600">
+                          +{student.earnedBadges.length - 3}
+                        </div>
+                      )}
+                    </div>
+                  </td>
                   <td className="py-4 px-6 text-slate-600">{student.totalAttempted} câu</td>
                   <td className="py-4 px-6">
                     <span className={`px-3 py-1 rounded-full text-sm font-medium ${
@@ -202,7 +228,7 @@ export default function Overview() {
               ))}
               {stats.length === 0 && (
                 <tr>
-                  <td colSpan={6} className="py-8 text-center text-slate-500">
+                  <td colSpan={7} className="py-8 text-center text-slate-500">
                     Chưa có học sinh nào. Hãy thêm học sinh và làm bài tập nhé!
                   </td>
                 </tr>
