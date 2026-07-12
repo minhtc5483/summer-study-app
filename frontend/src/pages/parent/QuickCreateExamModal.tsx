@@ -20,6 +20,7 @@ export default function QuickCreateExamModal({ isOpen, onClose, subjectId, subje
   // States for one-time creation
   const [dueDate, setDueDate] = useState<string>('');
   const [selectedTopicId, setSelectedTopicId] = useState<string>('');
+  const [useInternetSearch, setUseInternetSearch] = useState(false);
   
   // States for scheduling
   const [isScheduled, setIsScheduled] = useState(false);
@@ -38,6 +39,7 @@ export default function QuickCreateExamModal({ isOpen, onClose, subjectId, subje
       setTimeLimit(15);
       setDueDate('');
       setSelectedTopicId('');
+      setUseInternetSearch(false);
       setIsScheduled(false);
       setDueDays(3);
       setError('');
@@ -66,7 +68,8 @@ export default function QuickCreateExamModal({ isOpen, onClose, subjectId, subje
           studentIds: selectedStudents,
           numberOfQuestions,
           timeLimit,
-          dueDays
+          dueDays,
+          useInternetSearch
         });
         alert('Lên lịch tự động thành công! AI sẽ giao bài vào 6h sáng mỗi ngày.');
       } else {
@@ -76,7 +79,8 @@ export default function QuickCreateExamModal({ isOpen, onClose, subjectId, subje
           studentIds: selectedStudents,
           numberOfQuestions,
           timeLimit,
-          dueDate: dueDate || null
+          dueDate: dueDate || null,
+          useInternetSearch
         });
       }
       onSuccess();

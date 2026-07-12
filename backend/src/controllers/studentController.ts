@@ -28,6 +28,66 @@ export const getPublicStudents = async (req: Request, res: Response) => {
   }
 };
 
+export const getStudentHistory = async (req: Request, res: Response) => {
+  try {
+    const studentId = req.params.studentId as string;
+
+    const [examResults, pointExchanges] = await Promise.all([
+      prisma.examResult.findMany({
+        where: { studentId },
+        include: { 
+          exam: {
+            include: { questions: true }
+          }
+        },
+        orderBy: { createdAt: 'desc' },
+        take: 50
+      }),
+      prisma.pointExchange.findMany({
+        where: { studentId },
+        orderBy: { createdAt: 'desc' },
+        take: 50
+      })
+    ]);
+
+    const history: any[] = [];
+    
+    (examResults as any[]).forEach(er => {
+      const totalQuestions = er.exam?.questions?.length || 0;
+      // Estimate correct answers based on total score / 10 if standard points
+      const correctAnswers = Math.round(er.score / 10);
+      
+      history.push({
+        id: er.id,
+        type: 'EXAM',
+        title: er.exam?.name || 'Đề thi',
+        score: er.score,
+        date: er.createdAt,
+        details: `${correctAnswers}/${totalQuestions} câu đúng`
+      });
+    });
+
+    pointExchanges.forEach(pe => {
+      history.push({
+        id: pe.id,
+        type: 'EXCHANGE',
+        title: `Đổi ${pe.minutes} Phút Chơi`,
+        score: -pe.points,
+        date: pe.createdAt,
+        details: pe.status === 'FULFILLED' ? 'Đã duyệt' : 'Chờ duyệt'
+      });
+    });
+
+    // Sort by date descending
+    history.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
+    res.json(history);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Server error' });
+  }
+};
+
 export const getStudents = async (req: AuthRequest, res: Response) => {
   try {
     const parentId = String(req.user!.id);

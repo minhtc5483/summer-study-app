@@ -163,12 +163,12 @@ export default function Settings() {
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Icon (Emoji)</label>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Icon (Emoji hoặc URL ảnh)</label>
                   <input
                     type="text"
                     value={editingSubject.icon || ''}
                     onChange={(e) => setEditingSubject({...editingSubject, icon: e.target.value})}
-                    placeholder="VD: 📐, 📖, 🌍"
+                    placeholder="VD: 📐 hoặc https://..."
                     className="w-full px-4 py-2 rounded-lg border border-slate-200"
                   />
                 </div>
@@ -213,10 +213,14 @@ export default function Settings() {
               <div key={subject.id} className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-slate-100">
                 <div className="flex items-center gap-4">
                   <div 
-                    className="w-10 h-10 rounded-xl flex items-center justify-center text-xl shadow-sm text-white"
+                    className="w-10 h-10 rounded-xl flex items-center justify-center text-xl shadow-sm text-white overflow-hidden"
                     style={{ backgroundColor: subject.color || '#cbd5e1' }}
                   >
-                    {subject.icon}
+                    {subject.icon?.startsWith('http') ? (
+                      <img src={subject.icon} alt="icon" className="w-full h-full object-cover" />
+                    ) : (
+                      subject.icon
+                    )}
                   </div>
                   <span className="font-semibold text-slate-700">{subject.name}</span>
                 </div>

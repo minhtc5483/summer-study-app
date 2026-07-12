@@ -200,6 +200,18 @@ export default function Quiz() {
     return () => clearInterval(timer);
   }, [timeLeft, showResult, isTimeUp]);
 
+  // Auto-submit Effect
+  useEffect(() => {
+    if (isReview || showResult || questions.length === 0) return;
+    
+    if (Object.keys(answers).length === questions.length) {
+      const timer = setTimeout(() => {
+        finishQuiz();
+      }, 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [answers, questions.length, isReview, showResult]);
+
   const formatTime = (seconds: number) => {
     const m = Math.floor(seconds / 60);
     const s = seconds % 60;

@@ -125,7 +125,13 @@ export default function QuestionBank() {
                   : 'bg-white text-slate-600 hover:bg-slate-50 border border-slate-100'
               }`}
             >
-              <div className="text-2xl">{subject.icon || '📚'}</div>
+              {subject.icon?.startsWith('http') ? (
+                <div className="w-8 h-8 rounded-lg overflow-hidden shrink-0">
+                  <img src={subject.icon} alt="icon" className="w-full h-full object-cover" />
+                </div>
+              ) : (
+                <div className="text-2xl">{subject.icon || '📚'}</div>
+              )}
               <span className="font-bold">{subject.name}</span>
             </button>
           ))}

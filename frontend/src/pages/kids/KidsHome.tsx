@@ -4,6 +4,7 @@ import { Trophy, Star, Flame, Lock, Play, ShoppingBag, ArrowRight } from 'lucide
 import { Link, useNavigate } from 'react-router-dom';
 import { useStudentStore } from '../../store/useStudentStore';
 import { api } from '../../lib/api';
+import ScoreHistoryModal from './ScoreHistoryModal';
 
 interface Badge {
   id: string;
@@ -44,6 +45,8 @@ export default function KidsHome() {
   const [selectedSubjectId, setSelectedSubjectId] = useState<string | null>(null);
   const [exams, setExams] = useState<Exam[]>([]);
   const [loadingExams, setLoadingExams] = useState(false);
+  
+  const [showHistoryModal, setShowHistoryModal] = useState(false);
 
   useEffect(() => {
     if (!selectedStudent) {
@@ -119,10 +122,13 @@ export default function KidsHome() {
               <Flame className="text-orange-500" fill="currentColor" />
               <span className="font-bold text-orange-600 text-lg">{selectedStudent.currentStreak} ngày</span>
             </div>
-            <div className="flex items-center gap-2 bg-yellow-100 px-4 py-2 rounded-2xl border border-yellow-200">
+            <button 
+              onClick={() => setShowHistoryModal(true)}
+              className="flex items-center gap-2 bg-yellow-100 px-4 py-2 rounded-2xl border border-yellow-200 hover:scale-105 transition-transform"
+            >
               <Star className="text-yellow-500" fill="currentColor" />
               <span className="font-bold text-yellow-600 text-lg">{selectedStudent.totalScore}</span>
-            </div>
+            </button>
             <Link to="/kids/rewards" className="flex items-center gap-2 bg-gradient-to-r from-pink-500 to-rose-500 text-white px-4 py-2 rounded-2xl shadow-md hover:scale-105 transition-transform font-bold">
               <ShoppingBag size={20} />
               Đổi Điểm Ngay
@@ -198,7 +204,11 @@ export default function KidsHome() {
                   }`}
                   style={selectedSubjectId === subject.id ? { backgroundColor: subject.color || '#2563EB' } : {}}
                 >
-                  <span className="text-2xl">{subject.icon || '📚'}</span>
+                  {subject.icon?.startsWith('http') ? (
+                    <img src={subject.icon} alt="icon" className="w-8 h-8 rounded-lg object-cover" />
+                  ) : (
+                    <span className="text-2xl">{subject.icon || '📚'}</span>
+                  )}
                   <span className="font-bold">{subject.name}</span>
                   {selectedSubjectId === subject.id && (
                     <ArrowRight size={18} className="ml-auto" />
@@ -305,6 +315,12 @@ export default function KidsHome() {
           
         </div>
       </div>
+
+      <ScoreHistoryModal 
+        isOpen={showHistoryModal} 
+        onClose={() => setShowHistoryModal(false)} 
+        studentId={selectedStudent.id} 
+      />
 
       <style>{`
         .hide-scrollbar::-webkit-scrollbar {

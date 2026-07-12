@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { register, login, getMe, refresh } from './controllers/authController';
-import { getStudents, getPublicStudents, createStudent, updateStudent, deleteStudent } from './controllers/studentController';
+import { getStudents, getPublicStudents, getStudentHistory, createStudent, updateStudent, deleteStudent } from './controllers/studentController';
 import { authenticate } from './middlewares/auth';
 import { upload } from './middlewares/upload';
 
@@ -88,6 +88,8 @@ router.get('/point-exchanges', authenticate, getExchanges);
 router.put('/point-exchanges/:id/fulfill', authenticate, fulfillExchange);
 
 // Public routes (Kids App)
+router.get('/public/students', getPublicStudents);
+router.get('/public/students/:studentId/history', getStudentHistory);
 router.get('/public/exams', getExams);
 router.get('/public/exams/:id', getExamById);
 router.post('/public/submit', savePublicProgress);

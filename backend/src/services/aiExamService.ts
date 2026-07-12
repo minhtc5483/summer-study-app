@@ -9,7 +9,8 @@ export async function generateAiExam(
   numberOfQuestions: number, 
   timeLimit?: number | null, 
   dueDate?: Date | null,
-  targetTopicId?: string | null
+  targetTopicId?: string | null,
+  useInternetSearch?: boolean
 ) {
   // Lấy tất cả câu hỏi thuộc môn học (hoặc cụ thể một topic)
   let filter: any = { subjectId };
@@ -27,7 +28,7 @@ export async function generateAiExam(
     allQuestions = allQuestions.concat(t.questions.map(q => ({ ...q, topicName: t.name, topicId: t.id })));
   });
 
-  if (allQuestions.length < numberOfQuestions) {
+  if (!useInternetSearch && allQuestions.length < numberOfQuestions) {
     throw new Error(`Kho bài tập chỉ có ${allQuestions.length} câu, không đủ để tạo đề ${numberOfQuestions} câu.`);
   }
 
@@ -39,30 +40,71 @@ export async function generateAiExam(
       const genAI = new GoogleGenerativeAI(apiKey);
       const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
       
-      const questionInfo = allQuestions.map((q, idx) => `[${idx}] ID: ${q.id} | Chủ đề: ${q.topicName} | Mức độ: ${q.level}`).join('\n');
-      
-      const prompt = `Bạn là một chuyên gia giáo dục AI. Hãy chọn ra đúng ${numberOfQuestions} câu hỏi từ danh sách dưới đây để tạo thành một đề thi cân bằng, đa dạng chủ đề và độ khó phù hợp.
-      
-Danh sách câu hỏi:
-${questionInfo}
-
-Chỉ trả về MỘT mảng JSON hợp lệ chứa CHÍNH XÁC ${numberOfQuestions} ID của các câu hỏi bạn đã chọn. Không trả về bất cứ chữ nào khác.
-Ví dụ: ["id1", "id2", "id3"]`;
-
-      const result = await model.generateContent(prompt);
-      let responseText = result.response.text().replace(/```json/gi, '').replace(/```/g, '').trim();
-      
-      selectedIds = JSON.parse(responseText);
-      
-      // Cần đảm bảo selectedIds là mảng string và nằm trong allQuestions
-      selectedIds = selectedIds.filter(id => allQuestions.some(q => q.id === id));
+      if (useInternetSearch) {
+        // Sinh câu hỏi mới hoàn toàn bằng cách lấy kiến thức từ internet
+        const subject = await prisma.subject.findUnique({ where: { id: subjectId } });
+        const topicName = targetTopicId ? topics.find(t => t.id === targetTopicId)?.name : 'tổng hợp';
+        
+        const prompt = `Bạn là một chuyên gia giáo dục. Hãy tìm kiếm trên internet các dạng bài tập mới nhất, chuẩn nhất theo sách giáo khoa để tạo ra ${numberOfQuestions} câu hỏi trắc nghiệm môn ${subject?.name}, chủ đề ${topicName}.
+        Yêu cầu đa dạng mức độ (Dễ, Trung bình, Khó).
+        Trả về DUY NHẤT một mảng JSON các object câu hỏi theo định dạng:
+        [{
+          "content": "Nội dung câu hỏi",
+          "level": "EASY" | "MEDIUM" | "HARD",
+          "type": "MULTIPLE_CHOICE",
+          "options": [{"text": "Đáp án A", "isCorrect": true}, {"text": "Đáp án B", "isCorrect": false}]
+        }]`;
+        
+        const result = await model.generateContent(prompt);
+        let responseText = result.response.text().replace(/```json/gi, '').replace(/```/g, '').trim();
+        const newQuestions = JSON.parse(responseText);
+        
+        // Lưu vào DB
+        const savedQuestions = [];
+        const finalTopicId = targetTopicId || topics[0]?.id;
+        if (!finalTopicId) throw new Error('Không có chủ đề nào để lưu câu hỏi');
+        
+        for (const q of newQuestions) {
+          const created = await prisma.question.create({
+            data: {
+              topicId: finalTopicId,
+              content: q.content,
+              level: q.level || 'EASY',
+              type: q.type || 'MULTIPLE_CHOICE',
+              options: {
+                create: q.options
+              }
+            }
+          });
+          savedQuestions.push(created.id);
+        }
+        selectedIds = savedQuestions;
+      } else {
+        const questionInfo = allQuestions.map((q, idx) => `[${idx}] ID: ${q.id} | Chủ đề: ${q.topicName} | Mức độ: ${q.level}`).join('\n');
+        
+        const prompt = `Bạn là một chuyên gia giáo dục AI. Hãy chọn ra đúng ${numberOfQuestions} câu hỏi từ danh sách dưới đây để tạo thành một đề thi cân bằng, đa dạng chủ đề và độ khó phù hợp.
+        
+  Danh sách câu hỏi:
+  ${questionInfo}
+  
+  Chỉ trả về MỘT mảng JSON hợp lệ chứa CHÍNH XÁC ${numberOfQuestions} ID của các câu hỏi bạn đã chọn. Không trả về bất cứ chữ nào khác.
+  Ví dụ: ["id1", "id2", "id3"]`;
+  
+        const result = await model.generateContent(prompt);
+        let responseText = result.response.text().replace(/```json/gi, '').replace(/```/g, '').trim();
+        
+        selectedIds = JSON.parse(responseText);
+        
+        // Cần đảm bảo selectedIds là mảng string và nằm trong allQuestions
+        selectedIds = selectedIds.filter(id => allQuestions.some(q => q.id === id));
+      }
     } catch (err) {
       console.error("Gemini Quick Create Error:", err);
     }
   }
 
   // Nếu Gemini lỗi hoặc không đủ câu do hallucination, fallback về random
-  if (selectedIds.length < numberOfQuestions) {
+  if (!useInternetSearch && selectedIds.length < numberOfQuestions) {
     const shuffled = [...allQuestions].sort(() => 0.5 - Math.random());
     selectedIds = shuffled.slice(0, numberOfQuestions).map(q => q.id);
   }
