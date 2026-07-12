@@ -10,6 +10,7 @@ import KidsHome from './pages/kids/KidsHome'
 import Quiz from './pages/kids/Quiz'
 import Home from './pages/Home'
 import Overview from './pages/parent/Overview'
+import StudentDetailStats from './pages/parent/StudentDetailStats'
 import Settings from './pages/parent/Settings'
 import QuestionBank from './pages/parent/QuestionBank'
 import SubjectExams from './pages/kids/SubjectExams'
@@ -28,6 +29,7 @@ const router = createBrowserRouter([
         children: [
           { index: true, element: <Overview /> },
           { path: "students", element: <Students /> },
+          { path: "students/:id/stats", element: <StudentDetailStats /> },
           { path: "question-bank", element: <QuestionBank /> },
           { path: "settings", element: <Settings /> },
         ]

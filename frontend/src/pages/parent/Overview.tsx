@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
 import { api } from '../../lib/api';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { Users, Target, Brain, Award, Flame, CalendarClock, Trash2 } from 'lucide-react';
+import { Users, Target, Brain, Award, Flame, CalendarClock, Trash2, CheckCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 
 interface StudentStat {
   studentId: string;
@@ -17,21 +18,25 @@ interface StudentStat {
 }
 
 export default function Overview() {
+  const navigate = useNavigate();
   const [stats, setStats] = useState<StudentStat[]>([]);
   const [aiSchedules, setAiSchedules] = useState<any[]>([]);
+  const [pointExchanges, setPointExchanges] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let isMounted = true;
     const fetchStats = async () => {
       try {
-        const [statRes, scheduleRes] = await Promise.all([
+        const [statRes, scheduleRes, exchangeRes] = await Promise.all([
           api.get('/statistics'),
-          api.get('/exams/ai-schedules')
+          api.get('/exams/ai-schedules'),
+          api.get('/point-exchanges')
         ]);
         if (isMounted) {
           setStats(statRes.data);
           setAiSchedules(scheduleRes.data);
+          setPointExchanges(exchangeRes.data);
         }
       } catch (error) {
         console.error('Failed to fetch data', error);
@@ -66,6 +71,15 @@ export default function Overview() {
       setAiSchedules(prev => prev.filter(s => s.id !== id));
     } catch (err) {
       alert('Không thể xóa lịch');
+    }
+  };
+
+  const handleFulfillExchange = async (id: string) => {
+    try {
+      await api.put(`/point-exchanges/${id}/fulfill`);
+      setPointExchanges(prev => prev.map(e => e.id === id ? { ...e, status: 'FULFILLED' } : e));
+    } catch (err) {
+      alert('Không thể cập nhật yêu cầu');
     }
   };
 
@@ -205,8 +219,12 @@ export default function Overview() {
             </thead>
             <tbody className="divide-y divide-slate-100">
               {stats.map((student) => (
-                <tr key={student.studentId} className="hover:bg-slate-50 transition-colors">
-                  <td className="py-4 px-6 font-medium text-slate-800">{student.name}</td>
+                <tr 
+                  key={student.studentId} 
+                  className="hover:bg-slate-50 transition-colors cursor-pointer"
+                  onClick={() => navigate(`/parent/students/${student.studentId}/stats`)}
+                >
+                  <td className="py-4 px-6 font-medium text-blue-600 hover:underline">{student.name}</td>
                   <td className="py-4 px-6">
                     <span className="flex items-center gap-1 font-bold text-yellow-500">
                       {student.totalScore} <Award size={16} />
@@ -298,6 +316,71 @@ export default function Overview() {
                 <tr>
                   <td colSpan={5} className="py-8 text-center text-slate-500">
                     Bạn chưa cài đặt lịch tự động nào. Hãy vào "Tạo đề nhanh" để thiết lập.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* Point Exchanges Table */}
+      <div className="bg-white rounded-2xl shadow-sm border border-purple-100 overflow-hidden mt-8">
+        <div className="p-6 border-b border-purple-100 bg-purple-50/50 flex items-center gap-3">
+          <Award className="text-purple-600" />
+          <h3 className="text-lg font-bold text-purple-900">Yêu cầu đổi Giờ chơi điện thoại</h3>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full text-left">
+            <thead className="bg-slate-50 text-slate-500 text-sm">
+              <tr>
+                <th className="py-4 px-6 font-medium">Học sinh</th>
+                <th className="py-4 px-6 font-medium">Điểm đã dùng</th>
+                <th className="py-4 px-6 font-medium">Thời gian chơi (Phút)</th>
+                <th className="py-4 px-6 font-medium">Thời gian đổi</th>
+                <th className="py-4 px-6 font-medium">Trạng thái</th>
+                <th className="py-4 px-6 font-medium text-right">Thao tác</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {pointExchanges.map((exchange) => (
+                <tr key={exchange.id} className="hover:bg-slate-50 transition-colors">
+                  <td className="py-4 px-6 font-bold text-slate-800 flex items-center gap-3">
+                    <img 
+                      src={exchange.student.avatar ? `http://localhost:3000${exchange.student.avatar}` : `https://ui-avatars.com/api/?name=${exchange.student.name}`}
+                      alt={exchange.student.name}
+                      className="w-8 h-8 rounded-full"
+                    />
+                    {exchange.student.name}
+                  </td>
+                  <td className="py-4 px-6 text-orange-600 font-bold">-{exchange.points}</td>
+                  <td className="py-4 px-6 text-purple-600 font-bold">{exchange.minutes} Phút</td>
+                  <td className="py-4 px-6 text-slate-600">
+                    {new Date(exchange.createdAt).toLocaleString('vi-VN')}
+                  </td>
+                  <td className="py-4 px-6">
+                    {exchange.status === 'PENDING' ? (
+                      <span className="px-3 py-1 rounded-full text-xs font-bold bg-yellow-100 text-yellow-700">Đang chờ</span>
+                    ) : (
+                      <span className="px-3 py-1 rounded-full text-xs font-bold bg-green-100 text-green-700">Đã duyệt</span>
+                    )}
+                  </td>
+                  <td className="py-4 px-6 text-right">
+                    {exchange.status === 'PENDING' && (
+                      <button 
+                        onClick={() => handleFulfillExchange(exchange.id)}
+                        className="px-4 py-2 bg-green-500 hover:bg-green-600 text-white font-bold rounded-lg transition-colors flex items-center gap-2 ml-auto"
+                      >
+                        <CheckCircle size={16} /> Đã cho chơi
+                      </button>
+                    )}
+                  </td>
+                </tr>
+              ))}
+              {pointExchanges.length === 0 && (
+                <tr>
+                  <td colSpan={6} className="py-8 text-center text-slate-500">
+                    Chưa có yêu cầu đổi giờ chơi nào.
                   </td>
                 </tr>
               )}

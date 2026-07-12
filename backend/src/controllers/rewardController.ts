@@ -97,11 +97,30 @@ export const exchangePoints = async (req: Request, res: Response) => {
       }
     });
 
-    // Record the transaction
-    await prisma.reward.create({
+    // Extract minutes from itemName
+    let minutes = 0;
+    const lowerName = itemName.toLowerCase();
+    if (lowerName.includes('15 phút')) minutes = 15;
+    else if (lowerName.includes('30 phút')) minutes = 30;
+    else if (lowerName.includes('1 giờ')) minutes = 60;
+    else minutes = 30; // fallback
+
+    // Record PointExchange
+    await prisma.pointExchange.create({
       data: {
         studentId,
-        badgeType: itemName
+        points: cost,
+        minutes,
+        status: 'PENDING'
+      }
+    });
+
+    // Send Notification to parent
+    await prisma.notification.create({
+      data: {
+        parentId: student.parentId,
+        title: 'Yêu cầu đổi giờ chơi',
+        message: `Bé ${student.name} đã dùng ${cost} điểm để đổi lấy ${itemName}. Bạn hãy vào xác nhận cho bé nhé!`
       }
     });
 

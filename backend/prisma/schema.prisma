@@ -33,6 +33,7 @@ model Student {
   progress      StudentProgress[]
   wrongAnswers  WrongQuestion[]
   rewards       Reward[]
+  pointExchanges PointExchange[]
   subjects      Subject[]
   exams         Exam[]
   examResults   ExamResult[]
@@ -172,4 +173,14 @@ model AiExamSchedule {
   dueDays           Int?      // How many days to complete the exam
   isActive          Boolean   @default(true)
   createdAt         DateTime  @default(now())
+}
+
+model PointExchange {
+  id        String   @id @default(uuid())
+  studentId String
+  points    Int
+  minutes   Int
+  status    String   @default("PENDING") // PENDING, FULFILLED
+  createdAt DateTime @default(now())
+  student   Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
 }
