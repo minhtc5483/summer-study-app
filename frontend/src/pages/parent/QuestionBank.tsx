@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { api } from '../../lib/api';
-import { Folder, Upload, Plus, BookOpen, Trash2, Users } from 'lucide-react';
+import { Folder, Upload, Plus, BookOpen, Trash2, Users, Edit2 } from 'lucide-react';
 import ImportModal from './ImportModal';
 import CreateExamModal from './CreateExamModal';
 import QuickCreateExamModal from './QuickCreateExamModal';
@@ -46,6 +46,7 @@ export default function QuestionBank() {
   // Modals
   const [importModalTopic, setImportModalTopic] = useState<Topic | null>(null);
   const [createExamTopic, setCreateExamTopic] = useState<Topic | null>(null);
+  const [editingExamData, setEditingExamData] = useState<any>(null);
   const [isQuickCreateOpen, setIsQuickCreateOpen] = useState(false);
 
   useEffect(() => {
@@ -85,6 +86,17 @@ export default function QuestionBank() {
       fetchData();
     } catch (error) {
       console.error('Failed to create topic', error);
+    }
+  };
+
+  const handleEditExam = async (examId: string, topic: Topic) => {
+    try {
+      const res = await api.get(`/exams/${examId}`);
+      setEditingExamData(res.data);
+      setCreateExamTopic(topic);
+    } catch (err) {
+      console.error(err);
+      alert('Không thể tải dữ liệu đề thi');
     }
   };
 
@@ -241,9 +253,14 @@ export default function QuestionBank() {
                               <div>
                                 <div className="flex justify-between items-start mb-2">
                                   <h4 className="font-bold text-slate-700">{exam.name}</h4>
-                                  <button onClick={() => handleDeleteExam(exam.id)} className="text-slate-400 hover:text-red-500 transition-colors">
-                                    <Trash2 size={16} />
-                                  </button>
+                                  <div className="flex gap-2">
+                                    <button onClick={() => handleEditExam(exam.id, topic)} className="text-slate-400 hover:text-blue-500 transition-colors">
+                                      <Edit2 size={16} />
+                                    </button>
+                                    <button onClick={() => handleDeleteExam(exam.id)} className="text-slate-400 hover:text-red-500 transition-colors">
+                                      <Trash2 size={16} />
+                                    </button>
+                                  </div>
                                 </div>
                                 <span className="inline-block px-2 py-1 bg-blue-50 text-primary text-xs font-bold rounded">
                                   {exam._count.questions} câu hỏi
@@ -295,16 +312,22 @@ export default function QuestionBank() {
         }}
       />
 
-      <CreateExamModal
-        isOpen={!!createExamTopic}
-        onClose={() => setCreateExamTopic(null)}
-        topicId={createExamTopic?.id || ''}
-        topicName={createExamTopic?.name || ''}
-        onSuccess={() => {
-          fetchData();
-          alert('Tạo đề thi thành công! Bé đã có thể làm đề này.');
-        }}
-      />
+      {createExamTopic && (
+        <CreateExamModal 
+          isOpen={!!createExamTopic}
+          onClose={() => {
+            setCreateExamTopic(null);
+            setEditingExamData(null);
+          }}
+          topicId={createExamTopic.id}
+          topicName={createExamTopic.name}
+          initialData={editingExamData}
+          onSuccess={() => {
+            fetchData();
+            setEditingExamData(null);
+          }}
+        />
+      )}
 
       {selectedSubject && (
         <QuickCreateExamModal

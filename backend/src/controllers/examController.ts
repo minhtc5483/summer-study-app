@@ -141,7 +141,11 @@ export const getExamById = async (req: Request, res: Response) => {
 };
 
 const updateExamSchema = z.object({
-  studentIds: z.array(z.string())
+  studentIds: z.array(z.string()).optional(),
+  name: z.string().optional(),
+  timeLimit: z.number().int().min(1).optional().nullable(),
+  dueDate: z.string().optional().nullable(),
+  questionIds: z.array(z.string()).min(1).optional()
 });
 
 export const updateExam = async (req: AuthRequest, res: Response) => {
@@ -152,15 +156,29 @@ export const updateExam = async (req: AuthRequest, res: Response) => {
       return res.status(400).json({ error: 'Validation failed', details: parsed.error.issues });
     }
 
-    const { studentIds } = parsed.data;
+    const { studentIds, name, timeLimit, dueDate, questionIds } = parsed.data;
+
+    let updateData: any = {};
+    if (studentIds) {
+      updateData.students = { set: studentIds.map(sId => ({ id: sId })) };
+    }
+    if (name) updateData.name = name;
+    if (timeLimit !== undefined) updateData.timeLimit = timeLimit;
+    if (dueDate !== undefined) updateData.dueDate = dueDate ? new Date(dueDate) : null;
+    
+    // Nếu có questionIds, thì xóa cũ và tạo mới
+    if (questionIds) {
+      // Đầu tiên phải update Exam bằng cách delete các question cũ, sau đó create mới
+      // Prisma có nested writes cho relation:
+      updateData.questions = {
+        deleteMany: {}, // Xóa toàn bộ liên kết ExamQuestion cũ
+        create: questionIds.map(qId => ({ questionId: qId }))
+      };
+    }
 
     const exam = await prisma.exam.update({
       where: { id },
-      data: {
-        students: {
-          set: studentIds.map(sId => ({ id: sId }))
-        }
-      },
+      data: updateData,
       include: {
         students: {
           select: { id: true, name: true, avatar: true }

@@ -121,3 +121,6 @@ CHỉnh giao diện bé: Liệt kê toàn bộ đề bài của tất cả các 
 
 Task 34:
 Sửa lại task 29: hiển thị hẳn 1 trang thông tin thành tích đạt được, ko phải dạng popup
+
+Task 35
+Cho phép sửa đề đã tạo (mở lại giao diện edit để chỉnh)

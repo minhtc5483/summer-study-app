@@ -22,9 +22,10 @@ interface CreateExamModalProps {
   topicId: string;
   topicName: string;
   onSuccess: () => void;
+  initialData?: any; // Dữ liệu đề thi đang sửa
 }
 
-export default function CreateExamModal({ isOpen, onClose, topicId, topicName, onSuccess }: CreateExamModalProps) {
+export default function CreateExamModal({ isOpen, onClose, topicId, topicName, onSuccess, initialData }: CreateExamModalProps) {
   const [examName, setExamName] = useState('');
   const [questions, setQuestions] = useState<Question[]>([]);
   const [students, setStudents] = useState<Student[]>([]);
@@ -46,16 +47,45 @@ export default function CreateExamModal({ isOpen, onClose, topicId, topicName, o
       ]).then(([qRes, sRes]) => {
           setQuestions(qRes.data);
           setStudents(sRes.data);
-          setSelectedIds(new Set());
-          setSelectedStudentIds(new Set());
-          setExamName('');
-          setTimeLimit(null);
-          setDueDate('');
+          
+          if (initialData) {
+            setExamName(initialData.name || '');
+            setTimeLimit(initialData.timeLimit || null);
+            
+            // Format dueDate for input type="date" (YYYY-MM-DD)
+            if (initialData.dueDate) {
+              const d = new Date(initialData.dueDate);
+              setDueDate(d.toISOString().split('T')[0]);
+            } else {
+              setDueDate('');
+            }
+            
+            const selectedQ = new Set<string>();
+            if (initialData.questionsList) {
+              initialData.questionsList.forEach((q: any) => selectedQ.add(q.id));
+            } else if (initialData.questions) {
+              // Sometimes it's nested in relations
+              initialData.questions.forEach((q: any) => selectedQ.add(q.questionId));
+            }
+            setSelectedIds(selectedQ);
+            
+            const selectedS = new Set<string>();
+            if (initialData.students) {
+              initialData.students.forEach((s: any) => selectedS.add(s.id));
+            }
+            setSelectedStudentIds(selectedS);
+          } else {
+            setSelectedIds(new Set());
+            setSelectedStudentIds(new Set());
+            setExamName('');
+            setTimeLimit(null);
+            setDueDate('');
+          }
         })
         .catch(console.error)
         .finally(() => setFetching(false));
     }
-  }, [isOpen, topicId]);
+  }, [isOpen, topicId, initialData]);
 
   if (!isOpen) return null;
 
@@ -91,19 +121,29 @@ export default function CreateExamModal({ isOpen, onClose, topicId, topicName, o
 
     setLoading(true);
     try {
-      await api.post('/exams', {
-        topicId,
-        name: examName,
-        questionIds: Array.from(selectedIds),
-        studentIds: Array.from(selectedStudentIds),
-        timeLimit: timeLimit,
-        dueDate: dueDate || null
-      });
+      if (initialData) {
+        await api.put(`/exams/${initialData.id}`, {
+          name: examName,
+          questionIds: Array.from(selectedIds),
+          studentIds: Array.from(selectedStudentIds),
+          timeLimit: timeLimit,
+          dueDate: dueDate || null
+        });
+      } else {
+        await api.post('/exams', {
+          topicId,
+          name: examName,
+          questionIds: Array.from(selectedIds),
+          studentIds: Array.from(selectedStudentIds),
+          timeLimit: timeLimit,
+          dueDate: dueDate || null
+        });
+      }
       onSuccess();
       onClose();
     } catch (error) {
-      console.error('Failed to create exam', error);
-      alert('Có lỗi xảy ra khi tạo đề thi');
+      console.error('Failed to save exam', error);
+      alert('Có lỗi xảy ra khi lưu đề thi');
     } finally {
       setLoading(false);
     }
@@ -112,12 +152,12 @@ export default function CreateExamModal({ isOpen, onClose, topicId, topicName, o
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
       <div className="bg-white rounded-3xl shadow-xl w-full max-w-5xl max-h-[95vh] flex flex-col overflow-hidden">
-        <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-blue-50 shrink-0">
+        <div className="p-6 bg-gradient-to-br from-indigo-500 to-purple-600 text-white flex items-center justify-between shrink-0">
           <div>
-            <h3 className="text-xl font-bold text-slate-800">Tạo Đề Thi Mới</h3>
-            <p className="text-sm text-slate-500 mt-1">Chủ đề: <span className="font-semibold text-primary">{topicName}</span></p>
+            <h2 className="text-2xl font-bold">{initialData ? 'Sửa Đề Thi' : 'Tạo Đề Thi Mới'}</h2>
+            <p className="text-indigo-100 mt-1">Chủ đề: {topicName}</p>
           </div>
-          <button onClick={onClose} className="text-slate-400 hover:text-slate-600 bg-white rounded-full p-2">
+          <button onClick={onClose} className="text-white hover:bg-white/20 p-2 rounded-full transition-colors">
             <X size={20} />
           </button>
         </div>
@@ -267,9 +307,9 @@ export default function CreateExamModal({ isOpen, onClose, topicId, topicName, o
           <button 
             onClick={handleSave}
             disabled={loading || selectedIds.size === 0 || !examName.trim()}
-            className="px-6 py-2 bg-primary text-white rounded-xl hover:bg-primary-dark transition-colors font-medium disabled:opacity-50"
+            className="px-6 py-2.5 bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-700 transition-colors shadow-sm disabled:opacity-50"
           >
-            {loading ? 'Đang lưu...' : 'Lưu Đề Thi & Giao Bài'}
+            {loading ? 'Đang lưu...' : initialData ? 'Lưu Thay Đổi' : 'Tạo Đề Thi'}
           </button>
         </div>
       </div>

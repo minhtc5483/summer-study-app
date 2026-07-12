@@ -4,7 +4,6 @@ import { Trophy, Star, Flame, Lock, Play, ShoppingBag, ArrowRight } from 'lucide
 import { Link, useNavigate } from 'react-router-dom';
 import { useStudentStore } from '../../store/useStudentStore';
 import { api } from '../../lib/api';
-import ScoreHistoryModal from './ScoreHistoryModal';
 
 interface Badge {
   id: string;
@@ -45,8 +44,6 @@ export default function KidsHome() {
   const [selectedSubjectId, setSelectedSubjectId] = useState<string>('ALL');
   const [exams, setExams] = useState<Exam[]>([]);
   const [loadingExams, setLoadingExams] = useState(false);
-  
-  const [showHistoryModal, setShowHistoryModal] = useState(false);
 
   useEffect(() => {
     if (!selectedStudent) {
@@ -126,13 +123,13 @@ export default function KidsHome() {
               <Flame className="text-orange-500" fill="currentColor" />
               <span className="font-bold text-orange-600 text-lg">{selectedStudent.currentStreak} ngày</span>
             </div>
-            <button 
-              onClick={() => setShowHistoryModal(true)}
+            <Link 
+              to="/kids/history"
               className="flex items-center gap-2 bg-yellow-100 px-4 py-2 rounded-2xl border border-yellow-200 hover:scale-105 transition-transform"
             >
               <Star className="text-yellow-500" fill="currentColor" />
               <span className="font-bold text-yellow-600 text-lg">{selectedStudent.totalScore}</span>
-            </button>
+            </Link>
             <Link to="/kids/rewards" className="flex items-center gap-2 bg-gradient-to-r from-pink-500 to-rose-500 text-white px-4 py-2 rounded-2xl shadow-md hover:scale-105 transition-transform font-bold">
               <ShoppingBag size={20} />
               Đổi Điểm Ngay
@@ -337,12 +334,6 @@ export default function KidsHome() {
           
         </div>
       </div>
-
-      <ScoreHistoryModal 
-        isOpen={showHistoryModal} 
-        onClose={() => setShowHistoryModal(false)} 
-        studentId={selectedStudent.id} 
-      />
 
       <style>{`
         .hide-scrollbar::-webkit-scrollbar {
