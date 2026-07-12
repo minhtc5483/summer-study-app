@@ -356,7 +356,7 @@ export default function Quiz() {
                         disabled={isReview || currentSelectedAnswer !== undefined}
                         className={`relative p-8 rounded-3xl border-4 text-3xl font-bold transition-all duration-300 shadow-sm ${bgColor} ${textColor}`}
                       >
-                        {option}
+                        <span className="font-extrabold text-blue-500/80 mr-3">{String.fromCharCode(65 + idx)}.</span> {option}
                         {isActuallyCorrect && (isReview || (isSelected && currentIsCorrect)) && (
                           <motion.div 
                             initial={{ scale: 0 }}
