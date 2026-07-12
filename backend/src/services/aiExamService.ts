@@ -51,10 +51,11 @@ export async function generateAiExam(
         Yêu cầu mức độ: ${difficulty ? diffString : 'Đa dạng mức độ (Dễ, Trung bình, Khó)'}.
         Trả về DUY NHẤT một mảng JSON các object câu hỏi theo định dạng:
         [{
-          "content": "Nội dung câu hỏi",
+          "text": "Nội dung câu hỏi",
           "level": ${difficulty ? difficulty : '1, 2 hoặc 3'},
           "type": "MULTIPLE_CHOICE",
-          "options": [{"text": "Đáp án A", "isCorrect": true}, {"text": "Đáp án B", "isCorrect": false}]
+          "options": ["Đáp án A", "Đáp án B", "Đáp án C", "Đáp án D"],
+          "correct": "Đáp án đúng (phải khớp hoàn toàn với một trong các lựa chọn trong mảng options)"
         }]`;
         
         const result = await model.generateContent(prompt);
@@ -67,15 +68,18 @@ export async function generateAiExam(
         if (!finalTopicId) throw new Error('Không có chủ đề nào để lưu câu hỏi');
         
         for (const q of newQuestions) {
+          const contentObj = {
+            text: q.text,
+            options: q.options,
+            correct: q.correct
+          };
+          
           const created = await prisma.question.create({
             data: {
               topicId: finalTopicId,
-              content: q.content,
-              level: q.level || 'EASY',
-              type: q.type || 'MULTIPLE_CHOICE',
-              options: {
-                create: q.options
-              }
+              content: JSON.stringify(contentObj),
+              level: q.level || 1,
+              type: q.type || 'MULTIPLE_CHOICE'
             }
           });
           savedQuestions.push(created.id);
