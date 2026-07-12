@@ -36,6 +36,10 @@ export async function generateAiExam(
   let selectedIds: string[] = [];
   const apiKey = process.env.GEMINI_API_KEY;
 
+  if (!apiKey && useInternetSearch) {
+    throw new Error('Chưa cấu hình GEMINI_API_KEY trên server. Không thể tìm kiếm Internet.');
+  }
+
   if (apiKey) {
     try {
       const genAI = new GoogleGenerativeAI(apiKey);
@@ -47,8 +51,9 @@ export async function generateAiExam(
         const topicName = targetTopicId ? topics.find(t => t.id === targetTopicId)?.name : 'tổng hợp';
         
         const diffString = difficulty === 3 ? "Khó" : difficulty === 2 ? "Trung bình" : "Dễ";
-        const prompt = `Bạn là một chuyên gia giáo dục. Hãy tìm kiếm trên internet các dạng bài tập mới nhất, chuẩn nhất theo sách giáo khoa để tạo ra ${numberOfQuestions} câu hỏi trắc nghiệm môn ${subject?.name}, chủ đề ${topicName}.
+        const prompt = `Bạn là một chuyên gia giáo dục. Hãy tìm kiếm trên internet các dạng bài tập mới nhất, chuẩn nhất theo sách giáo khoa để tạo ra đúng ${numberOfQuestions} câu hỏi trắc nghiệm môn ${subject?.name}, chủ đề ${topicName}.
         Yêu cầu mức độ: ${difficulty ? diffString : 'Đa dạng mức độ (Dễ, Trung bình, Khó)'}.
+        BẮT BUỘC trả về mảng JSON chứa đủ ${numberOfQuestions} câu hỏi. KHÔNG ĐƯỢC trả về mảng rỗng.
         Trả về DUY NHẤT một mảng JSON các object câu hỏi theo định dạng:
         [{
           "text": "Nội dung câu hỏi",
@@ -68,6 +73,10 @@ export async function generateAiExam(
         }
         
         const newQuestions = JSON.parse(jsonMatch[0]);
+        if (!Array.isArray(newQuestions) || newQuestions.length === 0) {
+           throw new Error("AI trả về mảng câu hỏi rỗng hoặc không hợp lệ: " + responseText);
+        }
+
         // Lưu vào DB
         const savedQuestions = [];
         const finalTopicId = targetTopicId || topics[0]?.id;
@@ -130,6 +139,10 @@ export async function generateAiExam(
     const fallbackPool = pool.length >= numberOfQuestions ? pool : allQuestions;
     const shuffled = [...fallbackPool].sort(() => 0.5 - Math.random());
     selectedIds = shuffled.slice(0, numberOfQuestions).map(q => q.id);
+  }
+
+  if (useInternetSearch && selectedIds.length === 0) {
+    throw new Error('Đã có lỗi xảy ra: AI không thể tạo được câu hỏi nào. Vui lòng thử lại.');
   }
 
   // Chọn topic đại diện (lấy topic có nhiều câu hỏi được chọn nhất)
