@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, Star, Heart, Volume2, Timer } from 'lucide-react';
 import { useStudentStore } from '../../store/useStudentStore';
@@ -20,6 +20,8 @@ export default function Quiz() {
   const { selectedStudent, setSelectedStudent } = useStudentStore();
   
   const [questions, setQuestions] = useState<any[]>([]);
+  const [searchParams] = useSearchParams();
+  const isReview = searchParams.get('mode') === 'review';
   const [examName, setExamName] = useState('');
   
   const [currentQuestion, setCurrentQuestion] = useState(0);
@@ -79,6 +81,7 @@ export default function Quiz() {
   }, [examId, selectedStudent, navigate]);
 
   const handleAnswer = (answer: string) => {
+    if (isReview) return;
     if (answers[currentQuestion] !== undefined) return;
     
     const correct = answer === questions[currentQuestion].correct;
@@ -164,6 +167,7 @@ export default function Quiz() {
 
   // Timer Effect
   useEffect(() => {
+    if (isReview) return;
     if (timeLeft === null || showResult || isTimeUp) return;
 
     if (timeLeft <= 0) {
@@ -241,7 +245,10 @@ export default function Quiz() {
         </div>
 
         <div className="mb-4 flex justify-between items-end">
-          <h2 className="text-3xl font-bold text-slate-700">{examName}</h2>
+          <div>
+            <h2 className="text-3xl font-bold text-slate-700">{examName}</h2>
+            {isReview && <div className="text-primary font-bold mt-1">👀 Đang ở chế độ xem lại đề thi</div>}
+          </div>
           <span className="text-xl font-medium text-slate-500">
             Câu {currentQuestion + 1} / {questions.length}
           </span>
@@ -293,7 +300,14 @@ export default function Quiz() {
                     let bgColor = 'bg-white hover:bg-blue-50 hover:border-blue-300 border-slate-200';
                     let textColor = 'text-slate-700';
 
-                    if (currentSelectedAnswer !== undefined) {
+                    if (isReview) {
+                      if (isActuallyCorrect) {
+                        bgColor = 'bg-green-100 border-green-500 shadow-lg shadow-green-200 scale-105';
+                        textColor = 'text-green-800';
+                      } else {
+                        bgColor = 'bg-slate-50 border-slate-200 opacity-50';
+                      }
+                    } else if (currentSelectedAnswer !== undefined) {
                       if (isActuallyCorrect) {
                         bgColor = 'bg-green-100 border-green-500 scale-105 shadow-lg shadow-green-200';
                         textColor = 'text-green-800';
@@ -308,14 +322,14 @@ export default function Quiz() {
                     return (
                       <motion.button
                         key={idx}
-                        whileHover={currentSelectedAnswer === undefined ? { scale: 1.02 } : {}}
-                        whileTap={currentSelectedAnswer === undefined ? { scale: 0.98 } : {}}
+                        whileHover={!isReview && currentSelectedAnswer === undefined ? { scale: 1.02 } : {}}
+                        whileTap={!isReview && currentSelectedAnswer === undefined ? { scale: 0.98 } : {}}
                         onClick={() => handleAnswer(option)}
-                        disabled={currentSelectedAnswer !== undefined}
+                        disabled={isReview || currentSelectedAnswer !== undefined}
                         className={`relative p-8 rounded-3xl border-4 text-3xl font-bold transition-all duration-300 shadow-sm ${bgColor} ${textColor}`}
                       >
                         {option}
-                        {isSelected && currentIsCorrect && (
+                        {isActuallyCorrect && (isReview || (isSelected && currentIsCorrect)) && (
                           <motion.div 
                             initial={{ scale: 0 }}
                             animate={{ scale: 1 }}
@@ -324,7 +338,7 @@ export default function Quiz() {
                             ✓
                           </motion.div>
                         )}
-                        {isSelected && currentIsCorrect === false && (
+                        {!isReview && isSelected && currentIsCorrect === false && (
                           <motion.div 
                             initial={{ scale: 0 }}
                             animate={{ scale: 1 }}
@@ -350,12 +364,22 @@ export default function Quiz() {
                          if (val) handleAnswer(val);
                       }
                     }}
-                    disabled={answers[currentQuestion] !== undefined}
-                    defaultValue={answers[currentQuestion] || ''}
+                    disabled={isReview || answers[currentQuestion] !== undefined}
+                    defaultValue={isReview ? questions[currentQuestion].correct : (answers[currentQuestion] || '')}
                     autoComplete="off"
                   />
                   
-                  {answers[currentQuestion] !== undefined && (
+                  {isReview && (
+                     <motion.div 
+                       initial={{ opacity: 0, y: 10 }}
+                       animate={{ opacity: 1, y: 0 }}
+                       className={`text-3xl font-bold px-8 py-4 rounded-2xl bg-green-100 text-green-600 border border-green-200`}
+                     >
+                       Đáp án đúng: {questions[currentQuestion].correct}
+                     </motion.div>
+                  )}
+
+                  {!isReview && answers[currentQuestion] !== undefined && (
                      <motion.div 
                        initial={{ opacity: 0, y: 10 }}
                        animate={{ opacity: 1, y: 0 }}
@@ -365,7 +389,7 @@ export default function Quiz() {
                      </motion.div>
                   )}
                   
-                  {answers[currentQuestion] === undefined && (
+                  {!isReview && answers[currentQuestion] === undefined && (
                      <button
                        onClick={() => {
                          const input = document.getElementById(`input-answer-${currentQuestion}`) as HTMLInputElement;
@@ -440,8 +464,14 @@ export default function Quiz() {
             <div className="flex flex-wrap justify-center gap-3 w-full">
               {questions.map((_, idx) => {
                 let bg = 'bg-slate-100 text-slate-500 border-slate-200';
-                if (correctness[idx] === true) bg = 'bg-green-100 text-green-600 border-green-500';
-                else if (correctness[idx] === false) bg = 'bg-red-100 text-red-600 border-red-500';
+                
+                if (isReview) {
+                  bg = 'bg-green-100 text-green-600 border-green-500 opacity-60'; // Highlight all as viewed
+                } else if (correctness[idx] === true) {
+                  bg = 'bg-green-100 text-green-600 border-green-500';
+                } else if (correctness[idx] === false) {
+                  bg = 'bg-red-100 text-red-600 border-red-500';
+                }
                 
                 const isCurrent = currentQuestion === idx;
 
@@ -457,12 +487,21 @@ export default function Quiz() {
               })}
             </div>
 
-            <button
-              onClick={finishQuiz}
-              className="w-full md:w-auto px-8 py-3 bg-gradient-to-r from-blue-500 to-indigo-500 text-white font-bold rounded-2xl whitespace-nowrap hover:shadow-lg hover:scale-105 transition-all shadow-md shrink-0"
-            >
-              Nộp Bài
-            </button>
+            {isReview ? (
+              <button
+                onClick={() => navigate(-1)}
+                className="w-full md:w-auto px-8 py-3 bg-gradient-to-r from-slate-500 to-slate-600 text-white font-bold rounded-2xl whitespace-nowrap hover:shadow-lg hover:scale-105 transition-all shadow-md shrink-0"
+              >
+                Quay Lại
+              </button>
+            ) : (
+              <button
+                onClick={finishQuiz}
+                className="w-full md:w-auto px-8 py-3 bg-gradient-to-r from-blue-500 to-indigo-500 text-white font-bold rounded-2xl whitespace-nowrap hover:shadow-lg hover:scale-105 transition-all shadow-md shrink-0"
+              >
+                Nộp Bài
+              </button>
+            )}
           </motion.div>
         )}
       </div>

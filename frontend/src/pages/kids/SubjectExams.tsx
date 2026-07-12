@@ -83,7 +83,7 @@ export default function SubjectExams() {
                 const bgColor = isCompleted ? '#94A3B8' : colors[index % colors.length]; // Xám cho đề đã làm
 
                 return (
-                  <Link key={exam.id} to={`/kids/quiz/${exam.id}`}>
+                  <Link key={exam.id} to={`/kids/quiz/${exam.id}${isCompleted ? '?mode=review' : ''}`}>
                     <motion.div
                       whileHover={{ scale: 1.03 }}
                       whileTap={{ scale: 0.97 }}

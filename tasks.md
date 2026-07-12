@@ -79,3 +79,5 @@ task 21
 Đề bái nào đã làm xong thì sẽ hiển thị 1 màu khác và xếp xuống dưới, ưu tiên hiện đề chưa làm bên trên; hiển thị só điểm đạt được của đề bài đó
 task 22
 chỉnh lại phần hiển thị số lượng câu hỏi của từng đề khi làm bài, bỏ thanh scroll
+task 23
+Đề thi nào đã nộp thì chỉ được xem lại, không được làm lại
