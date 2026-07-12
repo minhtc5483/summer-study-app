@@ -279,60 +279,104 @@ export default function Quiz() {
                 </h3>
               </div>
 
-              <div className="grid grid-cols-2 gap-4 w-full">
-                {questions[currentQuestion].options.map((option: string, idx: number) => {
-                  const currentSelectedAnswer = answers[currentQuestion];
-                  const currentIsCorrect = correctness[currentQuestion];
-                  const isSelected = currentSelectedAnswer === option;
-                  const isActuallyCorrect = option === questions[currentQuestion].correct;
-                  
-                  let bgColor = 'bg-white hover:bg-blue-50 hover:border-blue-300 border-slate-200';
-                  let textColor = 'text-slate-700';
+              {questions[currentQuestion].options && questions[currentQuestion].options.length > 0 ? (
+                <div className="grid grid-cols-2 gap-4 w-full">
+                  {questions[currentQuestion].options.map((option: string, idx: number) => {
+                    const currentSelectedAnswer = answers[currentQuestion];
+                    const currentIsCorrect = correctness[currentQuestion];
+                    const isSelected = currentSelectedAnswer === option;
+                    const isActuallyCorrect = option === questions[currentQuestion].correct;
+                    
+                    let bgColor = 'bg-white hover:bg-blue-50 hover:border-blue-300 border-slate-200';
+                    let textColor = 'text-slate-700';
 
-                  if (currentSelectedAnswer !== undefined) {
-                    if (isActuallyCorrect) {
-                      bgColor = 'bg-green-100 border-green-500 scale-105 shadow-lg shadow-green-200';
-                      textColor = 'text-green-800';
-                    } else if (isSelected && !isActuallyCorrect) {
-                      bgColor = 'bg-red-100 border-red-500 opacity-70 scale-95';
-                      textColor = 'text-red-800';
-                    } else {
-                      bgColor = 'bg-white border-slate-200 opacity-50';
+                    if (currentSelectedAnswer !== undefined) {
+                      if (isActuallyCorrect) {
+                        bgColor = 'bg-green-100 border-green-500 scale-105 shadow-lg shadow-green-200';
+                        textColor = 'text-green-800';
+                      } else if (isSelected && !isActuallyCorrect) {
+                        bgColor = 'bg-red-100 border-red-500 opacity-70 scale-95';
+                        textColor = 'text-red-800';
+                      } else {
+                        bgColor = 'bg-white border-slate-200 opacity-50';
+                      }
                     }
-                  }
 
-                  return (
-                    <motion.button
-                      key={idx}
-                      whileHover={currentSelectedAnswer === undefined ? { scale: 1.02 } : {}}
-                      whileTap={currentSelectedAnswer === undefined ? { scale: 0.98 } : {}}
-                      onClick={() => handleAnswer(option)}
-                      disabled={currentSelectedAnswer !== undefined}
-                      className={`relative p-8 rounded-3xl border-4 text-3xl font-bold transition-all duration-300 shadow-sm ${bgColor} ${textColor}`}
-                    >
-                      {option}
-                      {isSelected && currentIsCorrect && (
-                        <motion.div 
-                          initial={{ scale: 0 }}
-                          animate={{ scale: 1 }}
-                          className="absolute -top-4 -right-4 w-12 h-12 bg-green-500 text-white rounded-full flex items-center justify-center text-xl shadow-lg border-4 border-white"
-                        >
-                          ✓
-                        </motion.div>
-                      )}
-                      {isSelected && currentIsCorrect === false && (
-                        <motion.div 
-                          initial={{ scale: 0 }}
-                          animate={{ scale: 1 }}
-                          className="absolute -top-4 -right-4 w-12 h-12 bg-red-500 text-white rounded-full flex items-center justify-center text-xl shadow-lg border-4 border-white"
-                        >
-                          ✗
-                        </motion.div>
-                      )}
-                    </motion.button>
-                  );
-                })}
-              </div>
+                    return (
+                      <motion.button
+                        key={idx}
+                        whileHover={currentSelectedAnswer === undefined ? { scale: 1.02 } : {}}
+                        whileTap={currentSelectedAnswer === undefined ? { scale: 0.98 } : {}}
+                        onClick={() => handleAnswer(option)}
+                        disabled={currentSelectedAnswer !== undefined}
+                        className={`relative p-8 rounded-3xl border-4 text-3xl font-bold transition-all duration-300 shadow-sm ${bgColor} ${textColor}`}
+                      >
+                        {option}
+                        {isSelected && currentIsCorrect && (
+                          <motion.div 
+                            initial={{ scale: 0 }}
+                            animate={{ scale: 1 }}
+                            className="absolute -top-4 -right-4 w-12 h-12 bg-green-500 text-white rounded-full flex items-center justify-center text-xl shadow-lg border-4 border-white"
+                          >
+                            ✓
+                          </motion.div>
+                        )}
+                        {isSelected && currentIsCorrect === false && (
+                          <motion.div 
+                            initial={{ scale: 0 }}
+                            animate={{ scale: 1 }}
+                            className="absolute -top-4 -right-4 w-12 h-12 bg-red-500 text-white rounded-full flex items-center justify-center text-xl shadow-lg border-4 border-white"
+                          >
+                            ✗
+                          </motion.div>
+                        )}
+                      </motion.button>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="flex flex-col items-center gap-6 w-full">
+                  <input
+                    type="text"
+                    id={`input-answer-${currentQuestion}`}
+                    className="text-center text-4xl p-6 rounded-3xl border-4 border-slate-200 focus:border-blue-400 outline-none w-full max-w-md shadow-inner text-slate-800 font-bold transition-all"
+                    placeholder="Nhập câu trả lời..."
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                         const val = (e.target as HTMLInputElement).value.trim();
+                         if (val) handleAnswer(val);
+                      }
+                    }}
+                    disabled={answers[currentQuestion] !== undefined}
+                    defaultValue={answers[currentQuestion] || ''}
+                    autoComplete="off"
+                  />
+                  
+                  {answers[currentQuestion] !== undefined && (
+                     <motion.div 
+                       initial={{ opacity: 0, y: 10 }}
+                       animate={{ opacity: 1, y: 0 }}
+                       className={`text-3xl font-bold px-8 py-4 rounded-2xl ${correctness[currentQuestion] ? 'bg-green-100 text-green-600 border border-green-200' : 'bg-red-100 text-red-600 border border-red-200'}`}
+                     >
+                       {correctness[currentQuestion] ? 'Chính xác! 🎉' : `Sai rồi 😅. Đáp án đúng là: ${questions[currentQuestion].correct}`}
+                     </motion.div>
+                  )}
+                  
+                  {answers[currentQuestion] === undefined && (
+                     <button
+                       onClick={() => {
+                         const input = document.getElementById(`input-answer-${currentQuestion}`) as HTMLInputElement;
+                         if (input && input.value.trim()) {
+                           handleAnswer(input.value.trim());
+                         }
+                       }}
+                       className="px-10 py-4 bg-gradient-to-r from-blue-500 to-indigo-500 text-white text-2xl font-bold rounded-2xl hover:scale-105 transition-all shadow-lg hover:shadow-xl"
+                     >
+                       Trả Lời
+                     </button>
+                  )}
+                </div>
+              )}
             </motion.div>
           ) : (
             <motion.div
