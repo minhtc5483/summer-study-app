@@ -75,3 +75,5 @@ task 19
 thêm nút chuông ở góc phải trên cùng để báo khi nào bé nào làm xong đề bài, kèm theo thành tích được bao nhiêu điểm, làm trong bao lâu
 Task 20
 Thêm nút cho phép tạo đề nhanh: chỉ cần chọn môn học, chọn bé, số lượng câu hỏi, thời gian, số lượng câu hỏi, còn lại Gemini sẽ tự động lấy câu hỏi ngẫu nhiên từ kho bài tập của môn học đó
+task 21
+Đề bái nào đã làm xong thì sẽ hiển thị 1 màu khác và xếp xuống dưới, ưu tiên hiện đề chưa làm bên trên; hiển thị só điểm đạt được của đề bài đó

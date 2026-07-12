@@ -4,6 +4,7 @@ import { AuthRequest } from '../middlewares/auth';
 import { z } from 'zod';
 import sharp from 'sharp';
 import fs from 'fs';
+import { BADGES } from './rewardController';
 
 export const getPublicStudents = async (req: Request, res: Response) => {
   try {
@@ -11,7 +12,17 @@ export const getPublicStudents = async (req: Request, res: Response) => {
       orderBy: { createdAt: 'asc' },
       include: { subjects: true }
     });
-    res.json(students);
+
+    const studentsWithBadges = students.map(student => {
+      const earnedBadges = BADGES.filter(badge => {
+        if (badge.type === 'score' && student.totalScore >= badge.requirement) return true;
+        if (badge.type === 'streak' && student.currentStreak >= badge.requirement) return true;
+        return false;
+      });
+      return { ...student, earnedBadges };
+    });
+
+    res.json(studentsWithBadges);
   } catch (error) {
     res.status(500).json({ error: 'Server error' });
   }
@@ -25,7 +36,17 @@ export const getStudents = async (req: AuthRequest, res: Response) => {
       orderBy: { createdAt: 'asc' },
       include: { subjects: true }
     });
-    res.json(students);
+
+    const studentsWithBadges = students.map(student => {
+      const earnedBadges = BADGES.filter(badge => {
+        if (badge.type === 'score' && student.totalScore >= badge.requirement) return true;
+        if (badge.type === 'streak' && student.currentStreak >= badge.requirement) return true;
+        return false;
+      });
+      return { ...student, earnedBadges };
+    });
+
+    res.json(studentsWithBadges);
   } catch (error) {
     res.status(500).json({ error: 'Server error' });
   }

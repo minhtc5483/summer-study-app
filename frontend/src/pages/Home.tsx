@@ -103,6 +103,26 @@ export default function Home() {
                     <span className="font-bold">{student.currentStreak}</span>
                   </div>
                 </div>
+
+                {/* Badges Section */}
+                {student.earnedBadges && student.earnedBadges.length > 0 && (
+                  <div className="flex flex-wrap justify-center gap-2 mt-3 w-full">
+                    {student.earnedBadges.slice(0, 3).map((badge) => (
+                      <div 
+                        key={badge.id}
+                        className={`w-8 h-8 rounded-full flex items-center justify-center text-sm shadow-sm border border-slate-700/50 ${badge.color}`}
+                        title={badge.name}
+                      >
+                        {badge.icon}
+                      </div>
+                    ))}
+                    {student.earnedBadges.length > 3 && (
+                      <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold bg-slate-700 text-slate-300 shadow-sm border border-slate-600">
+                        +{student.earnedBadges.length - 3}
+                      </div>
+                    )}
+                  </div>
+                )}
               </motion.div>
             ))
           )}

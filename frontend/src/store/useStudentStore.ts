@@ -9,6 +9,7 @@ export interface StudentProfile {
   totalScore: number;
   currentStreak: number;
   subjects?: { id: string; name: string; icon: string | null; color: string | null }[];
+  earnedBadges?: { id: string; name: string; icon: string; color: string }[];
 }
 
 interface StudentState {

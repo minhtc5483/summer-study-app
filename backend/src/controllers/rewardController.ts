@@ -3,7 +3,7 @@ import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
-const BADGES = [
+export const BADGES = [
   { id: 'score_100', name: 'Tập Sự', description: 'Đạt 100 điểm', type: 'score', requirement: 100, icon: '🌟', color: 'bg-yellow-100 text-yellow-600' },
   { id: 'score_500', name: 'Khởi Hành', description: 'Đạt 500 điểm', type: 'score', requirement: 500, icon: '🔥', color: 'bg-orange-100 text-orange-600' },
   { id: 'score_1000', name: 'Tăng Tốc', description: 'Đạt 1000 điểm', type: 'score', requirement: 1000, icon: '🚀', color: 'bg-purple-100 text-purple-600' },
