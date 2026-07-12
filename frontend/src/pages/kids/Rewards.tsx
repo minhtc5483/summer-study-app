@@ -129,7 +129,7 @@ export default function Rewards() {
           <div className="flex gap-4">
             <div className="bg-white px-6 py-3 rounded-2xl flex items-center gap-3 shadow-sm border border-yellow-100">
               <Star className="text-yellow-400 fill-yellow-400" size={24} />
-              <span className="font-extrabold text-xl text-slate-800">{selectedStudent?.totalScore}</span>
+              <span className="font-extrabold text-xl text-slate-800">{selectedStudent?.totalScore.toLocaleString('vi-VN')}</span>
             </div>
             <div className="bg-white px-6 py-3 rounded-2xl flex items-center gap-3 shadow-sm border border-yellow-100">
               <Flame className="text-orange-500 fill-orange-500" size={24} />
@@ -227,7 +227,7 @@ export default function Rewards() {
                   </div>
                   <h3 className="text-2xl font-bold mb-2 text-slate-800">{item.name}</h3>
                   <div className="flex items-center gap-1 font-bold text-lg mb-6 bg-white/50 px-4 py-1 rounded-full text-slate-700">
-                    <Star size={20} className="text-yellow-500 fill-yellow-500" /> {item.cost} điểm
+                    <Star size={20} className="text-yellow-500 fill-yellow-500" /> {item.cost.toLocaleString('vi-VN')} điểm
                   </div>
                   
                   <button

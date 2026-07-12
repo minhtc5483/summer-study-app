@@ -138,7 +138,7 @@ export default function Students() {
               <div className="mt-6 flex items-center gap-4 w-full border-t border-slate-100 pt-4">
                 <div className="flex-1 text-center border-r border-slate-100">
                   <div className="text-xs text-slate-400 font-medium">ĐIỂM</div>
-                  <div className="font-bold text-slate-700">{student.totalScore}</div>
+                  <div className="font-bold text-slate-700">{student.totalScore.toLocaleString('vi-VN')}</div>
                 </div>
                 <div className="flex-1 text-center">
                   <div className="text-xs text-slate-400 font-medium">CHUỖI</div>

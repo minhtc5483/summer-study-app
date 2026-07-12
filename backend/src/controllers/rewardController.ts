@@ -3,18 +3,42 @@ import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
-export const BADGES = [
-  { id: 'score_100', name: 'Tập Sự', description: 'Đạt 100 điểm', type: 'score', requirement: 100, icon: '🌟', color: 'bg-yellow-100 text-yellow-600' },
-  { id: 'score_500', name: 'Khởi Hành', description: 'Đạt 500 điểm', type: 'score', requirement: 500, icon: '🔥', color: 'bg-orange-100 text-orange-600' },
-  { id: 'score_1000', name: 'Tăng Tốc', description: 'Đạt 1000 điểm', type: 'score', requirement: 1000, icon: '🚀', color: 'bg-purple-100 text-purple-600' },
-  { id: 'score_2000', name: 'Chiến Binh', description: 'Đạt 2000 điểm', type: 'score', requirement: 2000, icon: '🛡️', color: 'bg-indigo-100 text-indigo-600' },
-  { id: 'score_3000', name: 'Hiệp Sĩ', description: 'Đạt 3000 điểm', type: 'score', requirement: 3000, icon: '⚔️', color: 'bg-red-100 text-red-600' },
-  { id: 'score_5000', name: 'Thiên Tài', description: 'Đạt 5000 điểm', type: 'score', requirement: 5000, icon: '👑', color: 'bg-rose-100 text-rose-600' },
+const ICONS = ['🌟', '🔥', '🚀', '🛡️', '⚔️', '👑', '💎', '🔮', '🐉', '⚡', '🌈', '⭐', '🎈', '🎉', '🏆'];
+const COLORS = [
+  'bg-yellow-100 text-yellow-600',
+  'bg-orange-100 text-orange-600',
+  'bg-purple-100 text-purple-600',
+  'bg-indigo-100 text-indigo-600',
+  'bg-red-100 text-red-600',
+  'bg-rose-100 text-rose-600',
+  'bg-blue-100 text-blue-600',
+  'bg-emerald-100 text-emerald-600',
+  'bg-teal-100 text-teal-600',
+  'bg-pink-100 text-pink-600'
+];
+
+export const BADGES: any[] = [];
+let currentScore = 100;
+for (let i = 1; i <= 100; i++) {
+  BADGES.push({
+    id: `score_lv${i}`,
+    name: `Hạng ${i}`,
+    description: `Đạt ${currentScore.toLocaleString('vi-VN')} điểm`,
+    type: 'score',
+    requirement: currentScore,
+    icon: ICONS[(i - 1) % ICONS.length],
+    color: COLORS[(i - 1) % COLORS.length]
+  });
+  currentScore = Math.ceil((currentScore * 1.2) / 10) * 10; // Tăng 1.2 lần mỗi cấp
+}
+
+// Thêm các huy hiệu chuỗi ngày
+BADGES.push(
   { id: 'streak_3', name: 'Chăm Chỉ', description: 'Học 3 ngày liên tục', type: 'streak', requirement: 3, icon: '🌱', color: 'bg-green-100 text-green-600' },
   { id: 'streak_7', name: 'Bền Bỉ', description: 'Học 7 ngày liên tục', type: 'streak', requirement: 7, icon: '🌲', color: 'bg-emerald-100 text-emerald-600' },
   { id: 'streak_14', name: 'Đại Bàng', description: 'Học 14 ngày liên tục', type: 'streak', requirement: 14, icon: '🦅', color: 'bg-sky-100 text-sky-600' },
-  { id: 'streak_30', name: 'Vô Địch', description: 'Học 30 ngày liên tục', type: 'streak', requirement: 30, icon: '🏆', color: 'bg-blue-100 text-blue-600' },
-];
+  { id: 'streak_30', name: 'Vô Địch', description: 'Học 30 ngày liên tục', type: 'streak', requirement: 30, icon: '🏆', color: 'bg-blue-100 text-blue-600' }
+);
 
 export const getRewards = async (req: Request, res: Response) => {
   try {

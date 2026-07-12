@@ -128,7 +128,7 @@ export default function KidsHome() {
               className="flex items-center gap-2 bg-yellow-100 px-4 py-2 rounded-2xl border border-yellow-200 hover:scale-105 transition-transform"
             >
               <Star className="text-yellow-500" fill="currentColor" />
-              <span className="font-bold text-yellow-600 text-lg">{selectedStudent.totalScore}</span>
+              <span className="font-bold text-yellow-600 text-lg">{selectedStudent.totalScore.toLocaleString('vi-VN')}</span>
             </Link>
             <Link to="/kids/rewards" className="flex items-center gap-2 bg-gradient-to-r from-pink-500 to-rose-500 text-white px-4 py-2 rounded-2xl shadow-md hover:scale-105 transition-transform font-bold">
               <ShoppingBag size={20} />
@@ -170,7 +170,7 @@ export default function KidsHome() {
                   {!badge.isEarned ? (
                     <div className="w-full mt-auto">
                       <div className="text-[9px] font-bold text-slate-400 text-center mb-1">
-                        Cần {badge.requirement} {badge.type === 'score' ? 'điểm' : 'ngày'}
+                        Cần {badge.requirement.toLocaleString('vi-VN')} {badge.type === 'score' ? 'điểm' : 'ngày'}
                       </div>
                       <div className="w-full h-1.5 bg-slate-200 rounded-full overflow-hidden">
                         <div className="h-full bg-slate-400 rounded-full" style={{ width: `${badge.progress}%` }}></div>

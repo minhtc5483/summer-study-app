@@ -109,7 +109,7 @@ export default function Home() {
                 <div className="flex items-center gap-3 mt-2">
                   <div className="flex items-center gap-1 text-slate-400">
                     <span className="text-yellow-500 text-sm">🌟</span>
-                    <span className="font-bold">{student.totalScore}</span>
+                    <span className="font-bold">{student.totalScore.toLocaleString('vi-VN')}</span>
                   </div>
                   <div className="flex items-center gap-1 text-slate-400">
                     <Flame className="text-orange-500" size={14} fill="currentColor" />

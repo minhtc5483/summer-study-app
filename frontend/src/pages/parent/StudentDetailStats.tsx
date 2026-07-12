@@ -58,7 +58,7 @@ export default function StudentDetailStats() {
           />
           <div>
             <h2 className="text-3xl font-bold text-slate-800">Thống Kê Của {data.student.name}</h2>
-            <p className="text-slate-500 font-medium">{data.student.totalScore} Điểm Thành Tích • Chuỗi {data.student.currentStreak} ngày</p>
+            <p className="text-slate-500 font-medium">{data.student.totalScore.toLocaleString('vi-VN')} Điểm Thành Tích • Chuỗi {data.student.currentStreak} ngày</p>
           </div>
         </div>
       </div>

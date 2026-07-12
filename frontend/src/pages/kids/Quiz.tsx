@@ -263,7 +263,7 @@ export default function Quiz() {
             )}
             <div className="bg-white px-6 py-3 rounded-2xl flex items-center gap-3 shadow-sm border border-slate-100">
               <Star className="text-yellow-400 fill-yellow-400" size={24} />
-              <span className="font-extrabold text-xl text-slate-800">{selectedStudent?.totalScore}</span>
+              <span className="font-extrabold text-xl text-slate-800">{selectedStudent?.totalScore.toLocaleString('vi-VN')}</span>
             </div>
             <div className="bg-white px-6 py-3 rounded-2xl flex items-center gap-3 shadow-sm border border-slate-100">
               <Heart className="text-red-500 fill-red-500" size={24} />

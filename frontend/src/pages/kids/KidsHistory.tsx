@@ -107,7 +107,7 @@ export default function KidsHistory() {
                   <div className={`text-4xl font-black shrink-0 ${
                     item.score > 0 ? 'text-green-500' : 'text-orange-500'
                   }`}>
-                    {item.score > 0 ? '+' : ''}{item.score}
+                    {item.score > 0 ? '+' : ''}{item.score.toLocaleString('vi-VN')}
                   </div>
                 </motion.div>
               ))}

@@ -228,7 +228,7 @@ export default function Overview() {
                   <td className="py-4 px-6 font-medium text-blue-600 hover:underline">{student.name}</td>
                   <td className="py-4 px-6">
                     <span className="flex items-center gap-1 font-bold text-yellow-500">
-                      {student.totalScore} <Award size={16} />
+                      {student.totalScore.toLocaleString('vi-VN')} <Award size={16} />
                     </span>
                   </td>
                   <td className="py-4 px-6">
