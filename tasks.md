@@ -119,3 +119,5 @@ Tự động nộp bài khi bé đã trả lời hết câu hỏi
 Task 33
 CHỉnh giao diện bé: Liệt kê toàn bộ đề bài của tất cả các môn, khi click vào môn bên trái thì sẽ hiện các đề bài của môn đó
 
+Task 34:
+Sửa lại task 29: hiển thị hẳn 1 trang thông tin thành tích đạt được, ko phải dạng popup
