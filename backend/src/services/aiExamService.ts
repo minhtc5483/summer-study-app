@@ -39,7 +39,7 @@ export async function generateAiExam(
   if (apiKey) {
     try {
       const genAI = new GoogleGenerativeAI(apiKey);
-      const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+      const model = genAI.getGenerativeModel({ model: 'gemini-flash-latest' });
       
       if (useInternetSearch) {
         // Sinh câu hỏi mới hoàn toàn bằng cách lấy kiến thức từ internet
@@ -59,9 +59,15 @@ export async function generateAiExam(
         }]`;
         
         const result = await model.generateContent(prompt);
-        let responseText = result.response.text().replace(/```json/gi, '').replace(/```/g, '').trim();
-        const newQuestions = JSON.parse(responseText);
+        let responseText = result.response.text();
         
+        // Trích xuất JSON bằng regex để loại bỏ văn bản rác xung quanh
+        const jsonMatch = responseText.match(/\[[\s\S]*\]/);
+        if (!jsonMatch) {
+          throw new Error("Không thể trích xuất mảng JSON từ kết quả của AI: " + responseText);
+        }
+        
+        const newQuestions = JSON.parse(jsonMatch[0]);
         // Lưu vào DB
         const savedQuestions = [];
         const finalTopicId = targetTopicId || topics[0]?.id;
@@ -110,8 +116,11 @@ export async function generateAiExam(
         // Cần đảm bảo selectedIds là mảng string và nằm trong allQuestions
         selectedIds = selectedIds.filter(id => allQuestions.some(q => q.id === id));
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error("Gemini Quick Create Error:", err);
+      if (useInternetSearch) {
+        throw new Error(err.message || 'Lỗi khi tạo đề từ Internet');
+      }
     }
   }
 

@@ -113,7 +113,7 @@ export const importPDF = async (req: Request, res: Response) => {
     }
 
     const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+    const model = genAI.getGenerativeModel({ model: 'gemini-flash-latest' });
 
     const fileBytes = fs.readFileSync(file.path);
     const base64Data = fileBytes.toString('base64');
