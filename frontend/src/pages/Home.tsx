@@ -15,17 +15,30 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Fetch all students unconditionally
-    api.get('/public/students')
-      .then(res => {
-        setStudents(res.data);
-        setLoading(false);
-      })
-      .catch((err) => {
-        console.error('Failed to fetch public students', err);
-        setLoading(false);
-      });
-  }, []);
+    let isMounted = true;
+    
+    const fetchStudents = () => {
+      api.get('/public/students')
+        .then(res => {
+          if (isMounted) {
+            setStudents(res.data);
+            if (loading) setLoading(false);
+          }
+        })
+        .catch((err) => {
+          console.error('Failed to fetch public students', err);
+          if (isMounted && loading) setLoading(false);
+        });
+    };
+
+    fetchStudents();
+    const interval = setInterval(fetchStudents, 5000);
+
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+    };
+  }, [loading]);
 
   const handleSelectStudent = (student: StudentProfile) => {
     setSelectedStudent(student);

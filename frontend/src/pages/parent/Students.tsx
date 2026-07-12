@@ -19,19 +19,42 @@ export default function Students() {
   const [editingStudent, setEditingStudent] = useState<Student | null>(null);
 
   useEffect(() => {
+    let isMounted = true;
+    let intervalId: any;
+
+    const fetchStudents = async () => {
+      try {
+        const res = await api.get('/students');
+        if (isMounted) {
+          setStudents(res.data);
+          if (loading) setLoading(false);
+        }
+      } catch (err) {
+        console.error('Failed to fetch students', err);
+        if (isMounted && loading) setLoading(false);
+      }
+    };
+
     fetchStudents();
-  }, []);
+    intervalId = setInterval(fetchStudents, 5000);
+
+    return () => {
+      isMounted = false;
+      clearInterval(intervalId);
+    };
+  }, [loading]);
 
   const fetchStudents = async () => {
+    // This is kept for manual re-fetches (e.g. after adding/editing/deleting a student)
     try {
       const res = await api.get('/students');
       setStudents(res.data);
     } catch (err) {
       console.error('Failed to fetch students', err);
-    } finally {
-      setLoading(false);
     }
   };
+
+
 
   const handleOpenModal = (student?: Student) => {
     setEditingStudent(student || null);

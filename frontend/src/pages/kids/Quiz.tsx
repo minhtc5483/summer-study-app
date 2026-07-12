@@ -146,9 +146,12 @@ export default function Quiz() {
 
       // Sync with server
       try {
+        const correctCount = Object.values(correctness).filter(Boolean).length;
         await api.post('/public/submit', {
           studentId: selectedStudent.id,
-          topicId: undefined, // Option: fetch topicId if needed, or backend uses default. Wait, backend needs topicId, actually we should fetch it or pass it. But we just added `examId` support. Let's pass examId.
+          topicId: undefined,
+          questionsAttempted: questions.length,
+          questionsCorrect: correctCount,
           score: finalScore,
           streak: newStreak,
           examId: examId
