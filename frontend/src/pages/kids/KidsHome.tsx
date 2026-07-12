@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Trophy, Star, Flame, Lock, Play, ShoppingBag, ArrowRight } from 'lucide-react';
+import { Trophy, Star, Flame, Lock, Play, ShoppingBag } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useStudentStore } from '../../store/useStudentStore';
 import { api } from '../../lib/api';
@@ -325,17 +325,16 @@ export default function KidsHome() {
             )}
           </div>
         </div>
-      </div>
       
-      <style>{`
-        .hide-scrollbar::-webkit-scrollbar {
-          display: none;
-        }
-        .hide-scrollbar {
-          -ms-overflow-style: none;
-          scrollbar-width: none;
-        }
-      `}</style>
-    </div>
-  );
-}
+        <style>{`
+          .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+          }
+          .hide-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+          }
+        `}</style>
+      </div>
+    );
+  }
