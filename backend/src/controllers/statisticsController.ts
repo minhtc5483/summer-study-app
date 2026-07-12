@@ -16,7 +16,7 @@ export const getStatistics = async (req: AuthRequest, res: Response) => {
             topic: true
           }
         },
-        wrongQuestions: {
+        wrongAnswers: {
           include: {
             question: {
               include: {
@@ -52,7 +52,7 @@ export const getStatistics = async (req: AuthRequest, res: Response) => {
         totalAttempted,
         totalCorrect,
         accuracy: totalAttempted > 0 ? Math.round((totalCorrect / totalAttempted) * 100) : 0,
-        wrongQuestionsCount: (student as any).wrongQuestions?.length || 0,
+        wrongQuestionsCount: (student as any).wrongAnswers?.length || 0,
         earnedBadges
       };
     });

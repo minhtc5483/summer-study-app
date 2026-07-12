@@ -81,3 +81,5 @@ task 22
 chỉnh lại phần hiển thị số lượng câu hỏi của từng đề khi làm bài, bỏ thanh scroll
 task 23
 Đề thi nào đã nộp thì chỉ được xem lại, không được làm lại
+task 24
+Các câu hỏi cần nhập số để trả lời, thì chỉ hiển thị bàn phím số trên điện thoại để nhập nhanh nhất

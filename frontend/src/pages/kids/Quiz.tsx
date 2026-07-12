@@ -371,6 +371,8 @@ export default function Quiz() {
                 <div className="flex flex-col items-center gap-6 w-full">
                   <input
                     type="text"
+                    inputMode={!isNaN(Number(questions[currentQuestion].correct)) ? "numeric" : "text"}
+                    pattern={!isNaN(Number(questions[currentQuestion].correct)) ? "[0-9]*" : undefined}
                     id={`input-answer-${currentQuestion}`}
                     className="text-center text-4xl p-6 rounded-3xl border-4 border-slate-200 focus:border-blue-400 outline-none w-full max-w-md shadow-inner text-slate-800 font-bold transition-all"
                     placeholder="Nhập câu trả lời..."
