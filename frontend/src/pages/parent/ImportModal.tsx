@@ -132,7 +132,7 @@ export default function ImportModal({ isOpen, onClose, topicId, topicName, onSuc
   };
 
   const handleDownloadTemplate = () => {
-    const csvContent = "CauHoi,A,B,C,D,DapAn,DoKho,Diem\n8 + 7 = ?,13,14,15,16,15,1,10\n10 - 2 = ?,6,7,8,9,8,1,10";
+    const csvContent = "\uFEFFCauHoi,A,B,C,D,DapAn,DoKho,Diem\n8 + 7 = ?,13,14,15,16,15,1,10\n10 - 2 = ?,6,7,8,9,8,1,10";
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
     link.href = URL.createObjectURL(blob);
