@@ -50,6 +50,7 @@ router.get('/topics', authenticate, getTopics);
 router.post('/topics', authenticate, createTopic);
 
 import { getExams, getExamById, createExam, updateExam, deleteExam, quickCreateExam } from './controllers/examController';
+import { createAiSchedule, getAiSchedules, deleteAiSchedule } from './controllers/aiScheduleController';
 
 // Exam & Question routes
 router.get('/exams', authenticate, getExams);
@@ -58,6 +59,11 @@ router.post('/exams', authenticate, createExam);
 router.post('/exams/quick-create', authenticate, quickCreateExam);
 router.put('/exams/:id', authenticate, updateExam);
 router.delete('/exams/:id', authenticate, deleteExam);
+
+// AI Schedules
+router.post('/exams/ai-schedules', authenticate, createAiSchedule);
+router.get('/exams/ai-schedules', authenticate, getAiSchedules);
+router.delete('/exams/ai-schedules/:id', authenticate, deleteAiSchedule);
 router.get('/questions', authenticate, getQuestions);
 router.post('/questions', authenticate, createQuestion);
 

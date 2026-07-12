@@ -45,6 +45,7 @@ model Subject {
   color       String?
   topics      Topic[]
   students    Student[]
+  aiSchedules AiExamSchedule[]
 }
 
 model Topic {
@@ -57,6 +58,7 @@ model Topic {
   questions   Question[]
   exams       Exam[]
   progress    StudentProgress[]
+  aiSchedules AiExamSchedule[]
 }
 
 model Question {
@@ -156,4 +158,18 @@ model ExamResult {
   exam       Exam     @relation(fields: [examId], references: [id], onDelete: Cascade)
 
   @@unique([studentId, examId])
+}
+
+model AiExamSchedule {
+  id                String    @id @default(uuid())
+  subjectId         String
+  subject           Subject   @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  topicId           String?
+  topic             Topic?    @relation(fields: [topicId], references: [id], onDelete: Cascade)
+  studentIds        String    // JSON array of student IDs
+  numberOfQuestions Int
+  timeLimit         Int?
+  dueDays           Int?      // How many days to complete the exam
+  isActive          Boolean   @default(true)
+  createdAt         DateTime  @default(now())
 }

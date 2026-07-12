@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { api } from '../../lib/api';
-import { Bot, Users, Brain, Loader2 } from 'lucide-react';
+import { Bot, Users, Brain, Loader2, CalendarClock } from 'lucide-react';
 
 interface QuickCreateExamModalProps {
   isOpen: boolean;
@@ -12,23 +12,37 @@ interface QuickCreateExamModalProps {
 
 export default function QuickCreateExamModal({ isOpen, onClose, subjectId, subjectName, onSuccess }: QuickCreateExamModalProps) {
   const [students, setStudents] = useState<any[]>([]);
+  const [topics, setTopics] = useState<any[]>([]);
   const [selectedStudents, setSelectedStudents] = useState<string[]>([]);
   const [numberOfQuestions, setNumberOfQuestions] = useState(10);
   const [timeLimit, setTimeLimit] = useState(15);
+  
+  // States for one-time creation
   const [dueDate, setDueDate] = useState<string>('');
+  const [selectedTopicId, setSelectedTopicId] = useState<string>('');
+  
+  // States for scheduling
+  const [isScheduled, setIsScheduled] = useState(false);
+  const [dueDays, setDueDays] = useState(3);
+  
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
   useEffect(() => {
     if (isOpen) {
       api.get('/students').then(res => setStudents(res.data)).catch(console.error);
+      api.get(`/topics?subjectId=${subjectId}`).then(res => setTopics(res.data)).catch(console.error);
+      
       setSelectedStudents([]);
       setNumberOfQuestions(10);
       setTimeLimit(15);
       setDueDate('');
+      setSelectedTopicId('');
+      setIsScheduled(false);
+      setDueDays(3);
       setError('');
     }
-  }, [isOpen]);
+  }, [isOpen, subjectId]);
 
   const toggleStudent = (id: string) => {
     setSelectedStudents(prev => 
@@ -45,17 +59,30 @@ export default function QuickCreateExamModal({ isOpen, onClose, subjectId, subje
     setLoading(true);
     setError('');
     try {
-      await api.post('/exams/quick-create', {
-        subjectId,
-        studentIds: selectedStudents,
-        numberOfQuestions,
-        timeLimit,
-        dueDate: dueDate || null
-      });
+      if (isScheduled) {
+        await api.post('/exams/ai-schedules', {
+          subjectId,
+          topicId: selectedTopicId || null,
+          studentIds: selectedStudents,
+          numberOfQuestions,
+          timeLimit,
+          dueDays
+        });
+        alert('Lên lịch tự động thành công! AI sẽ giao bài vào 6h sáng mỗi ngày.');
+      } else {
+        await api.post('/exams/quick-create', {
+          subjectId,
+          topicId: selectedTopicId || null,
+          studentIds: selectedStudents,
+          numberOfQuestions,
+          timeLimit,
+          dueDate: dueDate || null
+        });
+      }
       onSuccess();
       onClose();
     } catch (err: any) {
-      setError(err.response?.data?.error || 'Có lỗi xảy ra khi tạo đề bằng AI');
+      setError(err.response?.data?.error || 'Có lỗi xảy ra khi tạo/lên lịch');
     } finally {
       setLoading(false);
     }
@@ -87,6 +114,21 @@ export default function QuickCreateExamModal({ isOpen, onClose, subjectId, subje
             <label className="flex items-center gap-2 text-sm font-bold text-slate-700 mb-3">
               <Brain size={18} className="text-primary" /> Thiết lập Đề Bài
             </label>
+            
+            <div className="mb-4">
+              <label className="block text-xs font-medium text-slate-500 mb-1">Chủ đề tập trung (Tùy chọn)</label>
+              <select 
+                value={selectedTopicId}
+                onChange={e => setSelectedTopicId(e.target.value)}
+                className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-primary font-bold text-slate-700 bg-white"
+              >
+                <option value="">-- Tất cả chủ đề --</option>
+                {topics.map(t => (
+                  <option key={t.id} value={t.id}>{t.name}</option>
+                ))}
+              </select>
+            </div>
+
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs font-medium text-slate-500 mb-1">Số lượng câu hỏi</label>
@@ -111,18 +153,50 @@ export default function QuickCreateExamModal({ isOpen, onClose, subjectId, subje
               </div>
             </div>
             
-            <div className="mt-4">
-              <label className="block text-xs font-medium text-slate-500 mb-1">Hạn chót (Tùy chọn)</label>
-              <input 
-                type="date" 
-                value={dueDate}
-                onChange={e => setDueDate(e.target.value)}
-                className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-primary font-bold text-slate-700 bg-white"
-              />
+            <div className="mt-4 p-4 bg-blue-50 border border-blue-100 rounded-2xl">
+              <label className="flex items-center gap-3 cursor-pointer">
+                <input 
+                  type="checkbox" 
+                  checked={isScheduled} 
+                  onChange={e => setIsScheduled(e.target.checked)}
+                  className="w-5 h-5 text-blue-600 rounded focus:ring-blue-500"
+                />
+                <span className="font-bold text-blue-800 flex items-center gap-2">
+                  <CalendarClock size={18} /> Lên lịch AI tự tạo đề mỗi ngày
+                </span>
+              </label>
+              
+              <div className="mt-3 pl-8">
+                {isScheduled ? (
+                  <div>
+                    <label className="block text-xs font-medium text-blue-700 mb-1">Hạn chót làm bài (Tính từ ngày giao)</label>
+                    <div className="flex items-center gap-2">
+                      <input 
+                        type="number" 
+                        min={1}
+                        value={dueDays}
+                        onChange={e => setDueDays(Number(e.target.value))}
+                        className="w-24 px-3 py-2 rounded-xl border border-blue-200 focus:ring-2 focus:ring-blue-500 font-bold text-slate-700 bg-white"
+                      />
+                      <span className="text-sm font-medium text-blue-800">ngày</span>
+                    </div>
+                  </div>
+                ) : (
+                  <div>
+                    <label className="block text-xs font-medium text-slate-500 mb-1">Hạn chót (Tùy chọn)</label>
+                    <input 
+                      type="date" 
+                      value={dueDate}
+                      onChange={e => setDueDate(e.target.value)}
+                      className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-primary font-bold text-slate-700 bg-white"
+                    />
+                  </div>
+                )}
+              </div>
             </div>
 
             <p className="text-xs text-slate-400 mt-2 italic">
-              AI sẽ tự động chọn lọc các câu hỏi phù hợp và cân bằng nhất từ các chủ đề.
+              AI sẽ tự động chọn lọc các câu hỏi phù hợp nhất từ kho bài tập.
             </p>
           </div>
 
@@ -177,7 +251,7 @@ export default function QuickCreateExamModal({ isOpen, onClose, subjectId, subje
             className="px-6 py-2.5 bg-primary text-white font-bold rounded-xl hover:bg-primary-dark transition-colors shadow-sm disabled:opacity-50 flex items-center gap-2"
           >
             {loading && <Loader2 size={18} className="animate-spin" />}
-            {loading ? 'AI đang soạn đề...' : 'Tạo Đề Ngay'}
+            {loading ? 'Đang xử lý...' : isScheduled ? 'Bắt Đầu Lên Lịch' : 'Tạo Đề Ngay'}
           </button>
         </div>
       </div>

@@ -5,6 +5,7 @@ import path from 'path';
 import { PrismaClient } from '@prisma/client';
 import fs from 'fs';
 import routes from './routes';
+import './cron'; // Start cron jobs
 
 dotenv.config();
 

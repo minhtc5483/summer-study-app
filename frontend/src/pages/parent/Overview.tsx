@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { api } from '../../lib/api';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { Users, Target, Brain, Award, Flame } from 'lucide-react';
+import { Users, Target, Brain, Award, Flame, CalendarClock, Trash2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 interface StudentStat {
@@ -18,16 +18,23 @@ interface StudentStat {
 
 export default function Overview() {
   const [stats, setStats] = useState<StudentStat[]>([]);
+  const [aiSchedules, setAiSchedules] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let isMounted = true;
     const fetchStats = async () => {
       try {
-        const response = await api.get('/statistics');
-        if (isMounted) setStats(response.data);
+        const [statRes, scheduleRes] = await Promise.all([
+          api.get('/statistics'),
+          api.get('/exams/ai-schedules')
+        ]);
+        if (isMounted) {
+          setStats(statRes.data);
+          setAiSchedules(scheduleRes.data);
+        }
       } catch (error) {
-        console.error('Failed to fetch statistics', error);
+        console.error('Failed to fetch data', error);
       } finally {
         if (isMounted && loading) setLoading(false);
       }
@@ -51,6 +58,16 @@ export default function Overview() {
       </div>
     );
   }
+
+  const handleDeleteSchedule = async (id: string) => {
+    if (!window.confirm('Bạn có chắc chắn muốn hủy lịch tự động này?')) return;
+    try {
+      await api.delete(`/exams/ai-schedules/${id}`);
+      setAiSchedules(prev => prev.filter(s => s.id !== id));
+    } catch (err) {
+      alert('Không thể xóa lịch');
+    }
+  };
 
   // Summary calculations
   const totalStudents = stats.length;
@@ -230,6 +247,57 @@ export default function Overview() {
                 <tr>
                   <td colSpan={7} className="py-8 text-center text-slate-500">
                     Chưa có học sinh nào. Hãy thêm học sinh và làm bài tập nhé!
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* AI Schedules Table */}
+      <div className="bg-white rounded-2xl shadow-sm border border-blue-100 overflow-hidden mt-8">
+        <div className="p-6 border-b border-blue-100 bg-blue-50/50 flex items-center gap-3">
+          <CalendarClock className="text-blue-600" />
+          <h3 className="text-lg font-bold text-blue-900">Lịch giao bài tự động bằng AI</h3>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full text-left">
+            <thead className="bg-slate-50 text-slate-500 text-sm">
+              <tr>
+                <th className="py-4 px-6 font-medium">Môn học</th>
+                <th className="py-4 px-6 font-medium">Chủ đề</th>
+                <th className="py-4 px-6 font-medium">Cấu trúc đề</th>
+                <th className="py-4 px-6 font-medium">Lịch tạo đề</th>
+                <th className="py-4 px-6 font-medium text-right">Thao tác</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {aiSchedules.map((schedule) => (
+                <tr key={schedule.id} className="hover:bg-slate-50 transition-colors">
+                  <td className="py-4 px-6 font-bold text-slate-800">{schedule.subject?.name}</td>
+                  <td className="py-4 px-6 text-slate-600">{schedule.topic?.name || 'Tất cả'}</td>
+                  <td className="py-4 px-6 text-slate-600">
+                    {schedule.numberOfQuestions} câu / {schedule.timeLimit} phút
+                  </td>
+                  <td className="py-4 px-6 text-blue-600 font-medium">
+                    Hằng ngày lúc 06:00
+                  </td>
+                  <td className="py-4 px-6 text-right">
+                    <button 
+                      onClick={() => handleDeleteSchedule(schedule.id)}
+                      className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                      title="Hủy lịch"
+                    >
+                      <Trash2 size={18} />
+                    </button>
+                  </td>
+                </tr>
+              ))}
+              {aiSchedules.length === 0 && (
+                <tr>
+                  <td colSpan={5} className="py-8 text-center text-slate-500">
+                    Bạn chưa cài đặt lịch tự động nào. Hãy vào "Tạo đề nhanh" để thiết lập.
                   </td>
                 </tr>
               )}
