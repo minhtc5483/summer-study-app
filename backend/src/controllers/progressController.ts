@@ -14,7 +14,8 @@ const progressSchema = z.object({
   questionsAttempted: z.number().int().min(0).optional().default(0),
   questionsCorrect: z.number().int().min(0).optional().default(0),
   score: z.number().int().min(0),
-  wrongQuestions: z.array(wrongQuestionSchema).optional()
+  wrongQuestions: z.array(wrongQuestionSchema).optional(),
+  examId: z.string().optional()
 });
 
 export const saveProgress = async (req: AuthRequest, res: Response) => {
@@ -105,7 +106,7 @@ export const savePublicProgress = async (req: Request, res: Response) => {
       return res.status(400).json({ error: 'Validation failed', details: parsed.error.issues });
     }
 
-    const { studentId, topicId, questionsAttempted, questionsCorrect, score, wrongQuestions } = parsed.data;
+    const { studentId, topicId, questionsAttempted, questionsCorrect, score, wrongQuestions, examId } = parsed.data;
 
     // Verify student exists (Public version, no parent check)
     const student = await prisma.student.findUnique({ where: { id: studentId } });
@@ -171,6 +172,26 @@ export const savePublicProgress = async (req: Request, res: Response) => {
         userAnswer: wq.userAnswer ? JSON.stringify(wq.userAnswer) : null,
       }));
       await prisma.wrongQuestion.createMany({ data: wrongData });
+    }
+
+    // 2. Tùy chọn: Lưu ExamResult nếu có examId
+    if (examId) {
+      await prisma.examResult.upsert({
+        where: {
+          studentId_examId: {
+            studentId,
+            examId
+          }
+        },
+        update: {
+          score: Math.max(score, 0) // Cập nhật điểm cao nhất nếu cần, hoặc ghi đè
+        },
+        create: {
+          studentId,
+          examId,
+          score
+        }
+      });
     }
 
     // 4. Create Notification for Parent

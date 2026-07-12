@@ -82,7 +82,8 @@ export const getExams = async (req: Request, res: Response) => {
         },
         _count: {
           select: { questions: true }
-        }
+        },
+        examResults: studentId ? { where: { studentId } } : false
       },
       orderBy: { createdAt: 'desc' }
     });

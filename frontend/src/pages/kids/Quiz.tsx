@@ -148,8 +148,10 @@ export default function Quiz() {
       try {
         await api.post('/public/submit', {
           studentId: selectedStudent.id,
+          topicId: undefined, // Option: fetch topicId if needed, or backend uses default. Wait, backend needs topicId, actually we should fetch it or pass it. But we just added `examId` support. Let's pass examId.
           score: finalScore,
-          streak: newStreak
+          streak: newStreak,
+          examId: examId
         });
       } catch (error) {
         console.error('Failed to save progress', error);
@@ -386,9 +388,9 @@ export default function Quiz() {
           <motion.div 
             initial={{ y: 50, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
-            className="bg-white/80 backdrop-blur-md p-4 rounded-3xl mt-4 flex justify-between items-center shadow-sm border border-slate-200 relative z-20"
+            className="bg-white/80 backdrop-blur-md p-4 rounded-3xl mt-4 shadow-sm border border-slate-200 relative z-20 flex flex-col md:flex-row items-center gap-4"
           >
-            <div className="flex gap-3 overflow-x-auto pb-2 custom-scrollbar">
+            <div className="flex flex-wrap justify-center gap-3 w-full">
               {questions.map((_, idx) => {
                 let bg = 'bg-slate-100 text-slate-500 border-slate-200';
                 if (correctness[idx] === true) bg = 'bg-green-100 text-green-600 border-green-500';
@@ -410,7 +412,7 @@ export default function Quiz() {
 
             <button
               onClick={finishQuiz}
-              className="px-6 py-3 bg-gradient-to-r from-blue-500 to-indigo-500 text-white font-bold rounded-2xl whitespace-nowrap ml-4 hover:shadow-lg hover:scale-105 transition-all shadow-md"
+              className="w-full md:w-auto px-8 py-3 bg-gradient-to-r from-blue-500 to-indigo-500 text-white font-bold rounded-2xl whitespace-nowrap hover:shadow-lg hover:scale-105 transition-all shadow-md shrink-0"
             >
               Nộp Bài
             </button>
