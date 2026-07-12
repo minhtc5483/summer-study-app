@@ -109,3 +109,7 @@ số điểm bé đạt được, khi click vào sẽ cho phép bé coi lịch s
 
 Task 30
 Thay đổi biểu tượng môn học - tìm kiếm trên internet
+
+Task 31:
+Tính năng tạo đề bằng AI: thêm tùy chọn AI tự tìm đề trên internet và tạo đề, chỉ cần chọn số câu và thời gian; đề bài phải đủ yêu cầu gồm nhiều mức độ,trải dài tất cả các nội dung trong sách giáo khoa của lớp đó
+
