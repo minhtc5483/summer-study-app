@@ -115,3 +115,7 @@ Tính năng tạo đề bằng AI: thêm tùy chọn AI tự tìm đề trên in
 
 task 32
 Tự động nộp bài khi bé đã trả lời hết câu hỏi
+
+Task 33
+CHỉnh giao diện bé: Liệt kê toàn bộ đề bài của tất cả các môn, khi click vào môn bên trái thì sẽ hiện các đề bài của môn đó
+

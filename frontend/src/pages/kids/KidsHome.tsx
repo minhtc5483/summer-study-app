@@ -42,7 +42,7 @@ export default function KidsHome() {
   const [badges, setBadges] = useState<Badge[]>([]);
   const [loadingBadges, setLoadingBadges] = useState(true);
   
-  const [selectedSubjectId, setSelectedSubjectId] = useState<string | null>(null);
+  const [selectedSubjectId, setSelectedSubjectId] = useState<string>('ALL');
   const [exams, setExams] = useState<Exam[]>([]);
   const [loadingExams, setLoadingExams] = useState(false);
   
@@ -54,9 +54,9 @@ export default function KidsHome() {
       return;
     }
 
-    // Default select first subject
-    if (selectedStudent.subjects && selectedStudent.subjects.length > 0 && !selectedSubjectId) {
-      setSelectedSubjectId(selectedStudent.subjects[0].id);
+    // Default select ALL subjects
+    if (selectedSubjectId === null) {
+      setSelectedSubjectId('ALL');
     }
 
     // Fetch Badges
@@ -79,7 +79,11 @@ export default function KidsHome() {
     if (!selectedStudent || !selectedSubjectId) return;
 
     setLoadingExams(true);
-    api.get(`/public/exams?subjectId=${selectedSubjectId}&studentId=${selectedStudent.id}`)
+    const query = selectedSubjectId === 'ALL' 
+      ? `/public/exams?studentId=${selectedStudent.id}` 
+      : `/public/exams?subjectId=${selectedSubjectId}&studentId=${selectedStudent.id}`;
+      
+    api.get(query)
       .then(res => setExams(res.data))
       .catch(console.error)
       .finally(() => setLoadingExams(false));
@@ -192,7 +196,23 @@ export default function KidsHome() {
           {/* Cột Trái: Danh sách Môn Học */}
           <div className="w-full md:w-1/4 flex flex-col gap-3 overflow-y-auto pr-2 pb-6">
             <h3 className="font-bold text-slate-700 ml-2 mb-1">Chọn Môn Học</h3>
-            {selectedStudent.subjects && selectedStudent.subjects.length > 0 ? (
+            
+            <button
+              onClick={() => setSelectedSubjectId('ALL')}
+              className={`w-full text-left p-4 rounded-2xl flex items-center gap-3 transition-all ${
+                selectedSubjectId === 'ALL'
+                  ? 'bg-gradient-to-r from-orange-400 to-rose-400 text-white shadow-lg shadow-rose-200 scale-105 ml-2'
+                  : 'bg-white text-slate-600 hover:bg-slate-50 border-2 border-transparent hover:border-orange-100'
+              }`}
+            >
+              <span className="text-2xl">🌟</span>
+              <span className="font-bold">Tất cả các môn</span>
+              {selectedSubjectId === 'ALL' && (
+                <ArrowRight size={18} className="ml-auto" />
+              )}
+            </button>
+
+            {selectedStudent.subjects && selectedStudent.subjects.length > 0 && (
               selectedStudent.subjects.map(subject => (
                 <button
                   key={subject.id}
@@ -215,8 +235,10 @@ export default function KidsHome() {
                   )}
                 </button>
               ))
-            ) : (
-              <p className="text-sm text-slate-500 italic">Chưa có môn học nào.</p>
+            )}
+            
+            {(!selectedStudent.subjects || selectedStudent.subjects.length === 0) && (
+              <p className="text-sm text-slate-500 italic">Chưa đăng ký môn học nào.</p>
             )}
           </div>
 
