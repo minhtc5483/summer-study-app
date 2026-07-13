@@ -89,6 +89,8 @@ export const saveProgress = async (req: AuthRequest, res: Response) => {
         newStreak += 1;
       } else if (diffDays > 1) {
         newStreak = 1; // reset streak if missed a day
+      } else if (diffDays === 0 && newStreak === 0) {
+        newStreak = 1;
       }
     } else {
       newStreak = 1;
@@ -196,6 +198,8 @@ export const savePublicProgress = async (req: Request, res: Response) => {
         newStreak += 1;
       } else if (diffDays > 1) {
         newStreak = 1; // reset streak if missed a day
+      } else if (diffDays === 0 && newStreak === 0) {
+        newStreak = 1;
       }
     } else {
       newStreak = 1;

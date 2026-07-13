@@ -166,6 +166,16 @@ export default function Quiz() {
       // Sync with server
       try {
         let timeSpent = Math.floor((Date.now() - startTime) / 1000);
+        const wrongQuestions = Object.entries(correctness)
+          .filter(([_, isCorrect]) => !isCorrect)
+          .map(([idxStr]) => {
+            const idx = parseInt(idxStr);
+            return {
+              questionId: questions[idx].id,
+              userAnswer: answers[idx as unknown as number] || answers[idx]
+            };
+          });
+
         await api.post('/public/submit', {
           studentId: selectedStudent.id,
           questionsAttempted: questions.length,
@@ -174,7 +184,8 @@ export default function Quiz() {
           streak: newStreak,
           examId: examId,
           answers: answers,
-          timeSpent: timeSpent
+          timeSpent: timeSpent,
+          wrongQuestions: wrongQuestions
         });
       } catch (error) {
         console.error('Failed to save progress', error);
