@@ -132,7 +132,7 @@ export default function Students() {
               </div>
               <h3 className="text-xl font-bold text-ink">{student.name}</h3>
               <span className="px-3 py-1 bg-terracotta-100 text-primary-dark text-sm font-medium rounded-full mt-2">
-                Lớp {student.grade}
+                {student.grade}
               </span>
               
               <div className="mt-6 flex items-center gap-4 w-full border-t border-cream-border pt-4">

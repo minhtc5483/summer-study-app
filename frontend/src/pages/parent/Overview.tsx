@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react';
 import { api } from '../../lib/api';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { Users, Target, Brain, Award, Flame, CalendarClock, Trash2, CheckCircle } from 'lucide-react';
+import { Users, Target, Brain, Award, Flame, CalendarClock, Trash2, CheckCircle, Clock, CheckCircle2, XCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 
-type TabKey = 'overview' | 'schedules' | 'exchanges';
+type TabKey = 'overview' | 'schedules' | 'exchanges' | 'log';
 
 interface StudentStat {
   studentId: string;
@@ -19,11 +19,25 @@ interface StudentStat {
   earnedBadges?: { id: string; name: string; icon: string; color: string }[];
 }
 
+interface ActivityLogEntry {
+  id: string;
+  student: { id: string; name: string; avatar: string | null };
+  examName: string;
+  subjectName: string;
+  questionsCorrect: number;
+  questionsWrong: number;
+  questionsAttempted: number;
+  timeSpent: number | null;
+  score: number;
+  createdAt: string;
+}
+
 export default function Overview() {
   const navigate = useNavigate();
   const [stats, setStats] = useState<StudentStat[]>([]);
   const [aiSchedules, setAiSchedules] = useState<any[]>([]);
   const [pointExchanges, setPointExchanges] = useState<any[]>([]);
+  const [activityLog, setActivityLog] = useState<ActivityLogEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<TabKey>('overview');
 
@@ -32,23 +46,28 @@ export default function Overview() {
     const fetchStats = async () => {
       try {
         const timestamp = Date.now();
-        const [statRes, scheduleRes, exchangeRes] = await Promise.all([
+        // allSettled so one endpoint having a problem doesn't blank out the whole page —
+        // each section just falls back to empty instead of every card going to zero.
+        const [statRes, scheduleRes, exchangeRes, logRes] = await Promise.allSettled([
           api.get(`/statistics?_t=${timestamp}`),
           api.get(`/exams/ai-schedules?_t=${timestamp}`),
-          api.get(`/point-exchanges?_t=${timestamp}`)
+          api.get(`/point-exchanges?_t=${timestamp}`),
+          api.get(`/statistics/activity-log?_t=${timestamp}`)
         ]);
-        if (isMounted) {
-          setStats(statRes.data);
-          setAiSchedules(scheduleRes.data);
-          setPointExchanges(exchangeRes.data);
-        }
-      } catch (error) {
-        console.error('Failed to fetch data', error);
+        if (!isMounted) return;
+        if (statRes.status === 'fulfilled') setStats(statRes.value.data);
+        else console.error('Failed to fetch statistics', statRes.reason);
+        if (scheduleRes.status === 'fulfilled') setAiSchedules(scheduleRes.value.data);
+        else console.error('Failed to fetch AI schedules', scheduleRes.reason);
+        if (exchangeRes.status === 'fulfilled') setPointExchanges(exchangeRes.value.data);
+        else console.error('Failed to fetch point exchanges', exchangeRes.reason);
+        if (logRes.status === 'fulfilled') setActivityLog(logRes.value.data);
+        else console.error('Failed to fetch activity log', logRes.reason);
       } finally {
         if (isMounted && loading) setLoading(false);
       }
     };
-    
+
     fetchStats(); // Initial fetch
     
     // Polling every 3 seconds for instant updates
@@ -154,6 +173,7 @@ export default function Overview() {
           { key: 'overview' as const, label: 'Tổng Quan', badge: 0 },
           { key: 'schedules' as const, label: 'Lịch AI', badge: aiSchedules.length },
           { key: 'exchanges' as const, label: 'Đổi Giờ Chơi', badge: pointExchanges.filter(e => e.status === 'PENDING').length },
+          { key: 'log' as const, label: 'Nhật Ký', badge: 0 },
         ]).map(tab => (
           <button
             key={tab.key}
@@ -421,6 +441,77 @@ export default function Overview() {
                 <tr>
                   <td colSpan={6} className="py-8 text-center text-ink-muted">
                     Chưa có yêu cầu đổi giờ chơi nào.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+      </>
+      )}
+
+      {activeTab === 'log' && (
+      <>
+      {/* Activity Log */}
+      <div className="bg-white rounded-2xl shadow-sm border border-cream-border overflow-hidden">
+        <div className="p-6 border-b border-cream-border flex items-center gap-3">
+          <Clock className="text-ink-muted" />
+          <h3 className="text-lg font-bold text-ink">Nhật Ký Làm Bài</h3>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full text-left">
+            <thead className="bg-cream text-ink-muted text-sm">
+              <tr>
+                <th className="py-4 px-6 font-medium">Bé</th>
+                <th className="py-4 px-6 font-medium">Ngày giờ</th>
+                <th className="py-4 px-6 font-medium">Môn</th>
+                <th className="py-4 px-6 font-medium">Đúng</th>
+                <th className="py-4 px-6 font-medium">Sai</th>
+                <th className="py-4 px-6 font-medium">Thời gian làm bài</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-cream-border">
+              {activityLog.map((entry) => {
+                const minutes = entry.timeSpent !== null ? Math.floor(entry.timeSpent / 60) : null;
+                const seconds = entry.timeSpent !== null ? entry.timeSpent % 60 : null;
+                return (
+                  <tr key={entry.id} className="hover:bg-cream transition-colors">
+                    <td className="py-4 px-6 font-medium text-ink flex items-center gap-3">
+                      <img
+                        src={entry.student.avatar ? entry.student.avatar : `https://ui-avatars.com/api/?name=${entry.student.name}`}
+                        alt={entry.student.name}
+                        className="w-8 h-8 rounded-full object-cover bg-cream-border"
+                      />
+                      {entry.student.name}
+                    </td>
+                    <td className="py-4 px-6 text-ink-muted whitespace-nowrap">
+                      {new Date(entry.createdAt).toLocaleString('vi-VN')}
+                    </td>
+                    <td className="py-4 px-6 text-ink-muted">
+                      <div>{entry.subjectName}</div>
+                      <div className="text-xs text-ink-muted/70">{entry.examName}</div>
+                    </td>
+                    <td className="py-4 px-6">
+                      <span className="flex items-center gap-1 font-bold text-secondary-dark">
+                        <CheckCircle2 size={16} /> {entry.questionsCorrect}
+                      </span>
+                    </td>
+                    <td className="py-4 px-6">
+                      <span className="flex items-center gap-1 font-bold text-danger">
+                        <XCircle size={16} /> {entry.questionsWrong}
+                      </span>
+                    </td>
+                    <td className="py-4 px-6 text-ink-muted">
+                      {minutes !== null ? `${minutes} phút ${seconds}s` : '—'}
+                    </td>
+                  </tr>
+                );
+              })}
+              {activityLog.length === 0 && (
+                <tr>
+                  <td colSpan={6} className="py-8 text-center text-ink-muted">
+                    Chưa có bài nào được nộp.
                   </td>
                 </tr>
               )}

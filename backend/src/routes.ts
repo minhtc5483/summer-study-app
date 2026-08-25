@@ -34,7 +34,7 @@ import { getTopics, createTopic } from './controllers/topicController';
 import { getGrades, createGrade, deleteGrade } from './controllers/gradeController';
 import { getQuestions, createQuestion, importQuestions, importPDF } from './controllers/questionController';
 import { saveProgress, savePublicProgress } from './controllers/progressController';
-import { getStatistics, getStudentDetailedStats } from './controllers/statisticsController';
+import { getStatistics, getStudentDetailedStats, getActivityLog } from './controllers/statisticsController';
 import { exportData } from './controllers/dataController';
 import { getRewards, exchangePoints } from './controllers/rewardController';
 import { getNotifications, markAsRead } from './controllers/notificationController';
@@ -93,6 +93,7 @@ router.post('/progress', authenticate, saveProgress); // keep old for backward c
 
 // Statistics
 router.get('/statistics', authenticate, getStatistics);
+router.get('/statistics/activity-log', authenticate, getActivityLog);
 router.get('/statistics/students/:studentId/details', authenticate, getStudentDetailedStats);
 
 // Rewards & Point Exchange

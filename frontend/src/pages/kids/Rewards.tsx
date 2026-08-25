@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Star, Flame, Trophy, Lock, ShoppingBag, Tv, Smartphone, Gamepad2 } from 'lucide-react';
+import { ArrowLeft, Star, Flame, Trophy, Lock, ShoppingBag, Smartphone } from 'lucide-react';
 import { useStudentStore } from '../../store/useStudentStore';
 import { api } from '../../lib/api';
 import confetti from 'canvas-confetti';
@@ -25,10 +25,13 @@ export default function Rewards() {
   const [loading, setLoading] = useState(true);
   const [exchanging, setExchanging] = useState<string | null>(null);
 
+  // Điểm quy đổi giữ đúng tỉ lệ ~33 điểm/phút như trước, mở rộng theo giới hạn chơi
+  // điện thoại tối đa 2 tiếng/ngày mà ba mẹ đặt ra. Việc duyệt (Đã cho chơi) vẫn do
+  // phụ huynh xác nhận thủ công ở Dashboard, hệ thống không tự giới hạn theo ngày.
   const STORE_ITEMS = [
-    { id: '15_min_tv', name: '15 Phút Xem TV', cost: 500, minutes: 15, icon: <Tv size={32} />, color: 'bg-terracotta-100 text-primary-dark border-terracotta-100' },
-    { id: '30_min_ipad', name: '30 Phút iPad', cost: 1000, minutes: 30, icon: <Smartphone size={32} />, color: 'bg-sage-100 text-secondary-dark border-sage-100' },
-    { id: '1_hr_game', name: '1 Giờ Chơi Game', cost: 2000, minutes: 60, icon: <Gamepad2 size={32} />, color: 'bg-rose-100 text-rose-600 border-rose-200' },
+    { id: '30_min_phone', name: '30 Phút Chơi Điện Thoại', cost: 1000, minutes: 30, icon: <Smartphone size={32} />, color: 'bg-terracotta-100 text-primary-dark border-terracotta-100' },
+    { id: '1_hr_phone', name: '1 Giờ Chơi Điện Thoại', cost: 2000, minutes: 60, icon: <Smartphone size={32} />, color: 'bg-sage-100 text-secondary-dark border-sage-100' },
+    { id: '2_hr_phone', name: '2 Giờ Chơi Điện Thoại', cost: 4000, minutes: 120, icon: <Smartphone size={32} />, color: 'bg-gold-100 text-gold-600 border-gold-100' },
   ];
 
   const handleExchange = async (item: typeof STORE_ITEMS[0]) => {

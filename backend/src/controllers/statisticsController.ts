@@ -191,3 +191,44 @@ export const getStudentDetailedStats = async (req: AuthRequest, res: Response) =
     res.status(500).json({ error: 'Server error' });
   }
 };
+
+// Activity log for the parent: one row per exam submission across all of their students,
+// with student, subject/topic, correct/wrong count and time spent — the raw log behind
+// the aggregate stats above.
+export const getActivityLog = async (req: AuthRequest, res: Response) => {
+  try {
+    const parentId = req.user!.id;
+
+    const results = await prisma.examResult.findMany({
+      where: { student: { parentId } },
+      include: {
+        student: { select: { id: true, name: true, avatar: true } },
+        exam: { include: { topic: { include: { subject: true } } } }
+      },
+      orderBy: { createdAt: 'desc' },
+      take: 100
+    });
+
+    const log = results.map((r) => {
+      const attempted = r.questionsAttempted ?? 0;
+      const correct = r.questionsCorrect ?? 0;
+      return {
+        id: r.id,
+        student: r.student,
+        examName: r.exam?.name || 'Đề thi',
+        subjectName: r.exam?.topic?.subject?.name || 'Khác',
+        questionsCorrect: correct,
+        questionsWrong: Math.max(attempted - correct, 0),
+        questionsAttempted: attempted,
+        timeSpent: r.timeSpent,
+        score: r.score,
+        createdAt: r.createdAt
+      };
+    });
+
+    res.json(log);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Server error' });
+  }
+};

@@ -246,22 +246,27 @@ export const savePublicProgress = async (req: Request, res: Response) => {
 
     const { newStreak, questionsAttempted, questionsCorrect, score } = await applyProgress(student, parsed.data);
 
-    // Save ExamResult if an examId was provided — uses the server-verified score, not
-    // whatever the client sent.
+    // Save ExamResult if an examId was provided — uses the server-verified score/counts,
+    // not whatever the client sent. questionsAttempted/questionsCorrect are stored here so
+    // the parent's activity log can show a correct/wrong breakdown per submission.
     if (examId) {
       await prisma.examResult.upsert({
         where: { studentId_examId: { studentId, examId } },
         update: {
           score,
           answers: answers ? JSON.stringify(answers) : undefined,
-          timeSpent: timeSpent !== undefined ? timeSpent : undefined
+          timeSpent: timeSpent !== undefined ? timeSpent : undefined,
+          questionsAttempted,
+          questionsCorrect
         },
         create: {
           studentId,
           examId,
           score,
           answers: answers ? JSON.stringify(answers) : null,
-          timeSpent: timeSpent !== undefined ? timeSpent : null
+          timeSpent: timeSpent !== undefined ? timeSpent : null,
+          questionsAttempted,
+          questionsCorrect
         }
       });
     }

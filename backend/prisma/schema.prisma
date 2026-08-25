@@ -149,13 +149,15 @@ model Notification {
 }
 
 model ExamResult {
-  id         String   @id @default(uuid())
-  studentId  String
-  examId     String
-  score      Int
-  answers    String?  // JSON string storing the dictionary of answers
-  timeSpent  Int?     // Time spent in seconds
-  createdAt  DateTime @default(now())
+  id                 String   @id @default(uuid())
+  studentId          String
+  examId             String
+  score              Int
+  answers            String?  // JSON string storing the dictionary of answers
+  timeSpent          Int?     // Time spent in seconds
+  questionsAttempted Int?     // Server-graded count, for the parent activity log
+  questionsCorrect   Int?     // Server-graded count, for the parent activity log
+  createdAt          DateTime @default(now())
 
   student    Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
   exam       Exam     @relation(fields: [examId], references: [id], onDelete: Cascade)
