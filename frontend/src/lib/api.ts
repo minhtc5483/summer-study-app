@@ -15,14 +15,21 @@ interface RetriableRequestConfig extends AxiosRequestConfig {
 }
 
 api.interceptors.request.use((config) => {
-  const token = useAuthStore.getState().token;
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  } else if (isPublicRequest(config.url)) {
+  // Public/kids routes must always use the per-student PIN token, never the parent's — a
+  // shared device where the parent is still logged in (didn't log out before handing it to
+  // the kid) would otherwise send the parent's JWT here, which requireKidsAccess rejects
+  // with 401 since it's signed with a different secret/scope than the kids-access token.
+  if (isPublicRequest(config.url)) {
     const pinToken = useKidsAccessStore.getState().pinToken;
     if (pinToken) {
       config.headers.Authorization = `Bearer ${pinToken}`;
     }
+    return config;
+  }
+
+  const token = useAuthStore.getState().token;
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
   }
   return config;
 });
