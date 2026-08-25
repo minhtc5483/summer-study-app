@@ -2,23 +2,26 @@ import { Request, Response } from 'express';
 import { z } from 'zod';
 import { prisma } from '../index';
 
-// Score tiers, recalibrated so the top tier lines up with the "streak_30" badge below:
-// assuming a child earns roughly ~100 points/day from steady daily practice (one ~10-question
-// exam at the default 10 pts/question), 30 days of uninterrupted practice earns ~3000 points —
-// so the highest tier sits at 3000, reachable exactly when a 30-day streak is reached.
+// Score tiers, recalibrated so the top tier lines up with the "streak_30" badge below.
+// Daily practice target (per the family's actual routine): 1 exam per subject per day
+// across 3 subjects (Toán, Tiếng Việt, Tiếng Anh), each exam ~30-50 questions (avg ~40) at
+// the default 10 pts/question => ~3 * 40 * 10 = 1200 pts/day at 100% correct. Discounted
+// for a realistic mixed-difficulty (dễ/trung bình/khó) accuracy rate, ~1000 pts/day is a
+// fair steady-practice estimate, so 30 days of uninterrupted practice => ~30,000 points —
+// the highest tier sits at 30,000, reachable roughly when the 30-day streak is reached.
 // The old scheme doubled every level (100, 200, 400, ... to level 40 ≈ 5.5×10^13) and was
 // never realistically reachable past the first few levels.
 const SCORE_TIERS: { requirement: number; name: string; icon: string; color: string }[] = [
-  { requirement: 100, name: 'Tân Binh', icon: '🌱', color: 'bg-green-100 text-green-600' },
-  { requirement: 250, name: 'Chăm Học', icon: '📖', color: 'bg-lime-100 text-lime-600' },
-  { requirement: 500, name: 'Tiến Bộ', icon: '⭐', color: 'bg-yellow-100 text-yellow-600' },
-  { requirement: 750, name: 'Giỏi Giang', icon: '🚀', color: 'bg-amber-100 text-amber-600' },
-  { requirement: 1000, name: 'Xuất Sắc', icon: '🎯', color: 'bg-orange-100 text-orange-600' },
-  { requirement: 1400, name: 'Chuyên Cần', icon: '🔥', color: 'bg-red-100 text-red-600' },
-  { requirement: 1750, name: 'Tài Năng', icon: '💎', color: 'bg-rose-100 text-rose-600' },
-  { requirement: 2150, name: 'Ngôi Sao', icon: '👑', color: 'bg-purple-100 text-purple-600' },
-  { requirement: 2550, name: 'Bậc Thầy', icon: '🏅', color: 'bg-indigo-100 text-indigo-600' },
-  { requirement: 3000, name: 'Huyền Thoại', icon: '🏆', color: 'bg-blue-100 text-blue-600' },
+  { requirement: 1000, name: 'Tân Binh', icon: '🌱', color: 'bg-green-100 text-green-600' },
+  { requirement: 2700, name: 'Chăm Học', icon: '📖', color: 'bg-lime-100 text-lime-600' },
+  { requirement: 5000, name: 'Tiến Bộ', icon: '⭐', color: 'bg-yellow-100 text-yellow-600' },
+  { requirement: 7500, name: 'Giỏi Giang', icon: '🚀', color: 'bg-amber-100 text-amber-600' },
+  { requirement: 10500, name: 'Xuất Sắc', icon: '🎯', color: 'bg-orange-100 text-orange-600' },
+  { requirement: 14000, name: 'Chuyên Cần', icon: '🔥', color: 'bg-red-100 text-red-600' },
+  { requirement: 17500, name: 'Tài Năng', icon: '💎', color: 'bg-rose-100 text-rose-600' },
+  { requirement: 21500, name: 'Ngôi Sao', icon: '👑', color: 'bg-purple-100 text-purple-600' },
+  { requirement: 25500, name: 'Bậc Thầy', icon: '🏅', color: 'bg-indigo-100 text-indigo-600' },
+  { requirement: 30000, name: 'Huyền Thoại', icon: '🏆', color: 'bg-blue-100 text-blue-600' },
 ];
 
 export const BADGES: any[] = SCORE_TIERS.map((tier, idx) => ({
