@@ -108,7 +108,7 @@ export default function KidsHome() {
         </Link>
       </div>
 
-      <div className="relative z-10 max-w-6xl mx-auto p-4 md:p-6 pt-16 h-screen flex flex-col">
+      <div className="relative z-10 max-w-6xl mx-auto p-4 md:p-6 pt-16 flex flex-col">
         {/* Header - Bảng Xin Chào */}
         <header className="flex flex-col md:flex-row justify-between items-center mb-6 bg-white/80 backdrop-blur-md p-4 rounded-3xl shadow-sm shrink-0">
           <div className="flex items-center gap-4 mb-4 md:mb-0">
@@ -233,17 +233,17 @@ export default function KidsHome() {
         </div>
 
         {/* Danh sách Đề Bài */}
-        <div className="flex-1 bg-white/50 backdrop-blur-sm rounded-3xl border-2 border-white p-4 md:p-6 overflow-y-auto min-h-0">
+        <div className="flex-1 bg-white/50 backdrop-blur-sm rounded-3xl border-2 border-white p-4 md:p-6 mb-6">
             {loadingExams ? (
-              <div className="flex justify-center items-center h-full">
+              <div className="flex justify-center items-center min-h-[16rem]">
                 <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
               </div>
             ) : !selectedSubjectId ? (
-              <div className="flex justify-center items-center h-full text-ink-muted font-medium">
+              <div className="flex justify-center items-center min-h-[16rem] text-ink-muted font-medium">
                 Vui lòng chọn một môn học ở bên trái
               </div>
             ) : exams.length === 0 ? (
-              <div className="flex flex-col justify-center items-center h-full text-ink-muted">
+              <div className="flex flex-col justify-center items-center min-h-[16rem] text-ink-muted">
                 <div className="text-6xl mb-4">😅</div>
                 <p className="text-xl font-bold text-ink">Chưa có đề bài nào!</p>
                 <p className="mt-2 text-sm">Ba mẹ chưa tạo đề bài nào cho môn này cả.</p>

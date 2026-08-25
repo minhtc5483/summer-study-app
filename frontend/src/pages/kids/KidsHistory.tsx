@@ -32,7 +32,7 @@ export default function KidsHistory() {
       <div className="absolute top-[-50px] left-[-50px] w-64 h-64 bg-gold-100 rounded-full mix-blend-multiply filter blur-3xl opacity-50 animate-blob"></div>
       <div className="absolute top-0 right-[-50px] w-64 h-64 bg-terracotta-100 rounded-full mix-blend-multiply filter blur-3xl opacity-50 animate-blob animation-delay-2000"></div>
 
-      <div className="relative z-10 max-w-4xl mx-auto p-4 md:p-6 pt-16 h-screen flex flex-col">
+      <div className="relative z-10 max-w-4xl mx-auto p-4 md:p-6 pt-16 pb-10 flex flex-col">
         {/* Header */}
         <header className="flex items-center gap-6 mb-8 bg-white/80 backdrop-blur-md p-6 rounded-3xl shadow-sm shrink-0">
           <button 
@@ -53,7 +53,7 @@ export default function KidsHistory() {
           </div>
         </header>
 
-        <div className="flex-1 overflow-y-auto bg-white/80 backdrop-blur-md rounded-3xl shadow-sm p-6 border-2 border-white">
+        <div className="flex-1 bg-white/80 backdrop-blur-md rounded-3xl shadow-sm p-6 border-2 border-white">
           {loading ? (
             <div className="flex justify-center items-center h-48">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
