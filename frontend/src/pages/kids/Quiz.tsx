@@ -1,7 +1,7 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, Star, Heart, Volume2, Timer } from 'lucide-react';
+import { ArrowLeft, Star, Heart, Timer } from 'lucide-react';
 import { useStudentStore } from '../../store/useStudentStore';
 import { api } from '../../lib/api';
 import confetti from 'canvas-confetti';
@@ -45,49 +45,6 @@ export default function Quiz() {
     if (type === 'complete') audio.src = 'https://assets.mixkit.co/active_storage/sfx/2019/2019-preview.mp3';
     audio.volume = 0.5;
     audio.play().catch(e => console.log('Audio blocked', e));
-  };
-
-  // Đọc câu hỏi bằng giọng AI tạo sẵn ở server (Gemini TTS, xem backend/src/lib/tts.ts) thay
-  // vì giọng đọc có sẵn của trình duyệt/hệ điều hành (window.speechSynthesis) — giọng máy
-  // móc, và nhiều thiết bị (đặc biệt Windows Chrome) còn không có sẵn giọng tiếng Việt nào.
-  // Audio được cache theo questionId ở server nên chỉ tốn thời gian gọi AI ở lần đọc đầu
-  // tiên của mỗi câu hỏi, các lần sau tải gần như tức thì.
-  const [speaking, setSpeaking] = useState(false);
-  const currentAudioRef = useRef<HTMLAudioElement | null>(null);
-
-  const speakQuestion = async (questionId: string, text: string) => {
-    // Ngắt lượt đọc trước nếu bé bấm liên tục.
-    if (currentAudioRef.current) {
-      currentAudioRef.current.pause();
-      currentAudioRef.current = null;
-    }
-    if ('speechSynthesis' in window) window.speechSynthesis.cancel();
-
-    setSpeaking(true);
-    try {
-      const res = await api.get(`/public/tts/questions/${questionId}`, { responseType: 'blob' });
-      const url = URL.createObjectURL(res.data);
-      const audio = new Audio(url);
-      currentAudioRef.current = audio;
-      audio.onended = () => setSpeaking(false);
-      audio.onerror = () => setSpeaking(false);
-      await audio.play();
-    } catch (err) {
-      console.error('Không tạo được giọng đọc AI, dùng giọng trình duyệt thay thế', err);
-      speakQuestionBrowserFallback(text);
-      setSpeaking(false);
-    }
-  };
-
-  // Dự phòng nếu server không gọi được (mất mạng, API lỗi, ...) — vẫn cố đọc bằng giọng có
-  // sẵn của trình duyệt còn hơn im lặng hoàn toàn, dù chất lượng kém hơn giọng AI ở trên.
-  const speakQuestionBrowserFallback = (text: string) => {
-    if (!('speechSynthesis' in window)) return;
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = 'vi-VN';
-    utterance.rate = 0.92;
-    utterance.pitch = 1.05;
-    window.speechSynthesis.speak(utterance);
   };
 
   useEffect(() => {
@@ -138,21 +95,6 @@ export default function Quiz() {
       .catch(console.error)
       .finally(() => setLoading(false));
   }, [examId, selectedStudent, navigate, isReview]);
-
-  // Bấm loa là lúc bé đã đọc/nghĩ xong câu hỏi và muốn nghe ngay — nếu chỉ bắt đầu gọi
-  // Gemini lúc đó thì phải chờ ~5-6s mới có tiếng, cảm giác như bị đơ. Thay vào đó, âm thầm
-  // xin server tạo trước giọng đọc ngay khi câu hỏi (và câu kế tiếp) hiện ra, tận dụng thời
-  // gian bé đọc/suy nghĩ để việc gọi AI chạy ngầm — lúc bấm loa thật thì audio thường đã có
-  // sẵn trong cache của server (và của trình duyệt), nghe gần như ngay lập tức.
-  useEffect(() => {
-    if (isReview) return; // xem lại bài không cần đọc trước, bé hiếm khi bấm loa ở màn này
-    const prefetch = (id?: string) => {
-      if (!id) return;
-      api.post(`/public/tts/questions/${id}/prefetch`).catch(() => {});
-    };
-    prefetch(questions[currentQuestion]?.id);
-    prefetch(questions[currentQuestion + 1]?.id);
-  }, [questions, currentQuestion, isReview]);
 
   const handleAnswer = (answer: string) => {
     if (isReview) return;
@@ -375,14 +317,7 @@ export default function Quiz() {
               className="flex-1 flex flex-col items-center justify-center max-w-2xl mx-auto w-full"
             >
               <div className="bg-white w-full rounded-[1.5rem] md:rounded-[3rem] p-5 sm:p-8 md:p-16 shadow-xl shadow-cream-border/50 mb-4 md:mb-10 text-center relative border border-cream-border">
-                <button
-                  className={`absolute top-2.5 right-2.5 md:top-6 md:right-6 p-2 md:p-4 bg-terracotta-100 text-primary rounded-xl md:rounded-2xl hover:bg-terracotta-100/70 transition-colors ${speaking ? 'animate-pulse opacity-70' : ''}`}
-                  onClick={() => speakQuestion(questions[currentQuestion].id, questions[currentQuestion].text)}
-                  disabled={speaking}
-                >
-                  <Volume2 className="w-4 h-4 md:w-7 md:h-7" />
-                </button>
-                <h3 className="text-xl sm:text-2xl md:text-5xl font-extrabold text-ink leading-tight px-6 md:px-0">
+                <h3 className="text-xl sm:text-2xl md:text-5xl font-extrabold text-ink leading-tight">
                   {questions[currentQuestion].text}
                 </h3>
               </div>
