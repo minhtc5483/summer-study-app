@@ -97,8 +97,8 @@ export default function Overview() {
   return (
     <div className="space-y-8">
       <div>
-        <h2 className="text-3xl font-bold text-slate-800">Tổng Quan Tiến Độ</h2>
-        <p className="text-slate-500 mt-2">Theo dõi kết quả học tập của các bé trong mùa hè này.</p>
+        <h2 className="text-3xl font-bold text-ink">Tổng Quan Tiến Độ</h2>
+        <p className="text-ink-muted mt-2">Theo dõi kết quả học tập của các bé trong mùa hè này.</p>
       </div>
 
       {/* Summary Cards */}
@@ -106,14 +106,14 @@ export default function Overview() {
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex items-center gap-4"
+          className="bg-white p-6 rounded-2xl shadow-sm border border-cream-border flex items-center gap-4"
         >
-          <div className="w-14 h-14 bg-blue-100 rounded-xl flex items-center justify-center text-blue-600">
+          <div className="w-14 h-14 bg-terracotta-100 rounded-xl flex items-center justify-center text-primary-dark">
             <Users size={28} />
           </div>
           <div>
-            <p className="text-sm text-slate-500 font-medium">Số Học Sinh</p>
-            <p className="text-2xl font-bold text-slate-800">{totalStudents}</p>
+            <p className="text-sm text-ink-muted font-medium">Số Học Sinh</p>
+            <p className="text-2xl font-bold text-ink">{totalStudents}</p>
           </div>
         </motion.div>
 
@@ -121,14 +121,14 @@ export default function Overview() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex items-center gap-4"
+          className="bg-white p-6 rounded-2xl shadow-sm border border-cream-border flex items-center gap-4"
         >
-          <div className="w-14 h-14 bg-green-100 rounded-xl flex items-center justify-center text-green-600">
+          <div className="w-14 h-14 bg-sage-100 rounded-xl flex items-center justify-center text-secondary-dark">
             <Target size={28} />
           </div>
           <div>
-            <p className="text-sm text-slate-500 font-medium">Tỷ lệ Chính xác (TB)</p>
-            <p className="text-2xl font-bold text-slate-800">{avgAccuracy}%</p>
+            <p className="text-sm text-ink-muted font-medium">Tỷ lệ Chính xác (TB)</p>
+            <p className="text-2xl font-bold text-ink">{avgAccuracy}%</p>
           </div>
         </motion.div>
 
@@ -136,20 +136,20 @@ export default function Overview() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
-          className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex items-center gap-4"
+          className="bg-white p-6 rounded-2xl shadow-sm border border-cream-border flex items-center gap-4"
         >
-          <div className="w-14 h-14 bg-purple-100 rounded-xl flex items-center justify-center text-purple-600">
+          <div className="w-14 h-14 bg-gold-100 rounded-xl flex items-center justify-center text-gold-600">
             <Brain size={28} />
           </div>
           <div>
-            <p className="text-sm text-slate-500 font-medium">Tổng Câu đã làm</p>
-            <p className="text-2xl font-bold text-slate-800">{totalQuestions}</p>
+            <p className="text-sm text-ink-muted font-medium">Tổng Câu đã làm</p>
+            <p className="text-2xl font-bold text-ink">{totalQuestions}</p>
           </div>
         </motion.div>
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-2 border-b border-slate-200">
+      <div className="flex gap-2 border-b border-cream-border">
         {([
           { key: 'overview' as const, label: 'Tổng Quan', badge: 0 },
           { key: 'schedules' as const, label: 'Lịch AI', badge: aiSchedules.length },
@@ -161,7 +161,7 @@ export default function Overview() {
             className={`relative px-5 py-3 font-semibold text-sm transition-colors border-b-2 -mb-px ${
               activeTab === tab.key
                 ? 'text-primary-dark border-primary'
-                : 'text-slate-500 border-transparent hover:text-slate-700'
+                : 'text-ink-muted border-transparent hover:text-ink'
             }`}
           >
             {tab.label}
@@ -178,9 +178,9 @@ export default function Overview() {
       <>
       {/* Charts Area */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
-          <h3 className="text-lg font-bold text-slate-800 mb-6 flex items-center gap-2">
-            <Award className="text-yellow-500" /> Bảng Xếp Hạng Điểm Số
+        <div className="bg-white p-6 rounded-2xl shadow-sm border border-cream-border">
+          <h3 className="text-lg font-bold text-ink mb-6 flex items-center gap-2">
+            <Award className="text-gold-600" /> Bảng Xếp Hạng Điểm Số
           </h3>
           <div className="h-80">
             {stats.length > 0 ? (
@@ -193,20 +193,20 @@ export default function Overview() {
                     cursor={{fill: '#f8fafc'}}
                     contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
                   />
-                  <Bar dataKey="totalScore" name="Tổng Điểm" fill="#F59E0B" radius={[6, 6, 0, 0]} />
+                  <Bar dataKey="totalScore" name="Tổng Điểm" fill="#E8734A" radius={[6, 6, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             ) : (
-              <div className="h-full flex items-center justify-center text-slate-400">
+              <div className="h-full flex items-center justify-center text-ink-muted">
                 Chưa có dữ liệu học tập
               </div>
             )}
           </div>
         </div>
 
-        <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
-          <h3 className="text-lg font-bold text-slate-800 mb-6 flex items-center gap-2">
-            <Target className="text-blue-500" /> Tỷ lệ Chính xác (%)
+        <div className="bg-white p-6 rounded-2xl shadow-sm border border-cream-border">
+          <h3 className="text-lg font-bold text-ink mb-6 flex items-center gap-2">
+            <Target className="text-secondary-dark" /> Tỷ lệ Chính xác (%)
           </h3>
           <div className="h-80">
             {stats.length > 0 ? (
@@ -219,11 +219,11 @@ export default function Overview() {
                     cursor={{fill: '#f8fafc'}}
                     contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
                   />
-                  <Bar dataKey="accuracy" name="Độ Chính Xác (%)" fill="#3B82F6" radius={[6, 6, 0, 0]} />
+                  <Bar dataKey="accuracy" name="Độ Chính Xác (%)" fill="#7FA885" radius={[6, 6, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             ) : (
-              <div className="h-full flex items-center justify-center text-slate-400">
+              <div className="h-full flex items-center justify-center text-ink-muted">
                 Chưa có dữ liệu học tập
               </div>
             )}
@@ -232,13 +232,13 @@ export default function Overview() {
       </div>
 
       {/* Detailed Table */}
-      <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
-        <div className="p-6 border-b border-slate-100">
-          <h3 className="text-lg font-bold text-slate-800">Chi tiết Thành tích</h3>
+      <div className="bg-white rounded-2xl shadow-sm border border-cream-border overflow-hidden">
+        <div className="p-6 border-b border-cream-border">
+          <h3 className="text-lg font-bold text-ink">Chi tiết Thành tích</h3>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-left">
-            <thead className="bg-slate-50 text-slate-500 text-sm">
+            <thead className="bg-cream text-ink-muted text-sm">
               <tr>
                 <th className="py-4 px-6 font-medium">Học sinh</th>
                 <th className="py-4 px-6 font-medium">Tổng điểm</th>
@@ -249,16 +249,16 @@ export default function Overview() {
                 <th className="py-4 px-6 font-medium">Câu sai</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
+            <tbody className="divide-y divide-cream-border">
               {stats.map((student) => (
                 <tr 
                   key={student.studentId} 
-                  className="hover:bg-slate-50 transition-colors cursor-pointer"
+                  className="hover:bg-cream transition-colors cursor-pointer"
                   onClick={() => navigate(`/parent/students/${student.studentId}/stats`)}
                 >
-                  <td className="py-4 px-6 font-medium text-blue-600 hover:underline">{student.name}</td>
+                  <td className="py-4 px-6 font-medium text-primary-dark hover:underline">{student.name}</td>
                   <td className="py-4 px-6">
-                    <span className="flex items-center gap-1 font-bold text-yellow-500">
+                    <span className="flex items-center gap-1 font-bold text-gold-600">
                       {student.totalScore?.toLocaleString('vi-VN') || '0'} <Award size={16} />
                     </span>
                   </td>
@@ -270,18 +270,18 @@ export default function Overview() {
                   <td className="py-4 px-6">
                     <div className="flex gap-1 flex-wrap max-w-[120px]">
                       {student.earnedBadges && student.earnedBadges.slice(0, 3).map(badge => (
-                        <div key={badge.id} className={`w-6 h-6 rounded-full flex items-center justify-center text-xs shadow-sm border border-slate-700/50 ${badge.color}`} title={badge.name}>
+                        <div key={badge.id} className={`w-6 h-6 rounded-full flex items-center justify-center text-xs shadow-sm border border-cream-border ${badge.color}`} title={badge.name}>
                           {badge.icon}
                         </div>
                       ))}
                       {student.earnedBadges && student.earnedBadges.length > 3 && (
-                        <div className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold bg-slate-700 text-slate-300 shadow-sm border border-slate-600">
+                        <div className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold bg-cream-border text-ink-muted shadow-sm border border-cream-border">
                           +{student.earnedBadges.length - 3}
                         </div>
                       )}
                     </div>
                   </td>
-                  <td className="py-4 px-6 text-slate-600">{student.totalAttempted} câu</td>
+                  <td className="py-4 px-6 text-ink-muted">{student.totalAttempted} câu</td>
                   <td className="py-4 px-6">
                     <span className={`px-3 py-1 rounded-full text-sm font-medium ${
                       student.accuracy >= 80 ? 'bg-green-100 text-green-700' :
@@ -290,12 +290,12 @@ export default function Overview() {
                       {student.accuracy}%
                     </span>
                   </td>
-                  <td className="py-4 px-6 text-slate-600">{student.wrongQuestionsCount} câu</td>
+                  <td className="py-4 px-6 text-ink-muted">{student.wrongQuestionsCount} câu</td>
                 </tr>
               ))}
               {stats.length === 0 && (
                 <tr>
-                  <td colSpan={7} className="py-8 text-center text-slate-500">
+                  <td colSpan={7} className="py-8 text-center text-ink-muted">
                     Chưa có học sinh nào. Hãy thêm học sinh và làm bài tập nhé!
                   </td>
                 </tr>
@@ -310,14 +310,14 @@ export default function Overview() {
       {activeTab === 'schedules' && (
       <>
       {/* AI Schedules Table */}
-      <div className="bg-white rounded-2xl shadow-sm border border-blue-100 overflow-hidden">
-        <div className="p-6 border-b border-blue-100 bg-blue-50/50 flex items-center gap-3">
-          <CalendarClock className="text-blue-600" />
-          <h3 className="text-lg font-bold text-blue-900">Lịch giao bài tự động bằng AI</h3>
+      <div className="bg-white rounded-2xl shadow-sm border border-terracotta-100 overflow-hidden">
+        <div className="p-6 border-b border-terracotta-100 bg-terracotta-100/50 flex items-center gap-3">
+          <CalendarClock className="text-primary-dark" />
+          <h3 className="text-lg font-bold text-primary-dark">Lịch giao bài tự động bằng AI</h3>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-left">
-            <thead className="bg-slate-50 text-slate-500 text-sm">
+            <thead className="bg-cream text-ink-muted text-sm">
               <tr>
                 <th className="py-4 px-6 font-medium">Môn học</th>
                 <th className="py-4 px-6 font-medium">Chủ đề</th>
@@ -326,15 +326,15 @@ export default function Overview() {
                 <th className="py-4 px-6 font-medium text-right">Thao tác</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
+            <tbody className="divide-y divide-cream-border">
               {aiSchedules.map((schedule) => (
-                <tr key={schedule.id} className="hover:bg-slate-50 transition-colors">
-                  <td className="py-4 px-6 font-bold text-slate-800">{schedule.subject?.name}</td>
-                  <td className="py-4 px-6 text-slate-600">{schedule.topic?.name || 'Tất cả'}</td>
-                  <td className="py-4 px-6 text-slate-600">
+                <tr key={schedule.id} className="hover:bg-cream transition-colors">
+                  <td className="py-4 px-6 font-bold text-ink">{schedule.subject?.name}</td>
+                  <td className="py-4 px-6 text-ink-muted">{schedule.topic?.name || 'Tất cả'}</td>
+                  <td className="py-4 px-6 text-ink-muted">
                     {schedule.numberOfQuestions} câu / {schedule.timeLimit} phút
                   </td>
-                  <td className="py-4 px-6 text-blue-600 font-medium">
+                  <td className="py-4 px-6 text-primary font-medium">
                     Hằng ngày lúc 06:00
                   </td>
                   <td className="py-4 px-6 text-right">
@@ -350,7 +350,7 @@ export default function Overview() {
               ))}
               {aiSchedules.length === 0 && (
                 <tr>
-                  <td colSpan={5} className="py-8 text-center text-slate-500">
+                  <td colSpan={5} className="py-8 text-center text-ink-muted">
                     Bạn chưa cài đặt lịch tự động nào. Hãy vào "Tạo đề nhanh" để thiết lập.
                   </td>
                 </tr>
@@ -365,14 +365,14 @@ export default function Overview() {
       {activeTab === 'exchanges' && (
       <>
       {/* Point Exchanges Table */}
-      <div className="bg-white rounded-2xl shadow-sm border border-purple-100 overflow-hidden">
-        <div className="p-6 border-b border-purple-100 bg-purple-50/50 flex items-center gap-3">
-          <Award className="text-purple-600" />
-          <h3 className="text-lg font-bold text-purple-900">Yêu cầu đổi Giờ chơi điện thoại</h3>
+      <div className="bg-white rounded-2xl shadow-sm border border-sage-100 overflow-hidden">
+        <div className="p-6 border-b border-sage-100 bg-sage-100/50 flex items-center gap-3">
+          <Award className="text-secondary-dark" />
+          <h3 className="text-lg font-bold text-secondary-dark">Yêu cầu đổi Giờ chơi điện thoại</h3>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-left">
-            <thead className="bg-slate-50 text-slate-500 text-sm">
+            <thead className="bg-cream text-ink-muted text-sm">
               <tr>
                 <th className="py-4 px-6 font-medium">Học sinh</th>
                 <th className="py-4 px-6 font-medium">Điểm đã dùng</th>
@@ -382,10 +382,10 @@ export default function Overview() {
                 <th className="py-4 px-6 font-medium text-right">Thao tác</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
+            <tbody className="divide-y divide-cream-border">
               {pointExchanges.map((exchange) => (
-                <tr key={exchange.id} className="hover:bg-slate-50 transition-colors">
-                  <td className="py-4 px-6 font-bold text-slate-800 flex items-center gap-3">
+                <tr key={exchange.id} className="hover:bg-cream transition-colors">
+                  <td className="py-4 px-6 font-bold text-ink flex items-center gap-3">
                     <img 
                       src={exchange.student.avatar ? exchange.student.avatar : `https://ui-avatars.com/api/?name=${exchange.student.name}`}
                       alt={exchange.student.name}
@@ -394,8 +394,8 @@ export default function Overview() {
                     {exchange.student.name}
                   </td>
                   <td className="py-4 px-6 text-orange-600 font-bold">-{exchange.points}</td>
-                  <td className="py-4 px-6 text-purple-600 font-bold">{exchange.minutes} Phút</td>
-                  <td className="py-4 px-6 text-slate-600">
+                  <td className="py-4 px-6 text-secondary-dark font-bold">{exchange.minutes} Phút</td>
+                  <td className="py-4 px-6 text-ink-muted">
                     {new Date(exchange.createdAt).toLocaleString('vi-VN')}
                   </td>
                   <td className="py-4 px-6">
@@ -409,7 +409,7 @@ export default function Overview() {
                     {exchange.status === 'PENDING' && (
                       <button 
                         onClick={() => handleFulfillExchange(exchange.id)}
-                        className="px-4 py-2 bg-green-500 hover:bg-green-600 text-white font-bold rounded-lg transition-colors flex items-center gap-2 ml-auto"
+                        className="px-4 py-2 bg-secondary hover:bg-secondary-dark text-white font-bold rounded-lg transition-colors flex items-center gap-2 ml-auto"
                       >
                         <CheckCircle size={16} /> Đã cho chơi
                       </button>
@@ -419,7 +419,7 @@ export default function Overview() {
               ))}
               {pointExchanges.length === 0 && (
                 <tr>
-                  <td colSpan={6} className="py-8 text-center text-slate-500">
+                  <td colSpan={6} className="py-8 text-center text-ink-muted">
                     Chưa có yêu cầu đổi giờ chơi nào.
                   </td>
                 </tr>

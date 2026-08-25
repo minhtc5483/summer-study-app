@@ -141,14 +141,14 @@ export default function ImportModal({ isOpen, onClose, topicId, topicName, onSuc
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-ink/50 backdrop-blur-sm">
       <div className="bg-white rounded-3xl shadow-xl w-full max-w-lg overflow-hidden">
-        <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-blue-50">
+        <div className="p-6 border-b border-cream-border flex justify-between items-center bg-terracotta-100">
           <div>
-            <h3 className="text-xl font-bold text-slate-800">Nhập bài tập</h3>
-            <p className="text-sm text-slate-500 mt-1">Chủ đề: <span className="font-semibold text-primary">{topicName}</span></p>
+            <h3 className="text-xl font-bold text-ink">Nhập bài tập</h3>
+            <p className="text-sm text-ink-muted mt-1">Chủ đề: <span className="font-semibold text-primary">{topicName}</span></p>
           </div>
-          <button onClick={onClose} className="text-slate-400 hover:text-slate-600 bg-white rounded-full p-2">
+          <button onClick={onClose} className="text-ink-muted hover:text-ink bg-white rounded-full p-2">
             <X size={20} />
           </button>
         </div>
@@ -157,45 +157,45 @@ export default function ImportModal({ isOpen, onClose, topicId, topicName, onSuc
           {successCount !== null ? (
             <div className="text-center py-8">
               <CheckCircle className="text-green-500 w-16 h-16 mx-auto mb-4" />
-              <h4 className="text-2xl font-bold text-slate-800 mb-2">Thành công!</h4>
-              <p className="text-slate-600">Đã thêm {successCount} câu hỏi vào hệ thống.</p>
-              <button onClick={onClose} className="mt-6 px-6 py-2 bg-slate-100 text-slate-700 font-semibold rounded-xl hover:bg-slate-200 transition-colors">
+              <h4 className="text-2xl font-bold text-ink mb-2">Thành công!</h4>
+              <p className="text-ink-muted">Đã thêm {successCount} câu hỏi vào hệ thống.</p>
+              <button onClick={onClose} className="mt-6 px-6 py-2 bg-cream text-ink font-semibold rounded-xl hover:bg-cream-border transition-colors">
                 Đóng
               </button>
             </div>
           ) : (
             <>
-              <div className="flex bg-slate-100 p-1 rounded-2xl">
+              <div className="flex bg-cream p-1 rounded-2xl">
                 <button 
                   onClick={() => handleTabChange('csv')}
-                  className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-xl text-sm font-semibold transition-all ${activeTab === 'csv' ? 'bg-white shadow-sm text-primary' : 'text-slate-500 hover:text-slate-700'}`}
+                  className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-xl text-sm font-semibold transition-all ${activeTab === 'csv' ? 'bg-white shadow-sm text-primary' : 'text-ink-muted hover:text-ink'}`}
                 >
                   <FileSpreadsheet size={18} /> File CSV
                 </button>
                 <button 
                   onClick={() => handleTabChange('ai')}
-                  className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-xl text-sm font-semibold transition-all ${activeTab === 'ai' ? 'bg-white shadow-sm text-purple-600' : 'text-slate-500 hover:text-slate-700'}`}
+                  className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-xl text-sm font-semibold transition-all ${activeTab === 'ai' ? 'bg-white shadow-sm text-gold-600' : 'text-ink-muted hover:text-ink'}`}
                 >
                   <Brain size={18} /> Nhận diện AI
                 </button>
               </div>
 
               {activeTab === 'csv' ? (
-                <div className="bg-blue-50/50 p-4 rounded-2xl border border-blue-100">
-                  <p className="text-sm text-slate-600 mb-3">Tải lên file CSV đúng định dạng để thêm nhiều câu hỏi cùng lúc.</p>
+                <div className="bg-terracotta-100/50 p-4 rounded-2xl border border-terracotta-100">
+                  <p className="text-sm text-ink-muted mb-3">Tải lên file CSV đúng định dạng để thêm nhiều câu hỏi cùng lúc.</p>
                   <button onClick={handleDownloadTemplate} className="text-primary hover:text-primary-dark text-sm font-semibold flex items-center gap-2">
                     <FileText size={16} /> Tải file CSV mẫu (Template)
                   </button>
                 </div>
               ) : (
-                <div className="bg-purple-50/50 p-4 rounded-2xl border border-purple-100">
-                  <p className="text-sm text-slate-600">Hệ thống AI sẽ tự động đọc bài tập từ file PDF hoặc Hình ảnh (JPG, PNG) và chuyển thành câu hỏi trắc nghiệm.</p>
+                <div className="bg-gold-100/50 p-4 rounded-2xl border border-gold-100">
+                  <p className="text-sm text-ink-muted">Hệ thống AI sẽ tự động đọc bài tập từ file PDF hoặc Hình ảnh (JPG, PNG) và chuyển thành câu hỏi trắc nghiệm.</p>
                 </div>
               )}
 
               <div 
                 onClick={() => fileInputRef.current?.click()}
-                className={`border-2 border-dashed rounded-3xl p-8 text-center cursor-pointer transition-colors ${file ? 'border-primary bg-blue-50' : 'border-slate-200 hover:bg-slate-50'}`}
+                className={`border-2 border-dashed rounded-3xl p-8 text-center cursor-pointer transition-colors ${file ? 'border-primary bg-terracotta-100' : 'border-cream-border hover:bg-cream'}`}
               >
                 <input 
                   type="file" 
@@ -207,19 +207,19 @@ export default function ImportModal({ isOpen, onClose, topicId, topicName, onSuc
                 
                 {file ? (
                   <div className="flex flex-col items-center">
-                    <div className="w-16 h-16 bg-blue-100 text-primary rounded-full flex items-center justify-center mb-3">
+                    <div className="w-16 h-16 bg-terracotta-100 text-primary-dark rounded-full flex items-center justify-center mb-3">
                       <FileText size={32} />
                     </div>
-                    <p className="font-semibold text-slate-800">{file.name}</p>
-                    <p className="text-sm text-slate-500 mt-1">{(file.size / 1024).toFixed(1)} KB</p>
+                    <p className="font-semibold text-ink">{file.name}</p>
+                    <p className="text-sm text-ink-muted mt-1">{(file.size / 1024).toFixed(1)} KB</p>
                   </div>
                 ) : (
                   <div className="flex flex-col items-center">
-                    <div className="w-16 h-16 bg-slate-100 text-slate-400 rounded-full flex items-center justify-center mb-3">
+                    <div className="w-16 h-16 bg-cream text-ink-muted rounded-full flex items-center justify-center mb-3">
                       <Upload size={32} />
                     </div>
-                    <p className="font-semibold text-slate-700 mb-1">Bấm để chọn file {activeTab === 'csv' ? 'CSV' : 'PDF / Ảnh'}</p>
-                    <p className="text-sm text-slate-400">hoặc kéo thả file vào đây</p>
+                    <p className="font-semibold text-ink mb-1">Bấm để chọn file {activeTab === 'csv' ? 'CSV' : 'PDF / Ảnh'}</p>
+                    <p className="text-sm text-ink-muted">hoặc kéo thả file vào đây</p>
                   </div>
                 )}
               </div>
@@ -232,13 +232,13 @@ export default function ImportModal({ isOpen, onClose, topicId, topicName, onSuc
               )}
 
               <div className="flex gap-4">
-                <button type="button" onClick={onClose} className="flex-1 py-3 px-4 border border-slate-200 text-slate-700 rounded-xl hover:bg-slate-50 font-medium transition-colors">
+                <button type="button" onClick={onClose} className="flex-1 py-3 px-4 border border-cream-border text-ink rounded-xl hover:bg-cream font-medium transition-colors">
                   Hủy
                 </button>
                 <button
                   onClick={handleImport}
                   disabled={!file || loading}
-                  className={`flex-1 py-3 px-4 text-white rounded-xl font-medium transition-colors disabled:opacity-50 flex justify-center items-center gap-2 ${activeTab === 'ai' ? 'bg-purple-600 hover:bg-purple-700' : 'bg-primary hover:bg-primary-dark'}`}
+                  className={`flex-1 py-3 px-4 text-white rounded-xl font-medium transition-colors disabled:opacity-50 flex justify-center items-center gap-2 ${activeTab === 'ai' ? 'bg-gold-600 hover:opacity-90' : 'bg-primary hover:bg-primary-dark'}`}
                 >
                   {loading ? (
                     <div className="flex items-center gap-2">

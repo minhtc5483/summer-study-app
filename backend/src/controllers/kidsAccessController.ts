@@ -30,16 +30,15 @@ export const verifyFamilyPin = (req: Request, res: Response) => {
   res.json({ accessToken: issueKidsAccessToken() });
 };
 
-// Per-student PIN, set by the parent in Settings. A student with no PIN configured
-// (pinHash === null) needs no verification at all — the frontend skips calling this and
-// logs the student in directly. Issues the same kind of token as the family PIN so every
-// existing /public/* route works unchanged.
+// Per-student PIN, set by the parent in Settings. Every /public/* route past the student
+// picker (rewards, exam list, submit, ...) is gated by requireKidsAccess and needs a valid
+// kids-access token — there is no other way to get one now that the family-wide PIN screen
+// isn't shown first. So this endpoint is called for EVERY student on entry, PIN or not:
+// a student with no PIN configured (pinHash === null) gets the token immediately, no PIN
+// needed; a student with a PIN needs it verified first. Issues the same kind of token the
+// legacy family PIN does, so every existing /public/* route works unchanged.
 export const verifyStudentPin = async (req: Request, res: Response) => {
   const studentId = req.params.studentId as string;
-  const parsed = pinSchema.safeParse(req.body);
-  if (!parsed.success) {
-    return res.status(400).json({ error: 'PIN is required' });
-  }
 
   const student = await prisma.student.findUnique({ where: { id: studentId } });
   if (!student) {
@@ -47,7 +46,12 @@ export const verifyStudentPin = async (req: Request, res: Response) => {
   }
 
   if (!student.pinHash) {
-    return res.status(400).json({ error: 'Bé này chưa cần mã PIN' });
+    return res.json({ accessToken: issueKidsAccessToken() });
+  }
+
+  const parsed = pinSchema.safeParse(req.body);
+  if (!parsed.success) {
+    return res.status(400).json({ error: 'PIN is required' });
   }
 
   const isMatch = await bcrypt.compare(parsed.data.pin, student.pinHash);

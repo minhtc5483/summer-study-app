@@ -103,13 +103,13 @@ export default function StudentModal({ isOpen, onClose, onSubmit, initialData }:
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-ink/50 backdrop-blur-sm">
       <div className="bg-white rounded-3xl shadow-xl w-full max-w-md overflow-hidden">
-        <div className="p-6 border-b border-slate-100 flex justify-between items-center">
-          <h3 className="text-xl font-bold text-slate-800">
+        <div className="p-6 border-b border-cream-border flex justify-between items-center">
+          <h3 className="text-xl font-bold text-ink">
             {initialData ? 'Cập nhật Học Sinh' : 'Thêm Học Sinh Mới'}
           </h3>
-          <button onClick={onClose} className="text-slate-400 hover:text-slate-600">
+          <button onClick={onClose} className="text-ink-muted hover:text-ink">
             &times;
           </button>
         </div>
@@ -118,14 +118,14 @@ export default function StudentModal({ isOpen, onClose, onSubmit, initialData }:
           <div className="flex flex-col items-center">
             <div 
               onClick={() => fileInputRef.current?.click()}
-              className="w-24 h-24 rounded-full border-4 border-dashed border-slate-200 overflow-hidden bg-slate-50 cursor-pointer hover:bg-slate-100 hover:border-primary transition-all flex flex-col items-center justify-center relative group"
+              className="w-24 h-24 rounded-full border-4 border-dashed border-cream-border overflow-hidden bg-cream cursor-pointer hover:bg-cream-border hover:border-primary transition-all flex flex-col items-center justify-center relative group"
             >
               {avatarPreview ? (
                 <img src={avatarPreview} alt="Preview" className="w-full h-full object-cover" />
               ) : (
                 <>
-                  <Camera className="text-slate-400 mb-1" />
-                  <span className="text-xs text-slate-400 font-medium">Tải ảnh</span>
+                  <Camera className="text-ink-muted mb-1" />
+                  <span className="text-xs text-ink-muted font-medium">Tải ảnh</span>
                 </>
               )}
               <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
@@ -139,23 +139,23 @@ export default function StudentModal({ isOpen, onClose, onSubmit, initialData }:
               accept="image/*" 
               className="hidden" 
             />
-            <p className="text-xs text-slate-500 mt-2">Nhấn vào để tải ảnh đại diện</p>
+            <p className="text-xs text-ink-muted mt-2">Nhấn vào để tải ảnh đại diện</p>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-2">Tên bé</label>
+            <label className="block text-sm font-medium text-ink mb-2">Tên bé</label>
             <input
               type="text"
               required
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="w-full px-4 py-3 rounded-xl border border-slate-300 focus:ring-2 focus:ring-primary focus:border-primary transition-shadow"
+              className="w-full px-4 py-3 rounded-xl border border-cream-border focus:ring-2 focus:ring-primary focus:border-primary transition-shadow"
               placeholder="Ví dụ: Bé An"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-2">Lớp</label>
+            <label className="block text-sm font-medium text-ink mb-2">Lớp</label>
             {availableGrades.length > 0 ? (
               <div className="grid grid-cols-3 gap-3 max-h-40 overflow-y-auto p-1">
                 {availableGrades.map((g) => (
@@ -168,7 +168,7 @@ export default function StudentModal({ isOpen, onClose, onSubmit, initialData }:
                       onChange={() => setGrade(g.name)}
                       className="hidden peer" 
                     />
-                    <div className="text-center py-2 px-2 rounded-xl border-2 border-slate-200 peer-checked:border-primary peer-checked:bg-blue-50 peer-checked:text-primary-dark font-bold text-slate-600 transition-all text-sm">
+                    <div className="text-center py-2 px-2 rounded-xl border-2 border-cream-border peer-checked:border-primary peer-checked:bg-terracotta-100 peer-checked:text-primary-dark font-bold text-ink-muted transition-all text-sm">
                       {g.name}
                     </div>
                   </label>
@@ -182,11 +182,11 @@ export default function StudentModal({ isOpen, onClose, onSubmit, initialData }:
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-2">Môn học được phép làm</label>
+            <label className="block text-sm font-medium text-ink mb-2">Môn học được phép làm</label>
             {availableSubjects.length > 0 ? (
               <div className="space-y-2 max-h-40 overflow-y-auto p-1">
                 {availableSubjects.map((s) => (
-                  <label key={s.id} className="flex items-center gap-3 p-3 bg-slate-50 border border-slate-200 rounded-xl cursor-pointer hover:bg-slate-100 transition-colors">
+                  <label key={s.id} className="flex items-center gap-3 p-3 bg-cream border border-cream-border rounded-xl cursor-pointer hover:bg-cream-border transition-colors">
                     <input 
                       type="checkbox" 
                       checked={selectedSubjects.includes(s.id)}
@@ -194,11 +194,11 @@ export default function StudentModal({ isOpen, onClose, onSubmit, initialData }:
                         if (e.target.checked) setSelectedSubjects([...selectedSubjects, s.id]);
                         else setSelectedSubjects(selectedSubjects.filter(id => id !== s.id));
                       }}
-                      className="w-5 h-5 rounded border-slate-300 text-primary focus:ring-primary" 
+                      className="w-5 h-5 rounded border-cream-border text-primary focus:ring-primary" 
                     />
                     <div className="flex items-center gap-2">
                       <span className="text-xl">{s.icon}</span>
-                      <span className="font-semibold text-slate-700">{s.name}</span>
+                      <span className="font-semibold text-ink">{s.name}</span>
                     </div>
                   </label>
                 ))}
@@ -214,13 +214,13 @@ export default function StudentModal({ isOpen, onClose, onSubmit, initialData }:
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 py-3 px-4 bg-slate-100 text-slate-700 font-bold rounded-xl hover:bg-slate-200 transition-colors"
+              className="flex-1 py-3 px-4 bg-cream text-ink font-bold rounded-xl hover:bg-cream-border transition-colors"
             >
               Hủy
             </button>
             <button
               type="submit"
-              className="flex-1 py-3 px-4 bg-primary text-white font-bold rounded-xl hover:bg-primary-dark transition-colors shadow-lg shadow-blue-200"
+              className="flex-1 py-3 px-4 bg-primary text-white font-bold rounded-xl hover:bg-primary-dark transition-colors shadow-lg shadow-terracotta-100"
             >
               {initialData ? 'Lưu Thay Đổi' : 'Tạo Học Sinh'}
             </button>

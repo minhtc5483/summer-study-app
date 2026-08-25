@@ -99,15 +99,15 @@ export default function QuickCreateExamModal({ isOpen, onClose, subjectId, subje
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+    <div className="fixed inset-0 bg-ink/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-3xl w-full max-w-lg overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
-        <div className="p-6 bg-gradient-to-r from-blue-600 to-indigo-600 text-white flex items-center gap-3 shrink-0">
+        <div className="p-6 bg-gradient-to-r from-primary to-primary-dark text-white flex items-center gap-3 shrink-0">
           <div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-md">
             <Bot size={28} className="text-white" />
           </div>
           <div>
             <h2 className="text-xl font-bold">Tạo Đề Nhanh AI</h2>
-            <p className="text-blue-100 text-sm font-medium">Môn: {subjectName}</p>
+            <p className="text-terracotta-100 text-sm font-medium">Môn: {subjectName}</p>
           </div>
         </div>
 
@@ -119,16 +119,16 @@ export default function QuickCreateExamModal({ isOpen, onClose, subjectId, subje
           )}
 
           <div>
-            <label className="flex items-center gap-2 text-sm font-bold text-slate-700 mb-3">
+            <label className="flex items-center gap-2 text-sm font-bold text-ink mb-3">
               <Brain size={18} className="text-primary" /> Thiết lập Đề Bài
             </label>
             
             <div className="mb-4">
-              <label className="block text-xs font-medium text-slate-500 mb-1">Chủ đề tập trung (Tùy chọn)</label>
+              <label className="block text-xs font-medium text-ink-muted mb-1">Chủ đề tập trung (Tùy chọn)</label>
               <select 
                 value={selectedTopicId}
                 onChange={e => setSelectedTopicId(e.target.value)}
-                className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-primary font-bold text-slate-700 bg-white"
+                className="w-full px-4 py-3 rounded-xl border border-cream-border focus:ring-2 focus:ring-primary font-bold text-ink bg-white"
               >
                 <option value="">-- Tất cả chủ đề --</option>
                 {topics.map(t => (
@@ -138,11 +138,11 @@ export default function QuickCreateExamModal({ isOpen, onClose, subjectId, subje
             </div>
 
             <div className="mb-4">
-              <label className="block text-xs font-medium text-slate-500 mb-1">Độ khó (Tùy chọn)</label>
+              <label className="block text-xs font-medium text-ink-muted mb-1">Độ khó (Tùy chọn)</label>
               <select 
                 value={difficulty}
                 onChange={e => setDifficulty(e.target.value ? Number(e.target.value) : '')}
-                className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-primary font-bold text-slate-700 bg-white"
+                className="w-full px-4 py-3 rounded-xl border border-cream-border focus:ring-2 focus:ring-primary font-bold text-ink bg-white"
               >
                 <option value="">-- Đa dạng mức độ --</option>
                 <option value={1}>Dễ</option>
@@ -159,7 +159,7 @@ export default function QuickCreateExamModal({ isOpen, onClose, subjectId, subje
                   onChange={e => setUseInternetSearch(e.target.checked)}
                   className="w-5 h-5 text-primary rounded focus:ring-primary"
                 />
-                <span className="font-bold text-slate-700 flex items-center gap-2">
+                <span className="font-bold text-ink flex items-center gap-2">
                   Tìm kiếm bài tập mới trên Internet
                 </span>
               </label>
@@ -167,37 +167,37 @@ export default function QuickCreateExamModal({ isOpen, onClose, subjectId, subje
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-medium text-slate-500 mb-1">Số lượng câu hỏi</label>
+                <label className="block text-xs font-medium text-ink-muted mb-1">Số lượng câu hỏi</label>
                 <input 
                   type="number" 
                   min={1} 
                   max={50}
                   value={numberOfQuestions}
                   onChange={e => setNumberOfQuestions(Number(e.target.value))}
-                  className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-primary font-bold text-slate-700"
+                  className="w-full px-4 py-3 rounded-xl border border-cream-border focus:ring-2 focus:ring-primary font-bold text-ink"
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-slate-500 mb-1">Thời gian làm bài (Phút)</label>
+                <label className="block text-xs font-medium text-ink-muted mb-1">Thời gian làm bài (Phút)</label>
                 <input 
                   type="number" 
                   min={1} 
                   value={timeLimit}
                   onChange={e => setTimeLimit(Number(e.target.value))}
-                  className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-primary font-bold text-slate-700"
+                  className="w-full px-4 py-3 rounded-xl border border-cream-border focus:ring-2 focus:ring-primary font-bold text-ink"
                 />
               </div>
             </div>
             
-            <div className="mt-4 p-4 bg-blue-50 border border-blue-100 rounded-2xl">
+            <div className="mt-4 p-4 bg-gold-100 border border-gold-100 rounded-2xl">
               <label className="flex items-center gap-3 cursor-pointer">
                 <input 
                   type="checkbox" 
                   checked={isScheduled} 
                   onChange={e => setIsScheduled(e.target.checked)}
-                  className="w-5 h-5 text-blue-600 rounded focus:ring-blue-500"
+                  className="w-5 h-5 text-gold-600 rounded focus:ring-gold-600"
                 />
-                <span className="font-bold text-blue-800 flex items-center gap-2">
+                <span className="font-bold text-gold-600 flex items-center gap-2">
                   <CalendarClock size={18} /> Lên lịch AI tự tạo đề mỗi ngày
                 </span>
               </label>
@@ -205,39 +205,39 @@ export default function QuickCreateExamModal({ isOpen, onClose, subjectId, subje
               <div className="mt-3 pl-8">
                 {isScheduled ? (
                   <div>
-                    <label className="block text-xs font-medium text-blue-700 mb-1">Hạn chót làm bài (Tính từ ngày giao)</label>
+                    <label className="block text-xs font-medium text-gold-600 mb-1">Hạn chót làm bài (Tính từ ngày giao)</label>
                     <div className="flex items-center gap-2">
                       <input 
                         type="number" 
                         min={1}
                         value={dueDays}
                         onChange={e => setDueDays(Number(e.target.value))}
-                        className="w-24 px-3 py-2 rounded-xl border border-blue-200 focus:ring-2 focus:ring-blue-500 font-bold text-slate-700 bg-white"
+                        className="w-24 px-3 py-2 rounded-xl border border-gold-100 focus:ring-2 focus:ring-gold-600 font-bold text-ink bg-white"
                       />
-                      <span className="text-sm font-medium text-blue-800">ngày</span>
+                      <span className="text-sm font-medium text-gold-600">ngày</span>
                     </div>
                   </div>
                 ) : (
                   <div>
-                    <label className="block text-xs font-medium text-slate-500 mb-1">Hạn chót (Tùy chọn)</label>
+                    <label className="block text-xs font-medium text-ink-muted mb-1">Hạn chót (Tùy chọn)</label>
                     <input 
                       type="date" 
                       value={dueDate}
                       onChange={e => setDueDate(e.target.value)}
-                      className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-primary font-bold text-slate-700 bg-white"
+                      className="w-full px-4 py-3 rounded-xl border border-cream-border focus:ring-2 focus:ring-primary font-bold text-ink bg-white"
                     />
                   </div>
                 )}
               </div>
             </div>
 
-            <p className="text-xs text-slate-400 mt-2 italic">
+            <p className="text-xs text-ink-muted mt-2 italic">
               AI sẽ tự động chọn lọc các câu hỏi phù hợp nhất từ kho bài tập.
             </p>
           </div>
 
           <div>
-            <label className="flex items-center gap-2 text-sm font-bold text-slate-700 mb-3">
+            <label className="flex items-center gap-2 text-sm font-bold text-ink mb-3">
               <Users size={18} className="text-primary" /> Giao cho Học sinh
             </label>
             <div className="grid grid-cols-2 gap-3 max-h-48 overflow-y-auto pr-2">
@@ -247,19 +247,19 @@ export default function QuickCreateExamModal({ isOpen, onClose, subjectId, subje
                   onClick={() => toggleStudent(student.id)}
                   className={`flex items-center gap-3 p-3 rounded-xl border-2 transition-all text-left ${
                     selectedStudents.includes(student.id)
-                      ? 'border-primary bg-blue-50/50'
-                      : 'border-slate-100 hover:border-slate-200 hover:bg-slate-50'
+                      ? 'border-primary bg-terracotta-100/50'
+                      : 'border-cream-border hover:border-cream-border hover:bg-cream'
                   }`}
                 >
                   <img 
                     src={student.avatar ? student.avatar : 'https://ui-avatars.com/api/?name=' + student.name}
                     alt={student.name}
-                    className="w-10 h-10 rounded-full object-cover bg-slate-200"
+                    className="w-10 h-10 rounded-full object-cover bg-cream-border"
                   />
                   <div>
-                    <h4 className="font-bold text-sm text-slate-700">{student.name}</h4>
+                    <h4 className="font-bold text-sm text-ink">{student.name}</h4>
                     <span className={`text-[10px] px-2 py-0.5 rounded-full ${
-                      selectedStudents.includes(student.id) ? 'bg-primary text-white' : 'bg-slate-200 text-slate-600'
+                      selectedStudents.includes(student.id) ? 'bg-primary text-white' : 'bg-cream-border text-ink-muted'
                     }`}>
                       {selectedStudents.includes(student.id) ? 'Đã chọn' : 'Bỏ qua'}
                     </span>
@@ -267,17 +267,17 @@ export default function QuickCreateExamModal({ isOpen, onClose, subjectId, subje
                 </button>
               ))}
               {students.length === 0 && (
-                <p className="text-sm text-slate-500 italic col-span-2">Chưa có học sinh nào được thêm.</p>
+                <p className="text-sm text-ink-muted italic col-span-2">Chưa có học sinh nào được thêm.</p>
               )}
             </div>
           </div>
         </div>
 
-        <div className="p-6 border-t border-slate-100 bg-slate-50 flex justify-end gap-3 shrink-0">
+        <div className="p-6 border-t border-cream-border bg-cream flex justify-end gap-3 shrink-0">
           <button 
             onClick={onClose}
             disabled={loading}
-            className="px-6 py-2.5 font-bold text-slate-500 hover:bg-slate-200 rounded-xl transition-colors disabled:opacity-50"
+            className="px-6 py-2.5 font-bold text-ink-muted hover:bg-cream-border rounded-xl transition-colors disabled:opacity-50"
           >
             Hủy
           </button>

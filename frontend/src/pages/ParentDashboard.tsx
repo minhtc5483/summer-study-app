@@ -65,16 +65,16 @@ export default function ParentDashboard() {
   }
 
   return (
-    <div className="flex h-screen bg-slate-50 relative">
+    <div className="flex h-screen bg-cream relative">
       {/* Sidebar */}
       <aside className="w-64 bg-white shadow-lg flex flex-col shrink-0">
-        <div className="p-6 border-b border-slate-100 flex items-center gap-3">
+        <div className="p-6 border-b border-cream-border flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-primary text-white flex items-center justify-center shrink-0">
             <GraduationCap size={22} />
           </div>
           <div className="min-w-0">
-            <h1 className="text-lg font-bold text-slate-800 leading-tight truncate">Ôn Luyện Hè</h1>
-            <p className="text-xs text-slate-400 font-medium">Quản lý phụ huynh</p>
+            <h1 className="text-lg font-bold text-ink leading-tight truncate">Ôn Luyện Hè</h1>
+            <p className="text-xs text-ink-muted font-medium">Quản lý phụ huynh</p>
           </div>
         </div>
         <nav className="flex-1 p-4 space-y-1">
@@ -87,7 +87,7 @@ export default function ParentDashboard() {
                 `flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-colors ${
                   isActive
                     ? 'bg-primary/10 text-primary-dark'
-                    : 'text-slate-600 hover:bg-slate-100'
+                    : 'text-ink-muted hover:bg-cream'
                 }`
               }
             >
@@ -100,7 +100,7 @@ export default function ParentDashboard() {
             </NavLink>
           ))}
         </nav>
-        <div className="p-4 border-t border-slate-100">
+        <div className="p-4 border-t border-cream-border">
           <button
             onClick={logout}
             className="flex items-center gap-3 px-4 py-3 w-full text-danger rounded-xl hover:bg-red-50 transition-colors font-medium"
@@ -113,11 +113,11 @@ export default function ParentDashboard() {
       {/* Main Content */}
       <main className="flex-1 flex flex-col overflow-hidden relative">
         {/* Header bar for notifications */}
-        <header className="h-16 bg-white border-b border-slate-200 flex items-center justify-end px-8 relative z-50">
+        <header className="h-16 bg-white border-b border-cream-border flex items-center justify-end px-8 relative z-50">
           <div className="relative">
             <button 
               onClick={() => setShowNotifications(!showNotifications)}
-              className="w-10 h-10 rounded-full flex items-center justify-center text-slate-600 hover:bg-slate-100 relative transition-all"
+              className="w-10 h-10 rounded-full flex items-center justify-center text-ink-muted hover:bg-cream relative transition-all"
             >
               <Bell size={24} className={unreadCount > 0 ? "animate-pulse text-primary" : ""} />
               {unreadCount > 0 && (
@@ -128,9 +128,9 @@ export default function ParentDashboard() {
             </button>
             
             {showNotifications && (
-              <div className="absolute right-0 mt-2 w-80 bg-white rounded-2xl shadow-2xl border border-slate-100 overflow-hidden flex flex-col max-h-[80vh]">
-                <div className="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50">
-                  <h3 className="font-bold text-slate-800">Thông báo</h3>
+              <div className="absolute right-0 mt-2 w-80 bg-white rounded-2xl shadow-2xl border border-cream-border overflow-hidden flex flex-col max-h-[80vh]">
+                <div className="p-4 border-b border-cream-border flex justify-between items-center bg-cream">
+                  <h3 className="font-bold text-ink">Thông báo</h3>
                   {unreadCount > 0 && (
                     <button 
                       onClick={() => markAsRead('all')}
@@ -147,11 +147,11 @@ export default function ParentDashboard() {
                       Chưa có thông báo nào
                     </div>
                   ) : (
-                    <div className="divide-y divide-slate-100">
+                    <div className="divide-y divide-cream-border">
                       {notifications.map(notif => (
                         <div 
                           key={notif.id} 
-                          className={`p-4 transition-colors ${notif.isRead ? 'bg-white opacity-70' : 'bg-blue-50/50'}`}
+                          className={`p-4 transition-colors ${notif.isRead ? 'bg-white opacity-70' : 'bg-terracotta-100/50'}`}
                         >
                           <div className="flex justify-between items-start gap-3">
                             <div className="flex-1">
@@ -166,7 +166,7 @@ export default function ParentDashboard() {
                             {!notif.isRead && (
                               <button 
                                 onClick={() => markAsRead(notif.id)}
-                                className="text-blue-500 hover:text-blue-700"
+                                className="text-primary hover:text-primary-dark"
                                 title="Đánh dấu đã đọc"
                               >
                                 <CheckCircle2 size={18} />

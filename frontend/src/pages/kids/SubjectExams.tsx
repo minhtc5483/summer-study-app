@@ -51,22 +51,22 @@ export default function SubjectExams() {
         <div className="flex items-center mb-8">
           <button 
             onClick={() => navigate('/kids')}
-            className="w-12 h-12 bg-white/50 backdrop-blur-md rounded-full flex items-center justify-center text-slate-700 hover:bg-white shadow-sm transition-all"
+            className="w-12 h-12 bg-white/50 backdrop-blur-md rounded-full flex items-center justify-center text-ink-muted hover:bg-white shadow-sm transition-all"
           >
             <ArrowLeft size={24} />
           </button>
-          <h2 className="text-4xl font-extrabold text-slate-800 ml-6 drop-shadow-sm">Chọn đề bài để làm nhé! 🚀</h2>
+          <h2 className="text-4xl font-extrabold text-ink ml-6 drop-shadow-sm">Chọn đề bài để làm nhé! 🚀</h2>
         </div>
 
         {loading ? (
           <div className="flex justify-center py-20">
-            <div className="w-16 h-16 border-4 border-white border-t-blue-500 rounded-full animate-spin"></div>
+            <div className="w-16 h-16 border-4 border-white border-t-primary rounded-full animate-spin"></div>
           </div>
         ) : exams.length === 0 ? (
-          <div className="text-center py-20 bg-white/50 backdrop-blur-sm rounded-3xl border-2 border-dashed border-slate-300">
+          <div className="text-center py-20 bg-white/50 backdrop-blur-sm rounded-3xl border-2 border-dashed border-cream-border">
             <div className="text-6xl mb-4">😅</div>
-            <p className="text-2xl font-bold text-slate-600">Chưa có đề bài nào!</p>
-            <p className="text-slate-500 mt-2 text-lg">Ba mẹ chưa tạo đề bài nào cho môn này cả.</p>
+            <p className="text-2xl font-bold text-ink">Chưa có đề bài nào!</p>
+            <p className="text-ink-muted mt-2 text-lg">Ba mẹ chưa tạo đề bài nào cho môn này cả.</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -91,8 +91,8 @@ export default function SubjectExams() {
                 const isCompleted = exam.examResults && exam.examResults.length > 0;
                 const result = isCompleted ? exam.examResults![0] : null;
 
-                const colors = ['#3B82F6', '#10B981', '#F59E0B', '#8B5CF6', '#EC4899'];
-                const bgColor = isCompleted ? '#94A3B8' : colors[index % colors.length]; // Xám cho đề đã làm
+                const colors = ['#E8734A', '#7FA885', '#CA8A04', '#C2503A', '#4F7857'];
+                const bgColor = isCompleted ? '#C9B8A3' : colors[index % colors.length]; // Xám cho đề đã làm
 
                 return (
                   <Link key={exam.id} to={`/kids/quiz/${exam.id}${isCompleted ? '?mode=review' : ''}`}>

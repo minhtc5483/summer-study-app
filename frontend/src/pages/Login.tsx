@@ -23,10 +23,10 @@ export default function Login() {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-slate-50 relative">
+    <div className="flex items-center justify-center min-h-screen bg-cream relative">
       <Link 
         to="/" 
-        className="absolute top-6 left-6 flex items-center gap-2 px-4 py-2 bg-white rounded-xl shadow-sm text-slate-600 hover:text-primary hover:bg-blue-50 transition-colors font-medium border border-slate-200"
+        className="absolute top-6 left-6 flex items-center gap-2 px-4 py-2 bg-white rounded-xl shadow-sm text-ink-muted hover:text-primary hover:bg-terracotta-100 transition-colors font-medium border border-cream-border"
       >
         <Home size={20} />
         Trang chủ

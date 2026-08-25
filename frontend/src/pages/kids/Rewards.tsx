@@ -26,8 +26,8 @@ export default function Rewards() {
   const [exchanging, setExchanging] = useState<string | null>(null);
 
   const STORE_ITEMS = [
-    { id: '15_min_tv', name: '15 Phút Xem TV', cost: 500, minutes: 15, icon: <Tv size={32} />, color: 'bg-blue-100 text-blue-600 border-blue-200' },
-    { id: '30_min_ipad', name: '30 Phút iPad', cost: 1000, minutes: 30, icon: <Smartphone size={32} />, color: 'bg-purple-100 text-purple-600 border-purple-200' },
+    { id: '15_min_tv', name: '15 Phút Xem TV', cost: 500, minutes: 15, icon: <Tv size={32} />, color: 'bg-terracotta-100 text-primary-dark border-terracotta-100' },
+    { id: '30_min_ipad', name: '30 Phút iPad', cost: 1000, minutes: 30, icon: <Smartphone size={32} />, color: 'bg-sage-100 text-secondary-dark border-sage-100' },
     { id: '1_hr_game', name: '1 Giờ Chơi Game', cost: 2000, minutes: 60, icon: <Gamepad2 size={32} />, color: 'bg-rose-100 text-rose-600 border-rose-200' },
   ];
 
@@ -106,35 +106,35 @@ export default function Rewards() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
-        <div className="w-16 h-16 border-4 border-yellow-500 border-t-transparent rounded-full animate-spin"></div>
+      <div className="min-h-screen bg-cream flex items-center justify-center">
+        <div className="w-16 h-16 border-4 border-gold-600 border-t-transparent rounded-full animate-spin"></div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-yellow-50 to-orange-50 p-6 md:p-12 relative overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-cream to-gold-100 p-6 md:p-12 relative overflow-hidden">
       {/* Decorative background */}
-      <div className="absolute top-0 right-0 w-96 h-96 bg-yellow-200 rounded-full blur-3xl opacity-30 -translate-y-1/2 translate-x-1/3"></div>
-      <div className="absolute bottom-0 left-0 w-96 h-96 bg-orange-200 rounded-full blur-3xl opacity-30 translate-y-1/3 -translate-x-1/3"></div>
+      <div className="absolute top-0 right-0 w-96 h-96 bg-gold-100 rounded-full blur-3xl opacity-50 -translate-y-1/2 translate-x-1/3"></div>
+      <div className="absolute bottom-0 left-0 w-96 h-96 bg-terracotta-100 rounded-full blur-3xl opacity-50 translate-y-1/3 -translate-x-1/3"></div>
 
       <div className="max-w-4xl mx-auto relative z-10">
         <div className="flex items-center justify-between mb-8">
           <button 
             onClick={() => navigate(-1)}
-            className="w-12 h-12 bg-white rounded-full flex items-center justify-center text-slate-700 hover:bg-slate-100 shadow-sm transition-all border border-yellow-100"
+            className="w-12 h-12 bg-white rounded-full flex items-center justify-center text-ink-muted hover:bg-cream shadow-sm transition-all border border-gold-100"
           >
             <ArrowLeft size={24} />
           </button>
           
           <div className="flex gap-4">
-            <div className="bg-white px-6 py-3 rounded-2xl flex items-center gap-3 shadow-sm border border-yellow-100">
+            <div className="bg-white px-6 py-3 rounded-2xl flex items-center gap-3 shadow-sm border border-gold-100">
               <Star className="text-yellow-400 fill-yellow-400" size={24} />
-              <span className="font-extrabold text-xl text-slate-800">{selectedStudent?.totalScore.toLocaleString('vi-VN')}</span>
+              <span className="font-extrabold text-xl text-ink">{selectedStudent?.totalScore.toLocaleString('vi-VN')}</span>
             </div>
-            <div className="bg-white px-6 py-3 rounded-2xl flex items-center gap-3 shadow-sm border border-yellow-100">
+            <div className="bg-white px-6 py-3 rounded-2xl flex items-center gap-3 shadow-sm border border-gold-100">
               <Flame className="text-orange-500 fill-orange-500" size={24} />
-              <span className="font-extrabold text-xl text-slate-800">{selectedStudent?.currentStreak} ngày</span>
+              <span className="font-extrabold text-xl text-ink">{selectedStudent?.currentStreak} ngày</span>
             </div>
           </div>
         </div>
@@ -143,12 +143,12 @@ export default function Rewards() {
           <motion.div 
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
-            className="w-24 h-24 bg-gradient-to-tr from-yellow-400 to-orange-500 rounded-full mx-auto flex items-center justify-center mb-6 shadow-xl shadow-yellow-200"
+            className="w-24 h-24 bg-gradient-to-tr from-yellow-400 to-orange-500 rounded-full mx-auto flex items-center justify-center mb-6 shadow-xl shadow-gold-100"
           >
             <Trophy size={48} className="text-white" />
           </motion.div>
-          <h1 className="text-4xl md:text-5xl font-extrabold text-slate-800 mb-4">Góc Phần Thưởng</h1>
-          <p className="text-xl text-slate-600">Cố gắng hoàn thành bài tập để mở khóa huy hiệu mới nhé!</p>
+          <h1 className="text-4xl md:text-5xl font-extrabold text-ink mb-4">Góc Phần Thưởng</h1>
+          <p className="text-xl text-ink-muted">Cố gắng hoàn thành bài tập để mở khóa huy hiệu mới nhé!</p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -158,35 +158,35 @@ export default function Rewards() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: idx * 0.1 }}
-              className={`bg-white rounded-3xl p-6 shadow-sm border-2 ${badge.isEarned ? 'border-yellow-200 bg-gradient-to-b from-white to-yellow-50/50' : 'border-slate-100 grayscale-[0.5] opacity-80'}`}
+              className={`bg-white rounded-3xl p-6 shadow-sm border-2 ${badge.isEarned ? 'border-gold-100 bg-gradient-to-b from-white to-gold-100/50' : 'border-cream-border grayscale-[0.5] opacity-80'}`}
             >
               <div className="flex justify-between items-start mb-4">
-                <div className={`w-16 h-16 rounded-2xl flex items-center justify-center text-3xl shadow-inner ${badge.isEarned ? badge.color : 'bg-slate-100'}`}>
+                <div className={`w-16 h-16 rounded-2xl flex items-center justify-center text-3xl shadow-inner ${badge.isEarned ? badge.color : 'bg-cream'}`}>
                   {badge.icon}
                 </div>
                 {!badge.isEarned && (
-                  <div className="bg-slate-100 p-2 rounded-full text-slate-400">
+                  <div className="bg-cream p-2 rounded-full text-ink-muted">
                     <Lock size={20} />
                   </div>
                 )}
               </div>
               
-              <h3 className={`text-xl font-bold mb-2 ${badge.isEarned ? 'text-slate-800' : 'text-slate-600'}`}>
+              <h3 className={`text-xl font-bold mb-2 ${badge.isEarned ? 'text-ink' : 'text-ink-muted'}`}>
                 {badge.name}
               </h3>
-              <p className="text-slate-500 text-sm mb-4 min-h-[40px]">
+              <p className="text-ink-muted text-sm mb-4 min-h-[40px]">
                 {badge.description}
               </p>
 
               {!badge.isEarned && (
                 <div className="mt-auto">
-                  <div className="flex justify-between text-xs font-bold text-slate-400 mb-1">
+                  <div className="flex justify-between text-xs font-bold text-ink-muted mb-1">
                     <span>Tiến độ</span>
                     <span>{badge.progress}%</span>
                   </div>
-                  <div className="w-full h-2.5 bg-slate-100 rounded-full overflow-hidden">
+                  <div className="w-full h-2.5 bg-cream-border rounded-full overflow-hidden">
                     <div 
-                      className="h-full bg-slate-300 rounded-full transition-all duration-1000"
+                      className="h-full bg-ink-muted rounded-full transition-all duration-1000"
                       style={{ width: `${badge.progress}%` }}
                     />
                   </div>
@@ -207,8 +207,8 @@ export default function Rewards() {
             <div className="w-20 h-20 bg-gradient-to-tr from-pink-400 to-rose-500 rounded-full mx-auto flex items-center justify-center mb-4 shadow-lg shadow-pink-200">
               <ShoppingBag size={40} className="text-white" />
             </div>
-            <h2 className="text-4xl font-extrabold text-slate-800 mb-3">Cửa Hàng Đổi Thưởng</h2>
-            <p className="text-lg text-slate-600">Dùng điểm thưởng của con để đổi lấy thời gian giải trí nhé!</p>
+            <h2 className="text-4xl font-extrabold text-ink mb-3">Cửa Hàng Đổi Thưởng</h2>
+            <p className="text-lg text-ink-muted">Dùng điểm thưởng của con để đổi lấy thời gian giải trí nhé!</p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -226,8 +226,8 @@ export default function Rewards() {
                   <div className="w-20 h-20 bg-white rounded-2xl flex items-center justify-center mb-4 shadow-inner text-current">
                     {item.icon}
                   </div>
-                  <h3 className="text-2xl font-bold mb-2 text-slate-800">{item.name}</h3>
-                  <div className="flex items-center gap-1 font-bold text-lg mb-6 bg-white/50 px-4 py-1 rounded-full text-slate-700">
+                  <h3 className="text-2xl font-bold mb-2 text-ink">{item.name}</h3>
+                  <div className="flex items-center gap-1 font-bold text-lg mb-6 bg-white/50 px-4 py-1 rounded-full text-ink">
                     <Star size={20} className="text-yellow-500 fill-yellow-500" /> {item.cost.toLocaleString('vi-VN')} điểm
                   </div>
                   
@@ -236,10 +236,10 @@ export default function Rewards() {
                     disabled={!canAfford || exchanging === item.id}
                     className={`mt-auto w-full py-4 rounded-2xl font-bold text-lg transition-all ${
                       exchanging === item.id 
-                        ? 'bg-slate-200 text-slate-500' 
+                        ? 'bg-cream-border text-ink-muted' 
                         : canAfford 
-                          ? 'bg-gradient-to-r from-blue-500 to-indigo-500 text-white shadow-md hover:shadow-xl hover:scale-[1.02]' 
-                          : 'bg-slate-100 text-slate-400 cursor-not-allowed'
+                          ? 'bg-gradient-to-r from-primary to-primary-dark text-white shadow-md hover:shadow-xl hover:scale-[1.02]' 
+                          : 'bg-cream text-ink-muted cursor-not-allowed'
                     }`}
                   >
                     {exchanging === item.id ? 'Đang Đổi...' : canAfford ? 'Đổi Ngay' : 'Chưa đủ điểm'}

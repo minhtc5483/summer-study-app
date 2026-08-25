@@ -96,14 +96,14 @@ export default function KidsHome() {
   if (!selectedStudent) return null;
 
   return (
-    <div className="min-h-screen bg-blue-50 relative overflow-hidden font-sans">
+    <div className="min-h-screen bg-gradient-to-br from-cream to-terracotta-100 relative overflow-hidden font-sans">
       {/* Background decorations */}
       <div className="absolute top-[-50px] left-[-50px] w-64 h-64 bg-yellow-300 rounded-full mix-blend-multiply filter blur-3xl opacity-50 animate-blob"></div>
       <div className="absolute top-0 right-[-50px] w-64 h-64 bg-pink-300 rounded-full mix-blend-multiply filter blur-3xl opacity-50 animate-blob animation-delay-2000"></div>
       
       {/* Global Navigation */}
       <div className="absolute top-4 left-4 z-50 flex gap-2">
-        <Link to="/" className="flex items-center gap-2 px-4 py-2 bg-white/90 backdrop-blur-sm rounded-xl shadow-sm text-slate-600 hover:text-primary transition-colors font-medium text-sm">
+        <Link to="/" className="flex items-center gap-2 px-4 py-2 bg-white/90 backdrop-blur-sm rounded-xl shadow-sm text-ink-muted hover:text-primary transition-colors font-medium text-sm">
           <span className="text-lg">🏠</span> Đổi bé
         </Link>
       </div>
@@ -112,7 +112,7 @@ export default function KidsHome() {
         {/* Header - Bảng Xin Chào */}
         <header className="flex flex-col md:flex-row justify-between items-center mb-6 bg-white/80 backdrop-blur-md p-4 rounded-3xl shadow-sm shrink-0">
           <div className="flex items-center gap-4 mb-4 md:mb-0">
-            <div className="w-16 h-16 bg-gradient-to-tr from-blue-400 to-indigo-500 rounded-full border-4 border-white shadow-lg overflow-hidden flex items-center justify-center">
+            <div className="w-16 h-16 bg-gradient-to-tr from-primary-light to-primary-dark rounded-full border-4 border-white shadow-lg overflow-hidden flex items-center justify-center">
               {selectedStudent.avatar ? (
                 <img src={selectedStudent.avatar} alt={selectedStudent.name} className="w-full h-full object-cover" />
               ) : (
@@ -120,8 +120,8 @@ export default function KidsHome() {
               )}
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-slate-800">Xin chào, {selectedStudent.name}!</h1>
-              <p className="text-slate-500 font-medium">{selectedStudent.grade}</p>
+              <h1 className="text-2xl font-bold text-ink">Xin chào, {selectedStudent.name}!</h1>
+              <p className="text-ink-muted font-medium">{selectedStudent.grade}</p>
             </div>
           </div>
           
@@ -148,7 +148,7 @@ export default function KidsHome() {
         <div className="bg-white/60 backdrop-blur-md rounded-3xl p-4 md:p-6 shadow-sm mb-6 shrink-0 border border-white">
           <div className="flex items-center gap-2 mb-4">
             <Trophy className="text-yellow-500 fill-yellow-500" size={24} />
-            <h2 className="text-xl font-bold text-slate-800">Góc Phần Thưởng</h2>
+            <h2 className="text-xl font-bold text-ink">Góc Phần Thưởng</h2>
           </div>
           
           {loadingBadges ? (
@@ -161,26 +161,26 @@ export default function KidsHome() {
                 <div 
                   key={badge.id}
                   className={`flex flex-col items-center flex-shrink-0 w-28 snap-start p-3 rounded-2xl border-2 transition-all ${
-                    badge.isEarned ? 'bg-gradient-to-b from-white to-yellow-50 border-yellow-200' : 'bg-slate-50 border-slate-100 grayscale-[0.8] opacity-70'
+                    badge.isEarned ? 'bg-gradient-to-b from-white to-gold-100 border-gold-100' : 'bg-cream border-cream-border grayscale-[0.8] opacity-70'
                   }`}
                 >
-                  <div className={`w-14 h-14 rounded-xl flex items-center justify-center text-2xl shadow-inner mb-2 relative ${badge.isEarned ? badge.color : 'bg-slate-200'}`}>
+                  <div className={`w-14 h-14 rounded-xl flex items-center justify-center text-2xl shadow-inner mb-2 relative ${badge.isEarned ? badge.color : 'bg-cream-border'}`}>
                     {badge.icon}
                     {!badge.isEarned && (
-                      <div className="absolute -top-1 -right-1 bg-slate-400 text-white p-1 rounded-full">
+                      <div className="absolute -top-1 -right-1 bg-ink-muted text-white p-1 rounded-full">
                         <Lock size={10} />
                       </div>
                     )}
                   </div>
-                  <h3 className={`text-xs font-bold text-center mb-1 ${badge.isEarned ? 'text-slate-800' : 'text-slate-500'}`}>{badge.name}</h3>
+                  <h3 className={`text-xs font-bold text-center mb-1 ${badge.isEarned ? 'text-ink' : 'text-ink-muted'}`}>{badge.name}</h3>
                   
                   {!badge.isEarned ? (
                     <div className="w-full mt-auto">
-                      <div className="text-[9px] font-bold text-slate-400 text-center mb-1">
+                      <div className="text-[9px] font-bold text-ink-muted text-center mb-1">
                         Cần {badge.requirement.toLocaleString('vi-VN')} {badge.type === 'score' ? 'điểm' : 'ngày'}
                       </div>
-                      <div className="w-full h-1.5 bg-slate-200 rounded-full overflow-hidden">
-                        <div className="h-full bg-slate-400 rounded-full" style={{ width: `${badge.progress}%` }}></div>
+                      <div className="w-full h-1.5 bg-cream-border rounded-full overflow-hidden">
+                        <div className="h-full bg-ink-muted rounded-full" style={{ width: `${badge.progress}%` }}></div>
                       </div>
                     </div>
                   ) : (
@@ -196,14 +196,14 @@ export default function KidsHome() {
 
         {/* Chọn Môn Học (Slide ngang) */}
         <div className="mb-6 shrink-0">
-          <h3 className="font-bold text-slate-700 ml-2 mb-3">Chọn Môn Học</h3>
+          <h3 className="font-bold text-ink ml-2 mb-3">Chọn Môn Học</h3>
           <div className="flex gap-4 overflow-x-auto pb-4 snap-x hide-scrollbar">
             <button
               onClick={() => setSelectedSubjectId('ALL')}
               className={`flex-shrink-0 w-32 snap-start flex flex-col items-center justify-center p-4 rounded-2xl border-2 transition-all ${
                 selectedSubjectId === 'ALL'
                   ? 'bg-gradient-to-br from-orange-400 to-rose-400 text-white border-transparent shadow-lg shadow-rose-200 scale-105'
-                  : 'bg-white text-slate-600 hover:bg-slate-50 border-slate-100 hover:border-orange-200'
+                  : 'bg-white text-ink-muted hover:bg-cream border-cream-border hover:border-primary-light'
               }`}
             >
               <span className="text-3xl mb-2">🌟</span>
@@ -217,7 +217,7 @@ export default function KidsHome() {
                 className={`flex-shrink-0 w-32 snap-start flex flex-col items-center justify-center p-4 rounded-2xl border-2 transition-all ${
                   selectedSubjectId === subject.id
                     ? 'text-white border-transparent shadow-lg scale-105'
-                    : 'bg-white text-slate-600 hover:bg-slate-50 border-slate-100 hover:border-blue-200'
+                    : 'bg-white text-ink-muted hover:bg-cream border-cream-border hover:border-secondary-light'
                 }`}
                 style={selectedSubjectId === subject.id ? { backgroundColor: subject.color || '#2563EB', boxShadow: `0 10px 15px -3px ${subject.color}40` } : {}}
               >
@@ -236,16 +236,16 @@ export default function KidsHome() {
         <div className="flex-1 bg-white/50 backdrop-blur-sm rounded-3xl border-2 border-white p-4 md:p-6 overflow-y-auto min-h-0">
             {loadingExams ? (
               <div className="flex justify-center items-center h-full">
-                <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+                <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
               </div>
             ) : !selectedSubjectId ? (
-              <div className="flex justify-center items-center h-full text-slate-500 font-medium">
+              <div className="flex justify-center items-center h-full text-ink-muted font-medium">
                 Vui lòng chọn một môn học ở bên trái
               </div>
             ) : exams.length === 0 ? (
-              <div className="flex flex-col justify-center items-center h-full text-slate-500">
+              <div className="flex flex-col justify-center items-center h-full text-ink-muted">
                 <div className="text-6xl mb-4">😅</div>
-                <p className="text-xl font-bold text-slate-600">Chưa có đề bài nào!</p>
+                <p className="text-xl font-bold text-ink">Chưa có đề bài nào!</p>
                 <p className="mt-2 text-sm">Ba mẹ chưa tạo đề bài nào cho môn này cả.</p>
               </div>
             ) : (
@@ -264,12 +264,12 @@ export default function KidsHome() {
                   });
 
                   const sortedExams = [...pendingExams, ...completedExams];
-                  const colors = ['#3B82F6', '#10B981', '#F59E0B', '#8B5CF6', '#EC4899'];
+                  const colors = ['#E8734A', '#7FA885', '#CA8A04', '#C2503A', '#4F7857'];
 
                   return sortedExams.map((exam, index) => {
                     const isCompleted = exam.examResults && exam.examResults.length > 0;
                     const result = isCompleted ? exam.examResults![0] : null;
-                    const bgColor = isCompleted ? '#94A3B8' : colors[index % colors.length];
+                    const bgColor = isCompleted ? '#C9B8A3' : colors[index % colors.length];
 
                     return (
                       <Link key={exam.id} to={`/kids/quiz/${exam.id}${isCompleted ? '?mode=review' : ''}`}>

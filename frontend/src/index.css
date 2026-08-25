@@ -1,19 +1,44 @@
 @import "tailwindcss";
 
 @theme {
-  --font-sans: "Inter", "Outfit", system-ui, sans-serif;
-  
-  --color-primary-light: #60a5fa; /* blue-400 */
-  --color-primary: #3b82f6;       /* blue-500 */
-  --color-primary-dark: #2563eb;  /* blue-600 */
-  
-  --color-success: #22c55e;       /* green-500 */
-  --color-warning: #f59e0b;       /* amber-500 */
-  --color-danger: #ef4444;        /* red-500 */
+  --font-sans: "Quicksand", "Nunito", system-ui, sans-serif;
+  --font-display: "Baloo 2", "Quicksand", system-ui, sans-serif;
+
+  /* Warm Friendly: terracotta primary, sage-green secondary, cream neutrals.
+     Replaces the old blue/slate scheme app-wide. */
+  --color-primary-light: #f0916b;  /* light terracotta */
+  --color-primary: #e8734a;        /* terracotta */
+  --color-primary-dark: #d45f38;   /* deep terracotta */
+
+  --color-secondary-light: #a8c79a; /* light sage */
+  --color-secondary: #7fa885;       /* sage green */
+  --color-secondary-dark: #4f7857;  /* deep sage */
+
+  --color-success: #4f7857;        /* deep sage (reuses secondary-dark) */
+  --color-warning: #ca8a04;        /* warm gold */
+  --color-danger: #c2503a;         /* warm brick red, not a cold red */
+
+  --color-cream: #fff8f0;
+  --color-cream-light: #fffcf7;
+  --color-cream-border: #f3e7d8;
+  --color-ink: #5c4630;            /* warm near-black for headings */
+  --color-ink-muted: #a08a6e;      /* warm muted text */
+
+  /* Soft tint backgrounds for icon chips / stat cards / badges (bg-terracotta-100 etc.) */
+  --color-terracotta-100: #fbe4d5;
+  --color-terracotta-600: #b34a26;
+  --color-sage-100: #e3efdd;
+  --color-sage-600: #3f6146;
+  --color-gold-100: #fbf0d2;
+  --color-gold-600: #9a7b1e;
 }
 
 @layer base {
   body {
-    @apply bg-slate-50 text-slate-900;
+    @apply bg-cream text-ink;
+    font-family: var(--font-sans);
+  }
+  h1, h2, h3, h4, .font-display {
+    font-family: var(--font-display);
   }
 }

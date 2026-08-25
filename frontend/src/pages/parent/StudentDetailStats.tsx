@@ -37,7 +37,7 @@ export default function StudentDetailStats() {
 
   if (!data) {
     return (
-      <div className="text-center text-slate-500 py-12">
+      <div className="text-center text-ink-muted py-12">
         <p>Không tìm thấy dữ liệu học sinh.</p>
         <button onClick={() => navigate(-1)} className="mt-4 text-primary font-bold">Quay lại</button>
       </div>
@@ -47,54 +47,54 @@ export default function StudentDetailStats() {
   return (
     <div className="space-y-8">
       <div className="flex items-center gap-4">
-        <button onClick={() => navigate(-1)} className="p-2 hover:bg-slate-100 rounded-xl transition-colors">
-          <ArrowLeft size={24} className="text-slate-600" />
+        <button onClick={() => navigate(-1)} className="p-2 hover:bg-cream rounded-xl transition-colors">
+          <ArrowLeft size={24} className="text-ink-muted" />
         </button>
         <div className="flex items-center gap-4">
           <img 
             src={data.student.avatar ? data.student.avatar : `https://ui-avatars.com/api/?name=${data.student.name}`}
             alt="avatar" 
-            className="w-16 h-16 rounded-2xl object-cover bg-white p-1 border border-slate-200 shadow-sm"
+            className="w-16 h-16 rounded-2xl object-cover bg-white p-1 border border-cream-border shadow-sm"
           />
           <div>
-            <h2 className="text-3xl font-bold text-slate-800">Thống Kê Của {data.student.name}</h2>
-            <p className="text-slate-500 font-medium">{data.student.totalScore.toLocaleString('vi-VN')} Điểm Thành Tích • Chuỗi {data.student.currentStreak} ngày</p>
+            <h2 className="text-3xl font-bold text-ink">Thống Kê Của {data.student.name}</h2>
+            <p className="text-ink-muted font-medium">{data.student.totalScore.toLocaleString('vi-VN')} Điểm Thành Tích • Chuỗi {data.student.currentStreak} ngày</p>
           </div>
         </div>
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-5 gap-6">
-        <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm flex flex-col gap-2">
-          <TargetIcon className="text-blue-500" size={28} />
-          <p className="text-sm text-slate-500 font-bold uppercase">Tổng Số Bài Thi</p>
-          <p className="text-3xl font-black text-slate-800">{data.summary.totalExams}</p>
+        <div className="bg-white p-6 rounded-2xl border border-cream-border shadow-sm flex flex-col gap-2">
+          <TargetIcon className="text-primary" size={28} />
+          <p className="text-sm text-ink-muted font-bold uppercase">Tổng Số Bài Thi</p>
+          <p className="text-3xl font-black text-ink">{data.summary.totalExams}</p>
         </div>
-        <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm flex flex-col gap-2">
-          <Brain className="text-purple-500" size={28} />
-          <p className="text-sm text-slate-500 font-bold uppercase">Tổng Số Câu Hỏi</p>
-          <p className="text-3xl font-black text-slate-800">{data.summary.totalQuestions}</p>
+        <div className="bg-white p-6 rounded-2xl border border-cream-border shadow-sm flex flex-col gap-2">
+          <Brain className="text-gold-600" size={28} />
+          <p className="text-sm text-ink-muted font-bold uppercase">Tổng Số Câu Hỏi</p>
+          <p className="text-3xl font-black text-ink">{data.summary.totalQuestions}</p>
         </div>
-        <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm flex flex-col gap-2">
-          <Award className="text-green-500" size={28} />
-          <p className="text-sm text-slate-500 font-bold uppercase">Độ Chính Xác</p>
-          <p className="text-3xl font-black text-slate-800">{data.summary.avgAccuracy}%</p>
+        <div className="bg-white p-6 rounded-2xl border border-cream-border shadow-sm flex flex-col gap-2">
+          <Award className="text-secondary-dark" size={28} />
+          <p className="text-sm text-ink-muted font-bold uppercase">Độ Chính Xác</p>
+          <p className="text-3xl font-black text-ink">{data.summary.avgAccuracy}%</p>
         </div>
-        <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm flex flex-col gap-2">
-          <Clock className="text-orange-500" size={28} />
-          <p className="text-sm text-slate-500 font-bold uppercase">TG TB/Bài</p>
-          <p className="text-3xl font-black text-slate-800">{Math.floor(data.summary.avgTimeSpent / 60)}m {data.summary.avgTimeSpent % 60}s</p>
+        <div className="bg-white p-6 rounded-2xl border border-cream-border shadow-sm flex flex-col gap-2">
+          <Clock className="text-primary-dark" size={28} />
+          <p className="text-sm text-ink-muted font-bold uppercase">TG TB/Bài</p>
+          <p className="text-3xl font-black text-ink">{Math.floor(data.summary.avgTimeSpent / 60)}m {data.summary.avgTimeSpent % 60}s</p>
         </div>
-        <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm flex flex-col gap-2">
-          <Target className="text-red-500" size={28} />
-          <p className="text-sm text-slate-500 font-bold uppercase">Câu Sai Lưu Trữ</p>
-          <p className="text-3xl font-black text-slate-800">{data.summary.wrongCount}</p>
+        <div className="bg-white p-6 rounded-2xl border border-cream-border shadow-sm flex flex-col gap-2">
+          <Target className="text-danger" size={28} />
+          <p className="text-sm text-ink-muted font-bold uppercase">Câu Sai Lưu Trữ</p>
+          <p className="text-3xl font-black text-ink">{data.summary.wrongCount}</p>
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Biểu đồ điểm theo thời gian */}
-        <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm">
-          <h3 className="text-lg font-bold text-slate-800 mb-6">Tiến Độ Điểm Số</h3>
+        <div className="bg-white p-6 rounded-3xl border border-cream-border shadow-sm">
+          <h3 className="text-lg font-bold text-ink mb-6">Tiến Độ Điểm Số</h3>
           <div className="h-72">
             {data.timelineData.length > 0 ? (
               <ResponsiveContainer width="100%" height="100%">
@@ -105,18 +105,18 @@ export default function StudentDetailStats() {
                   <Tooltip 
                     contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
                   />
-                  <Line type="monotone" dataKey="score" name="Điểm" stroke="#3b82f6" strokeWidth={3} dot={{r: 4, fill: '#3b82f6', strokeWidth: 2}} activeDot={{r: 6}} />
+                  <Line type="monotone" dataKey="score" name="Điểm" stroke="#E8734A" strokeWidth={3} dot={{r: 4, fill: '#E8734A', strokeWidth: 2}} activeDot={{r: 6}} />
                 </LineChart>
               </ResponsiveContainer>
             ) : (
-              <div className="h-full flex items-center justify-center text-slate-400">Chưa có bài thi nào</div>
+              <div className="h-full flex items-center justify-center text-ink-muted">Chưa có bài thi nào</div>
             )}
           </div>
         </div>
 
         {/* Độ chính xác theo môn học */}
-        <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm">
-          <h3 className="text-lg font-bold text-slate-800 mb-6">Mức Độ Thành Thạo Theo Môn</h3>
+        <div className="bg-white p-6 rounded-3xl border border-cream-border shadow-sm">
+          <h3 className="text-lg font-bold text-ink mb-6">Mức Độ Thành Thạo Theo Môn</h3>
           <div className="h-72">
             {data.subjectData.length > 0 ? (
               <ResponsiveContainer width="100%" height="100%">
@@ -128,19 +128,19 @@ export default function StudentDetailStats() {
                     cursor={{fill: '#f8fafc'}}
                     contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
                   />
-                  <Bar dataKey="accuracy" name="Độ Chính Xác (%)" fill="#6366f1" radius={[4, 4, 0, 0]} barSize={40} />
+                  <Bar dataKey="accuracy" name="Độ Chính Xác (%)" fill="#7FA885" radius={[4, 4, 0, 0]} barSize={40} />
                 </BarChart>
               </ResponsiveContainer>
             ) : (
-              <div className="h-full flex items-center justify-center text-slate-400">Chưa có dữ liệu</div>
+              <div className="h-full flex items-center justify-center text-ink-muted">Chưa có dữ liệu</div>
             )}
           </div>
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm">
-          <h3 className="text-lg font-bold text-slate-800 mb-6">Lỗi Sai Theo Độ Khó</h3>
+        <div className="bg-white p-6 rounded-3xl border border-cream-border shadow-sm">
+          <h3 className="text-lg font-bold text-ink mb-6">Lỗi Sai Theo Độ Khó</h3>
           <div className="h-64 flex justify-center">
             {data.difficultyData && data.difficultyData.some((d: any) => d.value > 0) ? (
               <ResponsiveContainer width="100%" height="100%">
@@ -160,13 +160,13 @@ export default function StudentDetailStats() {
                 </BarChart>
               </ResponsiveContainer>
             ) : (
-               <div className="h-full flex items-center justify-center text-slate-400">Chưa có dữ liệu</div>
+               <div className="h-full flex items-center justify-center text-ink-muted">Chưa có dữ liệu</div>
             )}
           </div>
         </div>
 
-        <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm">
-          <h3 className="text-lg font-bold text-slate-800 mb-6">Tỉ Lệ Đúng Sai Tổng Quan</h3>
+        <div className="bg-white p-6 rounded-3xl border border-cream-border shadow-sm">
+          <h3 className="text-lg font-bold text-ink mb-6">Tỉ Lệ Đúng Sai Tổng Quan</h3>
           <div className="h-64 flex justify-center">
             {data.accuracyData[0].value > 0 || data.accuracyData[1].value > 0 ? (
               <ResponsiveContainer width="100%" height="100%">
@@ -189,7 +189,7 @@ export default function StudentDetailStats() {
                 </PieChart>
               </ResponsiveContainer>
             ) : (
-               <div className="h-full flex items-center justify-center text-slate-400">Chưa có dữ liệu</div>
+               <div className="h-full flex items-center justify-center text-ink-muted">Chưa có dữ liệu</div>
             )}
           </div>
         </div>
