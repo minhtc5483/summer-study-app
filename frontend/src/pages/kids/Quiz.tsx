@@ -47,6 +47,38 @@ export default function Quiz() {
     audio.play().catch(e => console.log('Audio blocked', e));
   };
 
+  // Đọc câu hỏi bằng giọng đọc tự nhiên nhất máy có, thay vì mặc định (thường là
+  // giọng robot của hệ điều hành). Trình duyệt/OS thường có nhiều giọng tiếng Việt —
+  // ưu tiên giọng "chất lượng cao" (network/Google, không phải "local"/SAPI mặc định),
+  // và hạ nhịp đọc + nâng cao độ một chút cho ấm và dễ nghe hơn với các bé nhỏ tuổi.
+  const speakQuestion = (text: string) => {
+    if (!('speechSynthesis' in window)) return;
+    window.speechSynthesis.cancel(); // ngắt lượt đọc trước nếu bé bấm liên tục
+
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = 'vi-VN';
+    utterance.rate = 0.92;
+    utterance.pitch = 1.05;
+
+    const pickVoice = () => {
+      const voices = window.speechSynthesis.getVoices();
+      const vietnameseVoices = voices.filter(v => v.lang === 'vi-VN' || v.lang === 'vi');
+      const naturalVoice =
+        vietnameseVoices.find(v => !v.localService) || // cloud/network voices thường tự nhiên hơn
+        vietnameseVoices.find(v => /google|natural|neural/i.test(v.name)) ||
+        vietnameseVoices[0];
+      if (naturalVoice) utterance.voice = naturalVoice;
+      window.speechSynthesis.speak(utterance);
+    };
+
+    // Danh sách giọng đọc có thể chưa tải xong ở lần gọi đầu tiên.
+    if (window.speechSynthesis.getVoices().length > 0) {
+      pickVoice();
+    } else {
+      window.speechSynthesis.onvoiceschanged = pickVoice;
+    }
+  };
+
   useEffect(() => {
     if (!selectedStudent) {
       navigate('/');
@@ -314,13 +346,9 @@ export default function Quiz() {
               className="flex-1 flex flex-col items-center justify-center max-w-2xl mx-auto w-full"
             >
               <div className="bg-white w-full rounded-[3rem] p-10 md:p-16 shadow-xl shadow-cream-border/50 mb-10 text-center relative border border-cream-border">
-                <button 
+                <button
                   className="absolute top-6 right-6 p-4 bg-terracotta-100 text-primary rounded-2xl hover:bg-terracotta-100/70 transition-colors"
-                  onClick={() => {
-                    const msg = new SpeechSynthesisUtterance(questions[currentQuestion].text);
-                    msg.lang = 'vi-VN';
-                    window.speechSynthesis.speak(msg);
-                  }}
+                  onClick={() => speakQuestion(questions[currentQuestion].text)}
                 >
                   <Volume2 size={28} />
                 </button>
