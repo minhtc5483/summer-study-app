@@ -298,63 +298,66 @@ export default function Quiz() {
 
   if (questions.length === 0) {
     return (
-      <div className="min-h-screen p-6 md:p-12 relative overflow-hidden bg-cream text-center flex flex-col items-center justify-center">
-        <button onClick={() => navigate(-1)} className="absolute top-10 left-10 p-4 bg-white rounded-full shadow-sm"><ArrowLeft /></button>
-        <div className="text-6xl mb-4">😅</div>
-        <h2 className="text-2xl font-bold text-ink">Đề bài này trống không!</h2>
-        <p className="text-ink-muted mt-2">Ba mẹ chưa thêm câu hỏi nào vào đề thi này.</p>
+      <div className="min-h-screen p-4 md:p-12 relative overflow-hidden bg-cream text-center flex flex-col items-center justify-center">
+        <button onClick={() => navigate(-1)} className="absolute top-4 left-4 md:top-10 md:left-10 p-3 md:p-4 bg-white rounded-full shadow-sm"><ArrowLeft className="w-5 h-5 md:w-6 md:h-6" /></button>
+        <div className="text-5xl md:text-6xl mb-4">😅</div>
+        <h2 className="text-xl md:text-2xl font-bold text-ink">Đề bài này trống không!</h2>
+        <p className="text-ink-muted mt-2 text-sm md:text-base">Ba mẹ chưa thêm câu hỏi nào vào đề thi này.</p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-cream p-6 md:p-12 relative overflow-hidden flex flex-col">
+    <div
+      className="min-h-screen bg-cream p-3 sm:p-6 md:p-12 relative overflow-hidden flex flex-col"
+      style={{ paddingTop: 'max(0.75rem, env(safe-area-inset-top))' }}
+    >
       {/* Cảnh vật nền trang trí */}
       <div className="absolute -left-10 bottom-0 w-64 h-64 bg-green-200 rounded-full blur-3xl opacity-50"></div>
       <div className="absolute -right-10 top-0 w-64 h-64 bg-sage-100 rounded-full blur-3xl opacity-50"></div>
 
       <div className="max-w-4xl mx-auto w-full flex-1 flex flex-col relative z-10">
-        <div className="flex items-center justify-between mb-8">
-          <button 
+        <div className="flex items-center justify-between gap-2 mb-4 md:mb-8">
+          <button
             onClick={() => navigate(-1)}
-            className="w-12 h-12 bg-white rounded-full flex items-center justify-center text-ink-muted hover:bg-cream shadow-sm transition-all"
+            className="w-9 h-9 md:w-12 md:h-12 bg-white rounded-full flex items-center justify-center text-ink-muted hover:bg-cream shadow-sm transition-all shrink-0"
           >
-            <ArrowLeft size={24} />
+            <ArrowLeft className="w-4 h-4 md:w-6 md:h-6" />
           </button>
-          
-          <div className="flex gap-4 items-center">
+
+          <div className="flex flex-wrap justify-end gap-2 md:gap-4 items-center">
             {timeLeft !== null && (
-              <div className={`bg-white px-6 py-3 rounded-2xl flex items-center gap-3 shadow-sm border ${timeLeft <= 60 ? 'border-danger animate-pulse' : 'border-cream-border'}`}>
-                <Timer className={`${timeLeft <= 60 ? 'text-danger' : 'text-primary'}`} size={24} />
-                <span className={`font-extrabold text-xl ${timeLeft <= 60 ? 'text-danger' : 'text-ink'}`}>
+              <div className={`bg-white px-2.5 py-1.5 md:px-6 md:py-3 rounded-xl md:rounded-2xl flex items-center gap-1.5 md:gap-3 shadow-sm border ${timeLeft <= 60 ? 'border-danger animate-pulse' : 'border-cream-border'}`}>
+                <Timer className={`w-3.5 h-3.5 md:w-6 md:h-6 ${timeLeft <= 60 ? 'text-danger' : 'text-primary'}`} />
+                <span className={`font-extrabold text-xs md:text-xl ${timeLeft <= 60 ? 'text-danger' : 'text-ink'}`}>
                   {formatTime(timeLeft)}
                 </span>
               </div>
             )}
-            <div className="bg-white px-6 py-3 rounded-2xl flex items-center gap-3 shadow-sm border border-cream-border">
-              <Star className="text-yellow-400 fill-yellow-400" size={24} />
-              <span className="font-extrabold text-xl text-ink">{selectedStudent?.totalScore.toLocaleString('vi-VN')}</span>
+            <div className="bg-white px-2.5 py-1.5 md:px-6 md:py-3 rounded-xl md:rounded-2xl flex items-center gap-1.5 md:gap-3 shadow-sm border border-cream-border">
+              <Star className="text-yellow-400 fill-yellow-400 w-3.5 h-3.5 md:w-6 md:h-6" />
+              <span className="font-extrabold text-xs md:text-xl text-ink">{selectedStudent?.totalScore.toLocaleString('vi-VN')}</span>
             </div>
-            <div className="bg-white px-6 py-3 rounded-2xl flex items-center gap-3 shadow-sm border border-cream-border">
-              <Heart className="text-danger fill-danger" size={24} />
-              <span className="font-extrabold text-xl text-ink">{selectedStudent?.currentStreak} ngày</span>
+            <div className="bg-white px-2.5 py-1.5 md:px-6 md:py-3 rounded-xl md:rounded-2xl flex items-center gap-1.5 md:gap-3 shadow-sm border border-cream-border">
+              <Heart className="text-danger fill-danger w-3.5 h-3.5 md:w-6 md:h-6" />
+              <span className="font-extrabold text-xs md:text-xl text-ink">{selectedStudent?.currentStreak} ngày</span>
             </div>
           </div>
         </div>
 
-        <div className="mb-4 flex justify-between items-end">
+        <div className="mb-3 md:mb-4 flex flex-wrap justify-between items-end gap-1">
           <div>
-            <h2 className="text-3xl font-bold text-ink">{examName}</h2>
-            {isReview && <div className="text-primary font-bold mt-1">👀 Đang ở chế độ xem lại đề thi</div>}
+            <h2 className="text-lg sm:text-xl md:text-3xl font-bold text-ink">{examName}</h2>
+            {isReview && <div className="text-primary font-bold mt-1 text-xs md:text-base">👀 Đang ở chế độ xem lại đề thi</div>}
           </div>
-          <span className="text-xl font-medium text-ink-muted">
+          <span className="text-xs md:text-xl font-medium text-ink-muted">
             Câu {currentQuestion + 1} / {questions.length}
           </span>
         </div>
 
         {/* Progress bar */}
-        <div className="w-full h-4 bg-cream-border rounded-full mb-12 overflow-hidden shadow-inner">
-          <motion.div 
+        <div className="w-full h-2.5 md:h-4 bg-cream-border rounded-full mb-4 md:mb-12 overflow-hidden shadow-inner">
+          <motion.div
             className="h-full bg-gradient-to-r from-primary-light to-primary-dark rounded-full"
             initial={{ width: 0 }}
             animate={{ width: `${(currentQuestion / questions.length) * 100}%` }}
@@ -371,21 +374,21 @@ export default function Quiz() {
               exit={{ opacity: 0, x: -50 }}
               className="flex-1 flex flex-col items-center justify-center max-w-2xl mx-auto w-full"
             >
-              <div className="bg-white w-full rounded-[3rem] p-10 md:p-16 shadow-xl shadow-cream-border/50 mb-10 text-center relative border border-cream-border">
+              <div className="bg-white w-full rounded-[1.5rem] md:rounded-[3rem] p-5 sm:p-8 md:p-16 shadow-xl shadow-cream-border/50 mb-4 md:mb-10 text-center relative border border-cream-border">
                 <button
-                  className={`absolute top-6 right-6 p-4 bg-terracotta-100 text-primary rounded-2xl hover:bg-terracotta-100/70 transition-colors ${speaking ? 'animate-pulse opacity-70' : ''}`}
+                  className={`absolute top-2.5 right-2.5 md:top-6 md:right-6 p-2 md:p-4 bg-terracotta-100 text-primary rounded-xl md:rounded-2xl hover:bg-terracotta-100/70 transition-colors ${speaking ? 'animate-pulse opacity-70' : ''}`}
                   onClick={() => speakQuestion(questions[currentQuestion].id, questions[currentQuestion].text)}
                   disabled={speaking}
                 >
-                  <Volume2 size={28} />
+                  <Volume2 className="w-4 h-4 md:w-7 md:h-7" />
                 </button>
-                <h3 className="text-4xl md:text-5xl font-extrabold text-ink leading-tight">
+                <h3 className="text-xl sm:text-2xl md:text-5xl font-extrabold text-ink leading-tight px-6 md:px-0">
                   {questions[currentQuestion].text}
                 </h3>
               </div>
 
               {questions[currentQuestion].options && questions[currentQuestion].options.length > 0 ? (
-                <div className="grid grid-cols-2 gap-4 w-full">
+                <div className="grid grid-cols-2 gap-2.5 md:gap-4 w-full">
                   {questions[currentQuestion].options.map((option: string, idx: number) => {
                     const currentSelectedAnswer = answers[currentQuestion];
                     const currentIsCorrect = correctness[currentQuestion];
@@ -421,23 +424,23 @@ export default function Quiz() {
                         whileTap={!isReview && currentSelectedAnswer === undefined ? { scale: 0.98 } : {}}
                         onClick={() => handleAnswer(option)}
                         disabled={isReview || currentSelectedAnswer !== undefined}
-                        className={`relative p-8 rounded-3xl border-4 text-3xl font-bold transition-all duration-300 shadow-sm ${bgColor} ${textColor}`}
+                        className={`relative p-3 sm:p-5 md:p-8 rounded-xl md:rounded-3xl border-2 md:border-4 text-base sm:text-xl md:text-3xl font-bold transition-all duration-300 shadow-sm ${bgColor} ${textColor}`}
                       >
-                        <span className="font-extrabold text-primary/80 mr-3">{String.fromCharCode(65 + idx)}.</span> {option}
+                        <span className="font-extrabold text-primary/80 mr-1.5 md:mr-3">{String.fromCharCode(65 + idx)}.</span> {option}
                         {isActuallyCorrect && (isReview || (isSelected && currentIsCorrect)) && (
-                          <motion.div 
+                          <motion.div
                             initial={{ scale: 0 }}
                             animate={{ scale: 1 }}
-                            className="absolute -top-4 -right-4 w-12 h-12 bg-green-500 text-white rounded-full flex items-center justify-center text-xl shadow-lg border-4 border-white"
+                            className="absolute -top-2.5 -right-2.5 md:-top-4 md:-right-4 w-7 h-7 md:w-12 md:h-12 bg-green-500 text-white rounded-full flex items-center justify-center text-xs md:text-xl shadow-lg border-2 md:border-4 border-white"
                           >
                             ✓
                           </motion.div>
                         )}
                         {!isReview && isSelected && currentIsCorrect === false && (
-                          <motion.div 
+                          <motion.div
                             initial={{ scale: 0 }}
                             animate={{ scale: 1 }}
-                            className="absolute -top-4 -right-4 w-12 h-12 bg-red-500 text-white rounded-full flex items-center justify-center text-xl shadow-lg border-4 border-white"
+                            className="absolute -top-2.5 -right-2.5 md:-top-4 md:-right-4 w-7 h-7 md:w-12 md:h-12 bg-red-500 text-white rounded-full flex items-center justify-center text-xs md:text-xl shadow-lg border-2 md:border-4 border-white"
                           >
                             ✗
                           </motion.div>
@@ -447,13 +450,13 @@ export default function Quiz() {
                   })}
                 </div>
               ) : (
-                <div className="flex flex-col items-center gap-6 w-full">
+                <div className="flex flex-col items-center gap-3 md:gap-6 w-full">
                   <input
                     type="text"
                     inputMode={!isNaN(Number(questions[currentQuestion].correct)) ? "numeric" : "text"}
                     pattern={!isNaN(Number(questions[currentQuestion].correct)) ? "[0-9]*" : undefined}
                     id={`input-answer-${currentQuestion}`}
-                    className="text-center text-4xl p-6 rounded-3xl border-4 border-cream-border focus:border-primary outline-none w-full max-w-md shadow-inner text-ink font-bold transition-all"
+                    className="text-center text-xl sm:text-2xl md:text-4xl p-3 md:p-6 rounded-xl md:rounded-3xl border-2 md:border-4 border-cream-border focus:border-primary outline-none w-full max-w-md shadow-inner text-ink font-bold transition-all"
                     placeholder="Nhập câu trả lời..."
                     onKeyDown={(e) => {
                       if (e.key === 'Enter') {
@@ -465,27 +468,27 @@ export default function Quiz() {
                     defaultValue={isReview ? questions[currentQuestion].correct : (answers[currentQuestion] || '')}
                     autoComplete="off"
                   />
-                  
+
                   {isReview && (
-                     <motion.div 
+                     <motion.div
                        initial={{ opacity: 0, y: 10 }}
                        animate={{ opacity: 1, y: 0 }}
-                       className={`text-3xl font-bold px-8 py-4 rounded-2xl bg-green-100 text-green-600 border border-green-200`}
+                       className={`text-base sm:text-lg md:text-3xl font-bold px-4 py-2 md:px-8 md:py-4 rounded-xl md:rounded-2xl bg-green-100 text-green-600 border border-green-200 text-center`}
                      >
                        Đáp án đúng: {questions[currentQuestion].correct}
                      </motion.div>
                   )}
 
                   {!isReview && answers[currentQuestion] !== undefined && (
-                     <motion.div 
+                     <motion.div
                        initial={{ opacity: 0, y: 10 }}
                        animate={{ opacity: 1, y: 0 }}
-                       className={`text-3xl font-bold px-8 py-4 rounded-2xl ${correctness[currentQuestion] ? 'bg-green-100 text-green-600 border border-green-200' : 'bg-red-100 text-red-600 border border-red-200'}`}
+                       className={`text-base sm:text-lg md:text-3xl font-bold px-4 py-2 md:px-8 md:py-4 rounded-xl md:rounded-2xl text-center ${correctness[currentQuestion] ? 'bg-green-100 text-green-600 border border-green-200' : 'bg-red-100 text-red-600 border border-red-200'}`}
                      >
                        {correctness[currentQuestion] ? 'Chính xác! 🎉' : `Sai rồi 😅. Đáp án đúng là: ${questions[currentQuestion].correct}`}
                      </motion.div>
                   )}
-                  
+
                   {!isReview && answers[currentQuestion] === undefined && (
                      <button
                        onClick={() => {
@@ -494,7 +497,7 @@ export default function Quiz() {
                            handleAnswer(input.value.trim());
                          }
                        }}
-                       className="px-10 py-4 bg-gradient-to-r from-primary to-primary-dark text-white text-2xl font-bold rounded-2xl hover:scale-105 transition-all shadow-lg hover:shadow-xl"
+                       className="px-6 py-2.5 md:px-10 md:py-4 bg-gradient-to-r from-primary to-primary-dark text-white text-base md:text-2xl font-bold rounded-xl md:rounded-2xl hover:scale-105 transition-all shadow-lg hover:shadow-xl"
                      >
                        Trả Lời
                      </button>
@@ -506,44 +509,44 @@ export default function Quiz() {
             <motion.div
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
-              className="flex-1 flex flex-col items-center justify-center text-center max-w-xl mx-auto w-full"
+              className="flex-1 flex flex-col items-center justify-center text-center max-w-xl mx-auto w-full px-2"
             >
-              <div className="w-48 h-48 bg-yellow-100 rounded-full flex items-center justify-center mb-8 relative">
+              <div className="w-24 h-24 md:w-48 md:h-48 bg-yellow-100 rounded-full flex items-center justify-center mb-4 md:mb-8 relative">
                 <div className="absolute inset-0 bg-yellow-400 rounded-full blur-2xl opacity-20 animate-pulse"></div>
-                <Star className="text-yellow-500 fill-yellow-500 relative z-10" size={96} />
+                <Star className="text-yellow-500 fill-yellow-500 relative z-10 w-12 h-12 md:w-24 md:h-24" />
               </div>
-              
-              <h2 className="text-5xl font-extrabold text-ink mb-6">
+
+              <h2 className="text-2xl sm:text-3xl md:text-5xl font-extrabold text-ink mb-3 md:mb-6">
                 {isTimeUp ? 'Hết Giờ Rồi! ⏰' : 'Xuất Sắc! 🎉'}
               </h2>
-              <div className="text-xl text-ink-muted font-medium mb-10 flex flex-col items-center">
-                {isTimeUp 
-                  ? <p className="mb-4">Bài làm của con đã được nộp tự động.</p>
-                  : <p className="mb-4">Con đã hoàn thành bài tập siêu nhanh!</p>
+              <div className="text-sm md:text-xl text-ink-muted font-medium mb-6 md:mb-10 flex flex-col items-center w-full">
+                {isTimeUp
+                  ? <p className="mb-3 md:mb-4">Bài làm của con đã được nộp tự động.</p>
+                  : <p className="mb-3 md:mb-4">Con đã hoàn thành bài tập siêu nhanh!</p>
                 }
-                
-                <div className="bg-white/60 backdrop-blur-md p-6 rounded-3xl inline-block border-2 border-cream-border shadow-sm text-left min-w-[300px]">
+
+                <div className="bg-white/60 backdrop-blur-md p-4 md:p-6 rounded-2xl md:rounded-3xl inline-block border-2 border-cream-border shadow-sm text-left w-full max-w-[300px]">
                   <div className="flex justify-between items-center mb-2">
-                    <span className="text-ink-muted">Điểm bài tập:</span>
-                    <span className="text-primary-dark font-extrabold text-2xl">{score}</span>
+                    <span className="text-ink-muted text-sm md:text-base">Điểm bài tập:</span>
+                    <span className="text-primary-dark font-extrabold text-lg md:text-2xl">{score}</span>
                   </div>
                   {timeBonus > 0 && (
                     <div className="flex justify-between items-center mb-2">
-                      <span className="text-ink-muted">Thưởng tốc độ:</span>
-                      <span className="text-green-500 font-extrabold text-2xl">+{timeBonus}</span>
+                      <span className="text-ink-muted text-sm md:text-base">Thưởng tốc độ:</span>
+                      <span className="text-green-500 font-extrabold text-lg md:text-2xl">+{timeBonus}</span>
                     </div>
                   )}
-                  <div className="w-full h-px bg-cream-border my-4"></div>
+                  <div className="w-full h-px bg-cream-border my-3 md:my-4"></div>
                   <div className="flex justify-between items-center">
-                    <span className="text-ink font-bold text-2xl">Tổng điểm:</span>
-                    <span className="text-yellow-500 font-black text-4xl">+{score + timeBonus}</span>
+                    <span className="text-ink font-bold text-lg md:text-2xl">Tổng điểm:</span>
+                    <span className="text-yellow-500 font-black text-2xl md:text-4xl">+{score + timeBonus}</span>
                   </div>
                 </div>
               </div>
 
               <button
                 onClick={() => navigate('/kids')}
-                className="px-10 py-5 bg-gradient-to-r from-primary to-primary-dark text-white text-2xl font-bold rounded-full hover:opacity-90 transition-all shadow-xl shadow-terracotta-100 hover:scale-105 transform duration-300"
+                className="px-6 py-3 md:px-10 md:py-5 bg-gradient-to-r from-primary to-primary-dark text-white text-base md:text-2xl font-bold rounded-full hover:opacity-90 transition-all shadow-xl shadow-terracotta-100 hover:scale-105 transform duration-300"
               >
                 Tiếp Tục Chơi
               </button>
@@ -556,12 +559,13 @@ export default function Quiz() {
           <motion.div 
             initial={{ y: 50, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
-            className="bg-white/80 backdrop-blur-md p-4 rounded-3xl mt-4 shadow-sm border border-cream-border relative z-20 flex flex-col md:flex-row items-center gap-4"
+            className="bg-white/80 backdrop-blur-md p-2.5 md:p-4 rounded-2xl md:rounded-3xl mt-3 md:mt-4 shadow-sm border border-cream-border relative z-20 flex flex-col md:flex-row items-center gap-2.5 md:gap-4"
+            style={{ paddingBottom: 'max(0.625rem, env(safe-area-inset-bottom))' }}
           >
-            <div className="flex flex-wrap justify-center gap-3 w-full">
+            <div className="flex flex-wrap justify-center gap-1.5 md:gap-3 w-full max-h-24 md:max-h-none overflow-y-auto">
               {questions.map((_, idx) => {
                 let bg = 'bg-cream text-ink-muted border-cream-border';
-                
+
                 if (isReview) {
                   if (correctness[idx] === true) bg = 'bg-green-100 text-green-600 border-green-500';
                   else if (correctness[idx] === false) bg = 'bg-red-100 text-red-600 border-red-500';
@@ -571,14 +575,14 @@ export default function Quiz() {
                 } else if (correctness[idx] === false) {
                   bg = 'bg-red-100 text-red-600 border-red-500';
                 }
-                
+
                 const isCurrent = currentQuestion === idx;
 
                 return (
                   <button
                     key={idx}
                     onClick={() => setCurrentQuestion(idx)}
-                    className={`min-w-[3rem] h-12 rounded-2xl font-bold flex items-center justify-center border-2 transition-all ${bg} ${isCurrent ? 'ring-4 ring-primary-light scale-110 shadow-lg' : ''}`}
+                    className={`min-w-[2rem] h-8 md:min-w-[3rem] md:h-12 rounded-lg md:rounded-2xl text-xs md:text-base font-bold flex items-center justify-center border md:border-2 transition-all shrink-0 ${bg} ${isCurrent ? 'ring-2 md:ring-4 ring-primary-light scale-110 shadow-lg' : ''}`}
                   >
                     {idx + 1}
                   </button>
@@ -589,14 +593,14 @@ export default function Quiz() {
             {isReview ? (
               <button
                 onClick={() => navigate(-1)}
-                className="w-full md:w-auto px-8 py-3 bg-gradient-to-r from-ink-muted to-ink text-white font-bold rounded-2xl whitespace-nowrap hover:shadow-lg hover:scale-105 transition-all shadow-md shrink-0"
+                className="w-full md:w-auto px-5 py-2.5 md:px-8 md:py-3 text-sm md:text-base bg-gradient-to-r from-ink-muted to-ink text-white font-bold rounded-xl md:rounded-2xl whitespace-nowrap hover:shadow-lg hover:scale-105 transition-all shadow-md shrink-0"
               >
                 Quay Lại
               </button>
             ) : (
               <button
                 onClick={finishQuiz}
-                className="w-full md:w-auto px-8 py-3 bg-gradient-to-r from-primary to-primary-dark text-white font-bold rounded-2xl whitespace-nowrap hover:shadow-lg hover:scale-105 transition-all shadow-md shrink-0"
+                className="w-full md:w-auto px-5 py-2.5 md:px-8 md:py-3 text-sm md:text-base bg-gradient-to-r from-primary to-primary-dark text-white font-bold rounded-xl md:rounded-2xl whitespace-nowrap hover:shadow-lg hover:scale-105 transition-all shadow-md shrink-0"
               >
                 Nộp Bài
               </button>
