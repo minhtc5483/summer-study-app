@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { register, login, getMe, refresh } from './controllers/authController';
-import { verifyFamilyPin } from './controllers/kidsAccessController';
-import { getStudents, getPublicStudents, getStudentHistory, createStudent, updateStudent, deleteStudent } from './controllers/studentController';
+import { verifyFamilyPin, verifyStudentPin } from './controllers/kidsAccessController';
+import { getStudents, getPublicStudents, getStudentHistory, createStudent, updateStudent, deleteStudent, setStudentPin } from './controllers/studentController';
 import { authenticate } from './middlewares/auth';
 import { requireKidsAccess } from './middlewares/kidsAccess';
 import { upload } from './middlewares/upload';
@@ -16,13 +16,17 @@ router.post('/auth/login', authRateLimit, login);
 router.post('/auth/refresh', refresh);
 router.get('/auth/me', authenticate, getMe);
 
-// Kids family-PIN gate: no auth needed to submit the PIN, but rate-limited against brute force
+// Legacy family-wide PIN gate — kept for backward compatibility, no longer used by the
+// "who's studying" screen (see /public/students/:studentId/verify-pin below).
 router.post('/public/verify-pin', authRateLimit, verifyFamilyPin);
+// Per-student PIN, set by the parent in Settings. Rate-limited: it's only a 4-digit code.
+router.post('/public/students/:studentId/verify-pin', authRateLimit, verifyStudentPin);
 
 // Student routes
 router.get('/students', authenticate, getStudents);
 router.post('/students', authenticate, upload.single('avatar'), createStudent);
 router.put('/students/:id', authenticate, upload.single('avatar'), updateStudent);
+router.put('/students/:id/pin', authenticate, setStudentPin);
 router.delete('/students/:id', authenticate, deleteStudent);
 
 import { getSubjects, createSubject, updateSubject, deleteSubject } from './controllers/subjectController';
@@ -90,8 +94,12 @@ import { getExchanges, fulfillExchange } from './controllers/pointExchangeContro
 router.get('/point-exchanges', authenticate, getExchanges);
 router.put('/point-exchanges/:id/fulfill', authenticate, fulfillExchange);
 
-// Public routes (Kids App) — protected by the family PIN (see requireKidsAccess), not by parent login
-router.get('/public/students', requireKidsAccess, getPublicStudents);
+// Public routes (Kids App) — protected by a kids-access token (see requireKidsAccess),
+// obtained either via the legacy family PIN or a per-student PIN (see above).
+// The student list itself is intentionally open (no token needed): the "who's studying"
+// screen must show names/avatars *before* any PIN is entered so a kid can pick their own
+// profile and be prompted for their own PIN, not the whole family's.
+router.get('/public/students', getPublicStudents);
 router.get('/public/students/:studentId/history', requireKidsAccess, getStudentHistory);
 router.get('/public/exams', requireKidsAccess, getExams);
 router.get('/public/exams/:id', requireKidsAccess, getExamById);

@@ -24,6 +24,7 @@ model Student {
   name          String
   grade         String
   avatar        String?
+  pinHash       String?   // bcrypt hash of this kid's own login PIN; null = no PIN, open access
   totalScore    Int       @default(0)
   currentStreak Int       @default(0)
   lastActive    DateTime?

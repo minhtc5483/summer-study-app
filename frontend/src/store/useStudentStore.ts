@@ -8,6 +8,7 @@ export interface StudentProfile {
   avatar: string | null;
   totalScore: number;
   currentStreak: number;
+  hasPin?: boolean;
   subjects?: { id: string; name: string; icon: string | null; color: string | null }[];
   earnedBadges?: { id: string; name: string; icon: string; color: string }[];
 }

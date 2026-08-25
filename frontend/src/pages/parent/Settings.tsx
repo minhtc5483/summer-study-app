@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { api } from '../../lib/api';
-import { BookOpen, Layers, Plus, Trash2, Edit2, Check, X } from 'lucide-react';
+import { BookOpen, Layers, Plus, Trash2, Edit2, Check, X, Lock, KeyRound } from 'lucide-react';
 
 interface Grade {
   id: string;
@@ -14,15 +14,29 @@ interface Subject {
   color: string | null;
 }
 
+interface StudentPinInfo {
+  id: string;
+  name: string;
+  avatar: string | null;
+  hasPin: boolean;
+}
+
 export default function Settings() {
   const [grades, setGrades] = useState<Grade[]>([]);
   const [subjects, setSubjects] = useState<Subject[]>([]);
-  
+  const [students, setStudents] = useState<StudentPinInfo[]>([]);
+
   // Grade Form
   const [newGradeName, setNewGradeName] = useState('');
-  
+
   // Subject Form
   const [editingSubject, setEditingSubject] = useState<Partial<Subject> | null>(null);
+
+  // Per-student PIN form: which student is being edited + the 4-digit value typed
+  const [editingPinFor, setEditingPinFor] = useState<string | null>(null);
+  const [pinValue, setPinValue] = useState('');
+  const [pinSaving, setPinSaving] = useState(false);
+  const [pinError, setPinError] = useState('');
 
   useEffect(() => {
     fetchData();
@@ -30,14 +44,46 @@ export default function Settings() {
 
   const fetchData = async () => {
     try {
-      const [gradesRes, subjectsRes] = await Promise.all([
+      const [gradesRes, subjectsRes, studentsRes] = await Promise.all([
         api.get('/grades'),
-        api.get('/subjects')
+        api.get('/subjects'),
+        api.get('/students')
       ]);
       setGrades(gradesRes.data);
       setSubjects(subjectsRes.data);
+      setStudents(studentsRes.data);
     } catch (error) {
       console.error('Failed to fetch settings data', error);
+    }
+  };
+
+  const handleSavePin = async (studentId: string) => {
+    if (!/^\d{4}$/.test(pinValue)) {
+      setPinError('Mã PIN phải gồm đúng 4 chữ số.');
+      return;
+    }
+    setPinSaving(true);
+    setPinError('');
+    try {
+      await api.put(`/students/${studentId}/pin`, { pin: pinValue });
+      setEditingPinFor(null);
+      setPinValue('');
+      fetchData();
+    } catch (error) {
+      console.error('Failed to save PIN', error);
+      setPinError('Có lỗi xảy ra, thử lại nhé.');
+    } finally {
+      setPinSaving(false);
+    }
+  };
+
+  const handleClearPin = async (studentId: string) => {
+    if (!confirm('Bỏ mã PIN của bé này? Bé sẽ vào học được ngay mà không cần nhập PIN.')) return;
+    try {
+      await api.put(`/students/${studentId}/pin`, { pin: '' });
+      fetchData();
+    } catch (error) {
+      console.error('Failed to clear PIN', error);
     }
   };
 
@@ -94,6 +140,97 @@ export default function Settings() {
       <div>
         <h2 className="text-3xl font-bold text-slate-800">Cài Đặt Hệ Thống</h2>
         <p className="text-slate-500 mt-2">Quản lý danh sách các khối lớp và môn học khả dụng.</p>
+      </div>
+
+      {/* Per-student PIN */}
+      <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-6">
+        <div className="flex items-center gap-3 mb-2">
+          <div className="w-12 h-12 bg-emerald-100 rounded-2xl flex items-center justify-center text-emerald-600">
+            <KeyRound size={24} />
+          </div>
+          <div>
+            <h3 className="text-xl font-bold text-slate-800">Mã PIN cho từng bé</h3>
+          </div>
+        </div>
+        <p className="text-slate-500 text-sm mb-6">
+          Đặt mã PIN gồm 4 chữ số cho từng bé để chỉ bé đó mới vào được hồ sơ của mình. Bé chưa có mã PIN sẽ vào học được ngay khi chạm vào tên, không cần nhập gì.
+        </p>
+
+        <div className="space-y-3">
+          {students.map(student => (
+            <div key={student.id} className="flex items-center justify-between gap-4 p-4 bg-slate-50 rounded-2xl border border-slate-100">
+              <div className="flex items-center gap-4 min-w-0">
+                <div className="w-12 h-12 rounded-xl overflow-hidden bg-slate-200 flex items-center justify-center shrink-0">
+                  {student.avatar ? (
+                    <img src={student.avatar} alt={student.name} className="w-full h-full object-cover" />
+                  ) : (
+                    <span className="text-2xl">👦</span>
+                  )}
+                </div>
+                <div className="min-w-0">
+                  <p className="font-semibold text-slate-700 truncate">{student.name}</p>
+                  <p className="text-xs text-slate-400 flex items-center gap-1">
+                    {student.hasPin ? (
+                      <><Lock size={12} /> Đã đặt mã PIN</>
+                    ) : (
+                      'Chưa đặt mã PIN — vào học tự do'
+                    )}
+                  </p>
+                </div>
+              </div>
+
+              {editingPinFor === student.id ? (
+                <div className="flex items-center gap-2 shrink-0">
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    maxLength={4}
+                    autoFocus
+                    value={pinValue}
+                    onChange={(e) => setPinValue(e.target.value.replace(/\D/g, ''))}
+                    placeholder="4 số"
+                    className="w-20 px-3 py-2 rounded-lg border border-slate-200 text-center tracking-widest focus:ring-2 focus:ring-emerald-500"
+                  />
+                  <button
+                    onClick={() => handleSavePin(student.id)}
+                    disabled={pinSaving}
+                    className="p-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 disabled:opacity-50"
+                  >
+                    <Check size={18} />
+                  </button>
+                  <button
+                    onClick={() => { setEditingPinFor(null); setPinValue(''); setPinError(''); }}
+                    className="p-2 bg-slate-200 text-slate-700 rounded-lg hover:bg-slate-300"
+                  >
+                    <X size={18} />
+                  </button>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2 shrink-0">
+                  <button
+                    onClick={() => { setEditingPinFor(student.id); setPinValue(''); setPinError(''); }}
+                    className="px-3 py-2 text-sm font-medium text-emerald-700 bg-emerald-50 rounded-lg hover:bg-emerald-100 transition-colors"
+                  >
+                    {student.hasPin ? 'Đổi PIN' : 'Đặt PIN'}
+                  </button>
+                  {student.hasPin && (
+                    <button
+                      onClick={() => handleClearPin(student.id)}
+                      className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                      title="Bỏ mã PIN"
+                    >
+                      <Trash2 size={18} />
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
+          ))}
+          {students.length === 0 && (
+            <p className="text-slate-500 text-center py-4">Chưa có bé nào. Thêm bé ở mục Quản lý Học sinh.</p>
+          )}
+        </div>
+        {pinError && <p className="text-red-500 text-sm mt-3">{pinError}</p>}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">

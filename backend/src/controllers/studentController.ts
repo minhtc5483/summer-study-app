@@ -4,6 +4,7 @@ import { AuthRequest } from '../middlewares/auth';
 import { z } from 'zod';
 import sharp from 'sharp';
 import fs from 'fs';
+import bcrypt from 'bcryptjs';
 import { BADGES } from './rewardController';
 
 export const getPublicStudents = async (req: Request, res: Response) => {
@@ -13,13 +14,15 @@ export const getPublicStudents = async (req: Request, res: Response) => {
       include: { subjects: true }
     });
 
-    const studentsWithBadges = students.map(student => {
+    // This is the unauthenticated "who's studying" screen — never leak the PIN hash,
+    // only whether one is set (frontend uses this to decide whether to prompt for it).
+    const studentsWithBadges = students.map(({ pinHash, ...student }) => {
       const earnedBadges = BADGES.filter(badge => {
         if (badge.type === 'score' && student.totalScore >= badge.requirement) return true;
         if (badge.type === 'streak' && student.currentStreak >= badge.requirement) return true;
         return false;
       });
-      return { ...student, earnedBadges };
+      return { ...student, hasPin: !!pinHash, earnedBadges };
     });
 
     res.json(studentsWithBadges);
@@ -97,13 +100,13 @@ export const getStudents = async (req: AuthRequest, res: Response) => {
       include: { subjects: true }
     });
 
-    const studentsWithBadges = students.map(student => {
+    const studentsWithBadges = students.map(({ pinHash, ...student }) => {
       const earnedBadges = BADGES.filter(badge => {
         if (badge.type === 'score' && student.totalScore >= badge.requirement) return true;
         if (badge.type === 'streak' && student.currentStreak >= badge.requirement) return true;
         return false;
       });
-      return { ...student, earnedBadges };
+      return { ...student, hasPin: !!pinHash, earnedBadges };
     });
 
     res.json(studentsWithBadges);
@@ -240,6 +243,40 @@ export const deleteStudent = async (req: AuthRequest, res: Response) => {
 
     await prisma.student.delete({ where: { id: id as string } });
     res.json({ message: 'Student deleted successfully' });
+  } catch (error) {
+    res.status(500).json({ error: 'Server error' });
+  }
+};
+
+const pinSchema = z.object({
+  // Empty string / null clears the PIN (student goes back to open access).
+  pin: z.union([z.string().regex(/^\d{4}$/, 'Mã PIN phải gồm đúng 4 chữ số'), z.literal(''), z.null()])
+});
+
+export const setStudentPin = async (req: AuthRequest, res: Response) => {
+  try {
+    const parsed = pinSchema.safeParse(req.body);
+    if (!parsed.success) {
+      return res.status(400).json({ error: 'Validation failed', details: parsed.error.issues });
+    }
+
+    const { id } = req.params;
+    const parentId = req.user!.id;
+
+    const student = await prisma.student.findUnique({ where: { id: id as string } });
+    if (!student || student.parentId !== parentId) {
+      return res.status(404).json({ error: 'Student not found' });
+    }
+
+    const pin = parsed.data.pin;
+    const pinHash = pin ? await bcrypt.hash(pin, 10) : null;
+
+    await prisma.student.update({
+      where: { id: id as string },
+      data: { pinHash }
+    });
+
+    res.json({ hasPin: !!pinHash });
   } catch (error) {
     res.status(500).json({ error: 'Server error' });
   }
