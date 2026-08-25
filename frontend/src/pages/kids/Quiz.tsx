@@ -139,6 +139,21 @@ export default function Quiz() {
       .finally(() => setLoading(false));
   }, [examId, selectedStudent, navigate, isReview]);
 
+  // Bấm loa là lúc bé đã đọc/nghĩ xong câu hỏi và muốn nghe ngay — nếu chỉ bắt đầu gọi
+  // Gemini lúc đó thì phải chờ ~5-6s mới có tiếng, cảm giác như bị đơ. Thay vào đó, âm thầm
+  // xin server tạo trước giọng đọc ngay khi câu hỏi (và câu kế tiếp) hiện ra, tận dụng thời
+  // gian bé đọc/suy nghĩ để việc gọi AI chạy ngầm — lúc bấm loa thật thì audio thường đã có
+  // sẵn trong cache của server (và của trình duyệt), nghe gần như ngay lập tức.
+  useEffect(() => {
+    if (isReview) return; // xem lại bài không cần đọc trước, bé hiếm khi bấm loa ở màn này
+    const prefetch = (id?: string) => {
+      if (!id) return;
+      api.post(`/public/tts/questions/${id}/prefetch`).catch(() => {});
+    };
+    prefetch(questions[currentQuestion]?.id);
+    prefetch(questions[currentQuestion + 1]?.id);
+  }, [questions, currentQuestion, isReview]);
+
   const handleAnswer = (answer: string) => {
     if (isReview) return;
     if (answers[currentQuestion] !== undefined) return;

@@ -116,7 +116,10 @@ router.post('/public/submit', requireKidsAccess, savePublicProgress);
 router.get('/public/rewards/:studentId', requireKidsAccess, getRewards);
 router.post('/public/exchange-points', requireKidsAccess, exchangePoints);
 
-import { getQuestionSpeech } from './controllers/ttsController';
+import { getQuestionSpeech, prefetchQuestionSpeech } from './controllers/ttsController';
 router.get('/public/tts/questions/:questionId', requireKidsAccess, getQuestionSpeech);
+// Called as soon as a question is shown, to hide Gemini's ~5-6s generation time behind
+// however long the kid spends reading/answering, instead of behind a tap on the speaker.
+router.post('/public/tts/questions/:questionId/prefetch', requireKidsAccess, prefetchQuestionSpeech);
 
 export default router;
