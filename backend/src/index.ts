@@ -26,23 +26,35 @@ if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir);
 }
 
-// Frontend is served by this same server in production (same-origin), so CORS only
-// matters for local dev (Vite on a different port) and any extra allowed domains.
+// Frontend is served by this same server (same-origin) whenever someone hits it directly
+// — production via the real domain, or local testing via http://localhost:<port> — so CORS
+// only needs to matter for local dev (Vite on a different port) and any extra allowed
+// domains. The catch: browsers attach an Origin header to fetch/XHR calls even for
+// same-origin requests, so a same-origin request still has to be recognized as such here,
+// not just "no Origin header" — comparing against the request's own Host does that
+// regardless of hostname/port (localhost, 127.0.0.1, a LAN IP, the real domain, ...),
+// instead of hardcoding one specific origin (this previously only allowed the Vite dev
+// port and ALLOWED_ORIGINS, so opening the built app directly on its own port was
+// rejected as cross-origin even though it's the same origin serving it).
 const allowedOrigins = [
   ...(process.env.ALLOWED_ORIGINS?.split(',').map((o) => o.trim()).filter(Boolean) || []),
   'http://localhost:5173',
 ];
 
-app.use(cors({
-  origin: (origin, callback) => {
-    // Allow requests with no Origin header (curl, same-origin, mobile webviews, etc.)
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
-}));
+app.use((req, res, next) => {
+  cors({
+    origin: (origin, callback) => {
+      const sameOrigin = !!origin && (origin === `http://${req.headers.host}` || origin === `https://${req.headers.host}`);
+      // Allow requests with no Origin header (curl, mobile webviews, ...), same-origin
+      // requests, and anything explicitly allow-listed.
+      if (!origin || sameOrigin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error('Not allowed by CORS'));
+      }
+    },
+  })(req, res, next);
+});
 app.use(express.json());
 app.use('/uploads', express.static(uploadsDir));
 

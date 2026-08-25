@@ -60,17 +60,25 @@ import { getExams, getExamById, createExam, updateExam, deleteExam, quickCreateE
 import { createAiSchedule, getAiSchedules, deleteAiSchedule } from './controllers/aiScheduleController';
 
 // Exam & Question routes
+// NOTE: literal paths like /exams/ai-schedules and /exams/quick-create MUST be registered
+// before the generic /exams/:id routes below — Express matches routes in registration
+// order, and /exams/:id would otherwise swallow them first (treating "ai-schedules" or
+// "quick-create" as the :id) and 404. This previously broke GET /exams/ai-schedules
+// specifically, which silently zeroed out the whole parent Overview page since it's
+// fetched in the same Promise.all as the stats that page actually needs.
 router.get('/exams', authenticate, getExams);
-router.get('/exams/:id', authenticate, getExamById);
 router.post('/exams', authenticate, createExam);
 router.post('/exams/quick-create', authenticate, quickCreateExam);
-router.put('/exams/:id', authenticate, updateExam);
-router.delete('/exams/:id', authenticate, deleteExam);
 
 // AI Schedules
 router.post('/exams/ai-schedules', authenticate, createAiSchedule);
 router.get('/exams/ai-schedules', authenticate, getAiSchedules);
 router.delete('/exams/ai-schedules/:id', authenticate, deleteAiSchedule);
+
+router.get('/exams/:id', authenticate, getExamById);
+router.put('/exams/:id', authenticate, updateExam);
+router.delete('/exams/:id', authenticate, deleteExam);
+
 router.get('/questions', authenticate, getQuestions);
 router.post('/questions', authenticate, createQuestion);
 
