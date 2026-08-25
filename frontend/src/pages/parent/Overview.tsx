@@ -5,6 +5,8 @@ import { Users, Target, Brain, Award, Flame, CalendarClock, Trash2, CheckCircle 
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 
+type TabKey = 'overview' | 'schedules' | 'exchanges';
+
 interface StudentStat {
   studentId: string;
   name: string;
@@ -23,6 +25,7 @@ export default function Overview() {
   const [aiSchedules, setAiSchedules] = useState<any[]>([]);
   const [pointExchanges, setPointExchanges] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState<TabKey>('overview');
 
   useEffect(() => {
     let isMounted = true;
@@ -145,6 +148,34 @@ export default function Overview() {
         </motion.div>
       </div>
 
+      {/* Tabs */}
+      <div className="flex gap-2 border-b border-slate-200">
+        {([
+          { key: 'overview' as const, label: 'Tổng Quan', badge: 0 },
+          { key: 'schedules' as const, label: 'Lịch AI', badge: aiSchedules.length },
+          { key: 'exchanges' as const, label: 'Đổi Giờ Chơi', badge: pointExchanges.filter(e => e.status === 'PENDING').length },
+        ]).map(tab => (
+          <button
+            key={tab.key}
+            onClick={() => setActiveTab(tab.key)}
+            className={`relative px-5 py-3 font-semibold text-sm transition-colors border-b-2 -mb-px ${
+              activeTab === tab.key
+                ? 'text-primary-dark border-primary'
+                : 'text-slate-500 border-transparent hover:text-slate-700'
+            }`}
+          >
+            {tab.label}
+            {tab.badge > 0 && (
+              <span className="ml-2 inline-flex items-center justify-center min-w-[1.25rem] h-5 px-1 bg-red-500 text-white text-xs font-bold rounded-full">
+                {tab.badge}
+              </span>
+            )}
+          </button>
+        ))}
+      </div>
+
+      {activeTab === 'overview' && (
+      <>
       {/* Charts Area */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
@@ -273,9 +304,13 @@ export default function Overview() {
           </table>
         </div>
       </div>
+      </>
+      )}
 
+      {activeTab === 'schedules' && (
+      <>
       {/* AI Schedules Table */}
-      <div className="bg-white rounded-2xl shadow-sm border border-blue-100 overflow-hidden mt-8">
+      <div className="bg-white rounded-2xl shadow-sm border border-blue-100 overflow-hidden">
         <div className="p-6 border-b border-blue-100 bg-blue-50/50 flex items-center gap-3">
           <CalendarClock className="text-blue-600" />
           <h3 className="text-lg font-bold text-blue-900">Lịch giao bài tự động bằng AI</h3>
@@ -324,9 +359,13 @@ export default function Overview() {
           </table>
         </div>
       </div>
+      </>
+      )}
 
+      {activeTab === 'exchanges' && (
+      <>
       {/* Point Exchanges Table */}
-      <div className="bg-white rounded-2xl shadow-sm border border-purple-100 overflow-hidden mt-8">
+      <div className="bg-white rounded-2xl shadow-sm border border-purple-100 overflow-hidden">
         <div className="p-6 border-b border-purple-100 bg-purple-50/50 flex items-center gap-3">
           <Award className="text-purple-600" />
           <h3 className="text-lg font-bold text-purple-900">Yêu cầu đổi Giờ chơi điện thoại</h3>
@@ -348,7 +387,7 @@ export default function Overview() {
                 <tr key={exchange.id} className="hover:bg-slate-50 transition-colors">
                   <td className="py-4 px-6 font-bold text-slate-800 flex items-center gap-3">
                     <img 
-                      src={exchange.student.avatar ? `http://localhost:3000${exchange.student.avatar}` : `https://ui-avatars.com/api/?name=${exchange.student.name}`}
+                      src={exchange.student.avatar ? exchange.student.avatar : `https://ui-avatars.com/api/?name=${exchange.student.name}`}
                       alt={exchange.student.name}
                       className="w-8 h-8 rounded-full"
                     />
@@ -389,6 +428,8 @@ export default function Overview() {
           </table>
         </div>
       </div>
+      </>
+      )}
     </div>
   );
 }

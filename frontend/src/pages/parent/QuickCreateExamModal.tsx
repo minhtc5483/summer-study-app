@@ -252,7 +252,7 @@ export default function QuickCreateExamModal({ isOpen, onClose, subjectId, subje
                   }`}
                 >
                   <img 
-                    src={student.avatar ? `http://localhost:3000${student.avatar}` : 'https://ui-avatars.com/api/?name=' + student.name}
+                    src={student.avatar ? student.avatar : 'https://ui-avatars.com/api/?name=' + student.name}
                     alt={student.name}
                     className="w-10 h-10 rounded-full object-cover bg-slate-200"
                   />

@@ -1,9 +1,16 @@
 
 import { useAuthStore } from '../store/useAuthStore';
-import { Navigate, Outlet, Link } from 'react-router-dom';
-import { Users, LogOut, Settings, BarChart, BookOpen, Bell, CheckCircle2 } from 'lucide-react';
+import { Navigate, Outlet, NavLink } from 'react-router-dom';
+import { Users, LogOut, Settings, BarChart, BookOpen, Bell, CheckCircle2, GraduationCap } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { api } from '../lib/api';
+
+const NAV_ITEMS = [
+  { to: '/parent', label: 'Tổng Quan', icon: BarChart, end: true },
+  { to: '/parent/students', label: 'Học Sinh', icon: Users, end: false },
+  { to: '/parent/question-bank', label: 'Kho Bài Tập', icon: BookOpen, end: false },
+  { to: '/parent/settings', label: 'Cài Đặt', icon: Settings, end: false },
+];
 
 interface AppNotification {
   id: string;
@@ -60,29 +67,43 @@ export default function ParentDashboard() {
   return (
     <div className="flex h-screen bg-slate-50 relative">
       {/* Sidebar */}
-      <aside className="w-64 bg-white shadow-lg flex flex-col">
-        <div className="p-6 border-b border-slate-100">
-          <h1 className="text-2xl font-bold text-primary-dark">Quản Lý</h1>
+      <aside className="w-64 bg-white shadow-lg flex flex-col shrink-0">
+        <div className="p-6 border-b border-slate-100 flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-primary text-white flex items-center justify-center shrink-0">
+            <GraduationCap size={22} />
+          </div>
+          <div className="min-w-0">
+            <h1 className="text-lg font-bold text-slate-800 leading-tight truncate">Ôn Luyện Hè</h1>
+            <p className="text-xs text-slate-400 font-medium">Quản lý phụ huynh</p>
+          </div>
         </div>
-        <nav className="flex-1 p-4 space-y-2">
-          <Link to="/parent" className="flex items-center gap-3 px-4 py-3 text-slate-700 rounded-xl hover:bg-slate-100 transition-colors">
-            <BarChart size={20} /> Tổng Quan
-          </Link>
-          <Link to="/parent/students" className="flex items-center gap-3 px-4 py-3 text-slate-700 rounded-xl hover:bg-slate-100 transition-colors">
-            <Users size={20} /> Học Sinh
-          </Link>
-          <Link to="/parent/question-bank" className="flex items-center gap-3 px-4 py-3 text-slate-700 rounded-xl hover:bg-slate-100 transition-colors">
-            <BookOpen size={20} /> Kho Bài Tập
-          </Link>
-
-          <Link to="/parent/settings" className="flex items-center gap-3 px-4 py-3 text-slate-700 rounded-xl hover:bg-slate-100 transition-colors">
-            <Settings size={20} /> Cài Đặt
-          </Link>
+        <nav className="flex-1 p-4 space-y-1">
+          {NAV_ITEMS.map(({ to, label, icon: Icon, end }) => (
+            <NavLink
+              key={to}
+              to={to}
+              end={end}
+              className={({ isActive }) =>
+                `flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-colors ${
+                  isActive
+                    ? 'bg-primary/10 text-primary-dark'
+                    : 'text-slate-600 hover:bg-slate-100'
+                }`
+              }
+            >
+              {({ isActive }) => (
+                <>
+                  <Icon size={20} className={isActive ? 'text-primary' : ''} />
+                  {label}
+                </>
+              )}
+            </NavLink>
+          ))}
         </nav>
         <div className="p-4 border-t border-slate-100">
-          <button 
+          <button
             onClick={logout}
-            className="flex items-center gap-3 px-4 py-3 w-full text-danger rounded-xl hover:bg-red-50 transition-colors"
+            className="flex items-center gap-3 px-4 py-3 w-full text-danger rounded-xl hover:bg-red-50 transition-colors font-medium"
           >
             <LogOut size={20} /> Đăng Xuất
           </button>

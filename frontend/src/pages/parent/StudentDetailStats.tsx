@@ -52,7 +52,7 @@ export default function StudentDetailStats() {
         </button>
         <div className="flex items-center gap-4">
           <img 
-            src={data.student.avatar ? `http://localhost:3000${data.student.avatar}` : `https://ui-avatars.com/api/?name=${data.student.name}`} 
+            src={data.student.avatar ? data.student.avatar : `https://ui-avatars.com/api/?name=${data.student.name}`}
             alt="avatar" 
             className="w-16 h-16 rounded-2xl object-cover bg-white p-1 border border-slate-200 shadow-sm"
           />

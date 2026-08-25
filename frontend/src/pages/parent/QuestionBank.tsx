@@ -275,7 +275,7 @@ export default function QuestionBank() {
                                     exam.students.map(s => (
                                       <img 
                                         key={s.id}
-                                        src={s.avatar ? `http://localhost:3000${s.avatar}` : 'https://ui-avatars.com/api/?name=' + s.name}
+                                        src={s.avatar ? s.avatar : 'https://ui-avatars.com/api/?name=' + s.name}
                                         alt={s.name}
                                         title={s.name}
                                         className="inline-block h-8 w-8 rounded-full ring-2 ring-white object-cover bg-slate-100"

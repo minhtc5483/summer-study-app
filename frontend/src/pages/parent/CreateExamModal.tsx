@@ -225,7 +225,7 @@ export default function CreateExamModal({ isOpen, onClose, topicId, topicName, o
                         {selectedStudentIds.has(student.id) ? <CheckSquare size={20} /> : <Square size={20} className="text-slate-300" />}
                       </div>
                       <img 
-                        src={student.avatar ? `http://localhost:3000${student.avatar}` : 'https://ui-avatars.com/api/?name=' + student.name} 
+                        src={student.avatar ? student.avatar : 'https://ui-avatars.com/api/?name=' + student.name}
                         className="w-8 h-8 rounded-full object-cover"
                         alt={student.name}
                       />
