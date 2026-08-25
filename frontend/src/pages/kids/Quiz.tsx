@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, Star, Heart, Volume2, Timer } from 'lucide-react';
@@ -47,36 +47,47 @@ export default function Quiz() {
     audio.play().catch(e => console.log('Audio blocked', e));
   };
 
-  // Đọc câu hỏi bằng giọng đọc tự nhiên nhất máy có, thay vì mặc định (thường là
-  // giọng robot của hệ điều hành). Trình duyệt/OS thường có nhiều giọng tiếng Việt —
-  // ưu tiên giọng "chất lượng cao" (network/Google, không phải "local"/SAPI mặc định),
-  // và hạ nhịp đọc + nâng cao độ một chút cho ấm và dễ nghe hơn với các bé nhỏ tuổi.
-  const speakQuestion = (text: string) => {
-    if (!('speechSynthesis' in window)) return;
-    window.speechSynthesis.cancel(); // ngắt lượt đọc trước nếu bé bấm liên tục
+  // Đọc câu hỏi bằng giọng AI tạo sẵn ở server (Gemini TTS, xem backend/src/lib/tts.ts) thay
+  // vì giọng đọc có sẵn của trình duyệt/hệ điều hành (window.speechSynthesis) — giọng máy
+  // móc, và nhiều thiết bị (đặc biệt Windows Chrome) còn không có sẵn giọng tiếng Việt nào.
+  // Audio được cache theo questionId ở server nên chỉ tốn thời gian gọi AI ở lần đọc đầu
+  // tiên của mỗi câu hỏi, các lần sau tải gần như tức thì.
+  const [speaking, setSpeaking] = useState(false);
+  const currentAudioRef = useRef<HTMLAudioElement | null>(null);
 
+  const speakQuestion = async (questionId: string, text: string) => {
+    // Ngắt lượt đọc trước nếu bé bấm liên tục.
+    if (currentAudioRef.current) {
+      currentAudioRef.current.pause();
+      currentAudioRef.current = null;
+    }
+    if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+
+    setSpeaking(true);
+    try {
+      const res = await api.get(`/public/tts/questions/${questionId}`, { responseType: 'blob' });
+      const url = URL.createObjectURL(res.data);
+      const audio = new Audio(url);
+      currentAudioRef.current = audio;
+      audio.onended = () => setSpeaking(false);
+      audio.onerror = () => setSpeaking(false);
+      await audio.play();
+    } catch (err) {
+      console.error('Không tạo được giọng đọc AI, dùng giọng trình duyệt thay thế', err);
+      speakQuestionBrowserFallback(text);
+      setSpeaking(false);
+    }
+  };
+
+  // Dự phòng nếu server không gọi được (mất mạng, API lỗi, ...) — vẫn cố đọc bằng giọng có
+  // sẵn của trình duyệt còn hơn im lặng hoàn toàn, dù chất lượng kém hơn giọng AI ở trên.
+  const speakQuestionBrowserFallback = (text: string) => {
+    if (!('speechSynthesis' in window)) return;
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.lang = 'vi-VN';
     utterance.rate = 0.92;
     utterance.pitch = 1.05;
-
-    const pickVoice = () => {
-      const voices = window.speechSynthesis.getVoices();
-      const vietnameseVoices = voices.filter(v => v.lang === 'vi-VN' || v.lang === 'vi');
-      const naturalVoice =
-        vietnameseVoices.find(v => !v.localService) || // cloud/network voices thường tự nhiên hơn
-        vietnameseVoices.find(v => /google|natural|neural/i.test(v.name)) ||
-        vietnameseVoices[0];
-      if (naturalVoice) utterance.voice = naturalVoice;
-      window.speechSynthesis.speak(utterance);
-    };
-
-    // Danh sách giọng đọc có thể chưa tải xong ở lần gọi đầu tiên.
-    if (window.speechSynthesis.getVoices().length > 0) {
-      pickVoice();
-    } else {
-      window.speechSynthesis.onvoiceschanged = pickVoice;
-    }
+    window.speechSynthesis.speak(utterance);
   };
 
   useEffect(() => {
@@ -347,8 +358,9 @@ export default function Quiz() {
             >
               <div className="bg-white w-full rounded-[3rem] p-10 md:p-16 shadow-xl shadow-cream-border/50 mb-10 text-center relative border border-cream-border">
                 <button
-                  className="absolute top-6 right-6 p-4 bg-terracotta-100 text-primary rounded-2xl hover:bg-terracotta-100/70 transition-colors"
-                  onClick={() => speakQuestion(questions[currentQuestion].text)}
+                  className={`absolute top-6 right-6 p-4 bg-terracotta-100 text-primary rounded-2xl hover:bg-terracotta-100/70 transition-colors ${speaking ? 'animate-pulse opacity-70' : ''}`}
+                  onClick={() => speakQuestion(questions[currentQuestion].id, questions[currentQuestion].text)}
+                  disabled={speaking}
                 >
                   <Volume2 size={28} />
                 </button>

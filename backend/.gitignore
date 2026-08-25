@@ -3,3 +3,6 @@ node_modules
 .env
 
 /generated/prisma
+
+# Cached generated audio for question read-aloud (backend/src/controllers/ttsController.ts)
+uploads/tts-cache/

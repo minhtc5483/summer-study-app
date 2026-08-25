@@ -116,4 +116,7 @@ router.post('/public/submit', requireKidsAccess, savePublicProgress);
 router.get('/public/rewards/:studentId', requireKidsAccess, getRewards);
 router.post('/public/exchange-points', requireKidsAccess, exchangePoints);
 
+import { getQuestionSpeech } from './controllers/ttsController';
+router.get('/public/tts/questions/:questionId', requireKidsAccess, getQuestionSpeech);
+
 export default router;
