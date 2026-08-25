@@ -26,9 +26,9 @@ export default function Rewards() {
   const [exchanging, setExchanging] = useState<string | null>(null);
 
   const STORE_ITEMS = [
-    { id: '15_min_tv', name: '15 Phút Xem TV', cost: 500, icon: <Tv size={32} />, color: 'bg-blue-100 text-blue-600 border-blue-200' },
-    { id: '30_min_ipad', name: '30 Phút iPad', cost: 1000, icon: <Smartphone size={32} />, color: 'bg-purple-100 text-purple-600 border-purple-200' },
-    { id: '1_hr_game', name: '1 Giờ Chơi Game', cost: 2000, icon: <Gamepad2 size={32} />, color: 'bg-rose-100 text-rose-600 border-rose-200' },
+    { id: '15_min_tv', name: '15 Phút Xem TV', cost: 500, minutes: 15, icon: <Tv size={32} />, color: 'bg-blue-100 text-blue-600 border-blue-200' },
+    { id: '30_min_ipad', name: '30 Phút iPad', cost: 1000, minutes: 30, icon: <Smartphone size={32} />, color: 'bg-purple-100 text-purple-600 border-purple-200' },
+    { id: '1_hr_game', name: '1 Giờ Chơi Game', cost: 2000, minutes: 60, icon: <Gamepad2 size={32} />, color: 'bg-rose-100 text-rose-600 border-rose-200' },
   ];
 
   const handleExchange = async (item: typeof STORE_ITEMS[0]) => {
@@ -44,7 +44,8 @@ export default function Rewards() {
       const res = await api.post('/public/exchange-points', {
         studentId: selectedStudent.id,
         cost: item.cost,
-        itemName: item.name
+        itemName: item.name,
+        minutes: item.minutes
       });
       
       if (res.data.success) {

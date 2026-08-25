@@ -1,7 +1,5 @@
-import { PrismaClient } from '@prisma/client';
 import { GoogleGenerativeAI } from '@google/generative-ai';
-
-const prisma = new PrismaClient();
+import { prisma } from '../index';
 
 export async function generateAiExam(
   subjectId: string, 

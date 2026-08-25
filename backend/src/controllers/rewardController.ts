@@ -1,7 +1,6 @@
 import { Request, Response } from 'express';
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import { z } from 'zod';
+import { prisma } from '../index';
 
 const ICONS = ['🌟', '🔥', '🚀', '🛡️', '⚔️', '👑', '💎', '🔮', '🐉', '⚡', '🌈', '⭐', '🎈', '🎉', '🏆'];
 const COLORS = [
@@ -93,41 +92,42 @@ export const getRewards = async (req: Request, res: Response) => {
   }
 };
 
+const exchangeSchema = z.object({
+  studentId: z.string(),
+  cost: z.number().int().min(1),
+  itemName: z.string().min(1),
+  // Sent explicitly by the frontend's store catalog instead of being guessed here by
+  // pattern-matching itemName (e.g. "includes('15 phút')") — that broke silently the
+  // moment the display text changed.
+  minutes: z.number().int().min(1)
+});
+
 export const exchangePoints = async (req: Request, res: Response) => {
   try {
-    const { studentId, cost, itemName } = req.body;
-
-    if (!studentId || cost === undefined || !itemName) {
-      return res.status(400).json({ error: 'Missing parameters' });
+    const parsed = exchangeSchema.safeParse(req.body);
+    if (!parsed.success) {
+      return res.status(400).json({ error: 'Validation failed', details: parsed.error.issues });
     }
+    const { studentId, cost, itemName, minutes } = parsed.data;
 
-    const student = await prisma.student.findUnique({
-      where: { id: studentId }
-    });
-
+    const student = await prisma.student.findUnique({ where: { id: studentId } });
     if (!student) {
       return res.status(404).json({ error: 'Student not found' });
     }
 
-    if (student.totalScore < cost) {
+    // Atomic conditional decrement: only spends the points if the balance still covers
+    // the cost at write time, so two rapid clicks / requests can't both succeed and drive
+    // the score negative (a plain read-then-write would be racy here).
+    const deduction = await prisma.student.updateMany({
+      where: { id: studentId, totalScore: { gte: cost } },
+      data: { totalScore: { decrement: cost } }
+    });
+
+    if (deduction.count === 0) {
       return res.status(400).json({ error: 'Not enough points' });
     }
 
-    // Deduct points
-    const updatedStudent = await prisma.student.update({
-      where: { id: studentId },
-      data: {
-        totalScore: student.totalScore - cost
-      }
-    });
-
-    // Extract minutes from itemName
-    let minutes = 0;
-    const lowerName = itemName.toLowerCase();
-    if (lowerName.includes('15 phút')) minutes = 15;
-    else if (lowerName.includes('30 phút')) minutes = 30;
-    else if (lowerName.includes('1 giờ')) minutes = 60;
-    else minutes = 30; // fallback
+    const updatedStudent = await prisma.student.findUniqueOrThrow({ where: { id: studentId } });
 
     // Record PointExchange
     await prisma.pointExchange.create({

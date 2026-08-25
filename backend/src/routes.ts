@@ -1,20 +1,23 @@
 import { Router } from 'express';
 import { register, login, getMe, refresh } from './controllers/authController';
+import { verifyFamilyPin } from './controllers/kidsAccessController';
 import { getStudents, getPublicStudents, getStudentHistory, createStudent, updateStudent, deleteStudent } from './controllers/studentController';
 import { authenticate } from './middlewares/auth';
+import { requireKidsAccess } from './middlewares/kidsAccess';
 import { upload } from './middlewares/upload';
+import { authRateLimit } from './middlewares/rateLimit';
 
 const router = Router();
 
 // Auth routes
-router.post('/auth/register', register);
-router.post('/login', login); // Alias for login as per api.md
-router.post('/auth/login', login);
+router.post('/auth/register', authRateLimit, register);
+router.post('/login', authRateLimit, login); // Alias for login as per api.md
+router.post('/auth/login', authRateLimit, login);
 router.post('/auth/refresh', refresh);
 router.get('/auth/me', authenticate, getMe);
 
-// Public routes
-router.get('/public/students', getPublicStudents);
+// Kids family-PIN gate: no auth needed to submit the PIN, but rate-limited against brute force
+router.post('/public/verify-pin', authRateLimit, verifyFamilyPin);
 
 // Student routes
 router.get('/students', authenticate, getStudents);
@@ -87,13 +90,13 @@ import { getExchanges, fulfillExchange } from './controllers/pointExchangeContro
 router.get('/point-exchanges', authenticate, getExchanges);
 router.put('/point-exchanges/:id/fulfill', authenticate, fulfillExchange);
 
-// Public routes (Kids App)
-router.get('/public/students', getPublicStudents);
-router.get('/public/students/:studentId/history', getStudentHistory);
-router.get('/public/exams', getExams);
-router.get('/public/exams/:id', getExamById);
-router.post('/public/submit', savePublicProgress);
-router.get('/public/rewards/:studentId', getRewards);
-router.post('/public/exchange-points', exchangePoints);
+// Public routes (Kids App) — protected by the family PIN (see requireKidsAccess), not by parent login
+router.get('/public/students', requireKidsAccess, getPublicStudents);
+router.get('/public/students/:studentId/history', requireKidsAccess, getStudentHistory);
+router.get('/public/exams', requireKidsAccess, getExams);
+router.get('/public/exams/:id', requireKidsAccess, getExamById);
+router.post('/public/submit', requireKidsAccess, savePublicProgress);
+router.get('/public/rewards/:studentId', requireKidsAccess, getRewards);
+router.post('/public/exchange-points', requireKidsAccess, exchangePoints);
 
 export default router;

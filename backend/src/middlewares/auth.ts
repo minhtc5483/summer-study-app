@@ -1,8 +1,17 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'super-secret-key-for-summer-app';
-const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET || 'super-secret-refresh-key-for-summer-app';
+const _JWT_SECRET = process.env.JWT_SECRET;
+const _JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET;
+
+if (!_JWT_SECRET || !_JWT_REFRESH_SECRET) {
+  throw new Error(
+    'JWT_SECRET and JWT_REFRESH_SECRET must be set in the environment (.env). Refusing to start with insecure defaults.'
+  );
+}
+
+export const JWT_SECRET: string = _JWT_SECRET;
+export const JWT_REFRESH_SECRET: string = _JWT_REFRESH_SECRET;
 
 export interface AuthRequest extends Request {
   user?: { id: string; username: string };

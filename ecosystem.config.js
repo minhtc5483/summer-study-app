@@ -7,9 +7,11 @@ module.exports = {
       cwd: './backend',
       env: {
         NODE_ENV: 'production',
-        PORT: 3000,
-        JWT_SECRET: 'super-secret-key-for-summer-app',
-        JWT_REFRESH_SECRET: 'super-secret-refresh-key-for-summer-app'
+        PORT: 3000
+        // Secrets (JWT_SECRET, JWT_REFRESH_SECRET, KIDS_ACCESS_SECRET, FAMILY_PIN, ...) are
+        // intentionally NOT set here. They must live only in backend/.env (gitignored, never
+        // committed) and are picked up automatically by dotenv.config() in src/index.ts.
+        // Do NOT hardcode secrets in this file — it is tracked in git.
       }
     }
   ]
