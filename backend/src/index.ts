@@ -18,6 +18,12 @@ import './cron'; // Start cron jobs
 const app = express();
 const port = process.env.PORT || 3000;
 
+// Cloudflare Tunnel (cloudflared) sits directly in front of this server as the only proxy
+// hop, forwarding the real client IP via X-Forwarded-For. Without this, Express leaves
+// 'trust proxy' at its default (false), so express-rate-limit refuses to trust that header
+// and throws ERR_ERL_UNEXPECTED_X_FORWARDED_FOR on every rate-limited request in production.
+app.set('trust proxy', 1);
+
 export const prisma = new PrismaClient();
 
 // Ensure uploads directory exists
