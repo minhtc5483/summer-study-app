@@ -1,13 +1,19 @@
+// Must run before any local module is imported: middlewares/auth.ts and
+// middlewares/kidsAccess.ts read their required secrets from process.env at module
+// load time (and throw immediately if missing). If dotenv.config() ran after those
+// imports, process.env wouldn't be populated from .env yet and the server would crash
+// on startup on any machine that doesn't already have these set as real OS env vars
+// (this is exactly what was crash-looping the Raspberry Pi deployment).
+import dotenv from 'dotenv';
+dotenv.config();
+
 import express from 'express';
 import cors from 'cors';
-import dotenv from 'dotenv';
 import path from 'path';
 import { PrismaClient } from '@prisma/client';
 import fs from 'fs';
 import routes from './routes';
 import './cron'; // Start cron jobs
-
-dotenv.config();
 
 const app = express();
 const port = process.env.PORT || 3000;
