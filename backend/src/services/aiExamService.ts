@@ -1,6 +1,30 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { prisma } from '../index';
 
+// Gemini occasionally returns 503 "high demand" (or 429 rate-limit) errors that are
+// transient by Google's own description — retrying after a short delay usually succeeds
+// without the parent needing to do anything. Only these known-transient errors are retried;
+// anything else (bad prompt, invalid API key, ...) fails immediately.
+function isTransientAiError(err: any): boolean {
+  const status = err?.status ?? err?.response?.status;
+  const message = String(err?.message || '');
+  return status === 503 || status === 429 || /503|429|overloaded|high demand|service unavailable|quota/i.test(message);
+}
+
+async function generateContentWithRetry(model: any, prompt: string, retries = 3) {
+  let lastError: any;
+  for (let attempt = 1; attempt <= retries; attempt++) {
+    try {
+      return await model.generateContent(prompt);
+    } catch (err: any) {
+      lastError = err;
+      if (!isTransientAiError(err) || attempt === retries) throw err;
+      await new Promise((resolve) => setTimeout(resolve, 800 * attempt));
+    }
+  }
+  throw lastError;
+}
+
 export async function generateAiExam(
   subjectId: string, 
   studentIds: string[], 
@@ -61,9 +85,9 @@ export async function generateAiExam(
           "correct": "Đáp án đúng (phải khớp hoàn toàn với một trong các lựa chọn trong mảng options)"
         }]`;
         
-        const result = await model.generateContent(prompt);
+        const result = await generateContentWithRetry(model, prompt);
         let responseText = result.response.text();
-        
+
         // Trích xuất JSON bằng regex để loại bỏ văn bản rác xung quanh
         const jsonMatch = responseText.match(/\[[\s\S]*\]/);
         if (!jsonMatch) {
@@ -115,7 +139,7 @@ export async function generateAiExam(
   Chỉ trả về MỘT mảng JSON hợp lệ chứa CHÍNH XÁC ${numberOfQuestions} ID của các câu hỏi bạn đã chọn. Không trả về bất cứ chữ nào khác.
   Ví dụ: ["id1", "id2", "id3"]`;
   
-        const result = await model.generateContent(prompt);
+        const result = await generateContentWithRetry(model, prompt);
         let responseText = result.response.text().replace(/```json/gi, '').replace(/```/g, '').trim();
         
         selectedIds = JSON.parse(responseText);
@@ -126,7 +150,13 @@ export async function generateAiExam(
     } catch (err: any) {
       console.error("Gemini Quick Create Error:", err);
       if (useInternetSearch) {
-        throw new Error(err.message || 'Lỗi khi tạo đề từ Internet');
+        // Đã thử lại vài lần ở generateContentWithRetry mà vẫn lỗi do quá tải/rate-limit —
+        // báo cho phụ huynh một câu dễ hiểu thay vì để lộ thông báo kỹ thuật thô của Gemini
+        // (URL, mã lỗi HTTP, ...). Các lỗi khác (JSON không hợp lệ, thiếu cấu hình, ...) vẫn
+        // giữ nguyên thông báo cụ thể vì đã được viết sẵn bằng tiếng Việt, dễ hiểu.
+        throw new Error(isTransientAiError(err)
+          ? 'AI đang quá tải do có nhiều người dùng cùng lúc. Vui lòng thử lại sau vài phút nhé.'
+          : (err.message || 'Lỗi khi tạo đề từ Internet'));
       }
     }
   }
