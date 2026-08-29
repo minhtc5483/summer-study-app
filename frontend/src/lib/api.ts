@@ -2,6 +2,7 @@ import axios from 'axios';
 import type { AxiosRequestConfig } from 'axios';
 import { useAuthStore } from '../store/useAuthStore';
 import { useKidsAccessStore } from '../store/useKidsAccessStore';
+import { useManageAccessStore } from '../store/useManageAccessStore';
 
 export const api = axios.create({
   baseURL: '/api',
@@ -30,6 +31,13 @@ api.interceptors.request.use((config) => {
   const token = useAuthStore.getState().token;
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
+  }
+
+  // Second factor for /parent routes: being logged in is no longer enough, the parent also
+  // has to have entered their management PIN recently (see requireManage on the backend).
+  const manageToken = useManageAccessStore.getState().manageToken;
+  if (manageToken) {
+    config.headers['X-Manage-Token'] = manageToken;
   }
   return config;
 });
@@ -68,6 +76,14 @@ api.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config as RetriableRequestConfig | undefined;
+
+    // The PIN lapsed or was never entered on this device. This is NOT a login problem —
+    // clearing the manage token makes ParentDashboard show the PIN prompt again, whereas
+    // logging the parent out here would send them back to the password screen for nothing.
+    if (error.response?.status === 403 && error.response?.data?.error === 'MANAGE_PIN_REQUIRED') {
+      useManageAccessStore.getState().clearManageToken();
+      return Promise.reject(error);
+    }
 
     if (error.response?.status === 401) {
       if (isPublicRequest(originalRequest?.url)) {

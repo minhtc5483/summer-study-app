@@ -17,6 +17,8 @@ export default function ImportModal({ isOpen, onClose, topicId, topicName, onSuc
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successCount, setSuccessCount] = useState<number | null>(null);
+  const [skippedRows, setSkippedRows] = useState<string[]>([]);
+  const [duplicateCount, setDuplicateCount] = useState(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   if (!isOpen) return null;
@@ -26,6 +28,8 @@ export default function ImportModal({ isOpen, onClose, topicId, topicName, onSuc
     setFile(null);
     setError(null);
     setSuccessCount(null);
+    setSkippedRows([]);
+    setDuplicateCount(0);
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -35,6 +39,42 @@ export default function ImportModal({ isOpen, onClose, topicId, topicName, onSuc
       setError(null);
       setSuccessCount(null);
     }
+  };
+
+  // Excel in Vietnamese locale saves with ";", people rename columns with dấu, and one blank
+  // cell used to crash the whole import with "Cannot read properties of undefined". Normalise
+  // the header (strip accents/spaces/case) and report bad rows by line number instead.
+  const stripAccents = (value: string) =>
+    value
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/đ/gi, 'd');
+
+  const normaliseKey = (key: string) => stripAccents(key).replace(/[^a-z0-9]/gi, '').toLowerCase();
+
+  const COLUMN_ALIASES: Record<string, string> = {
+    cauhoi: 'CauHoi',
+    noidung: 'CauHoi',
+    a: 'A',
+    b: 'B',
+    c: 'C',
+    d: 'D',
+    dapan: 'DapAn',
+    ketqua: 'DapAn',
+    dokho: 'DoKho',
+    mucdo: 'DoKho',
+    diem: 'Diem',
+  };
+
+  const normaliseRow = (row: Record<string, any>) => {
+    const out: Record<string, string> = {};
+    Object.keys(row).forEach((key) => {
+      const canonical = COLUMN_ALIASES[normaliseKey(key)];
+      if (canonical && row[key] !== null && row[key] !== undefined) {
+        out[canonical] = String(row[key]).trim();
+      }
+    });
+    return out;
   };
 
   const processCSV = () => {
@@ -47,44 +87,65 @@ export default function ImportModal({ isOpen, onClose, topicId, topicName, onSuc
       skipEmptyLines: true,
       complete: async (results) => {
         try {
-          const rows = results.data as any[];
+          const rows = (results.data as Record<string, any>[]).map(normaliseRow);
           if (rows.length === 0) throw new Error('File CSV trống!');
-          
-          const firstRow = rows[0];
-          if (!firstRow.CauHoi || !firstRow.DapAn) {
-            throw new Error('File CSV không đúng định dạng. Cần có cột "CauHoi" và "DapAn".');
+
+          if (!rows.some((row) => row.CauHoi)) {
+            throw new Error(
+              'File CSV không đúng định dạng. Cần có cột "CauHoi" và "DapAn" (tải file mẫu bên dưới để đối chiếu).'
+            );
           }
 
-          const questions = rows.map((row) => {
-            const options = [];
-            if (row.A) options.push(row.A.toString());
-            if (row.B) options.push(row.B.toString());
-            if (row.C) options.push(row.C.toString());
-            if (row.D) options.push(row.D.toString());
+          const questions: any[] = [];
+          const badRows: string[] = [];
 
-            let correct = row.DapAn.toString();
-            if (correct.toUpperCase() === 'A') correct = row.A?.toString() || '';
-            else if (correct.toUpperCase() === 'B') correct = row.B?.toString() || '';
-            else if (correct.toUpperCase() === 'C') correct = row.C?.toString() || '';
-            else if (correct.toUpperCase() === 'D') correct = row.D?.toString() || '';
+          rows.forEach((row, index) => {
+            // +2: dòng 1 là tiêu đề, và người dùng đếm từ 1 chứ không từ 0.
+            const lineNumber = index + 2;
+            if (!row.CauHoi) {
+              badRows.push(`dòng ${lineNumber}: thiếu câu hỏi`);
+              return;
+            }
+            if (!row.DapAn) {
+              badRows.push(`dòng ${lineNumber}: thiếu đáp án`);
+              return;
+            }
 
-            return {
-              type: 'MULTIPLE_CHOICE',
-              level: isNaN(parseInt(row.DoKho)) ? 1 : parseInt(row.DoKho),
-              points: isNaN(parseInt(row.Diem)) ? 10 : parseInt(row.Diem),
-              content: {
-                text: row.CauHoi.toString(),
-                options: options,
-                correct: correct
-              }
-            };
+            const options = ['A', 'B', 'C', 'D'].map((key) => row[key]).filter((value) => !!value);
+
+            let correct = row.DapAn;
+            const asLetter = stripAccents(correct).toUpperCase();
+            if (['A', 'B', 'C', 'D'].includes(asLetter) && row[asLetter]) {
+              correct = row[asLetter];
+            }
+
+            if (options.length > 0 && !options.includes(correct)) {
+              badRows.push(`dòng ${lineNumber}: đáp án "${row.DapAn}" không khớp lựa chọn nào`);
+              return;
+            }
+
+            const level = parseInt(row.DoKho, 10);
+            const points = parseInt(row.Diem, 10);
+
+            questions.push({
+              type: options.length > 0 ? 'MULTIPLE_CHOICE' : 'FILL_BLANK',
+              level: level >= 1 && level <= 3 ? level : 1,
+              points: points > 0 ? points : 10,
+              content: options.length > 0 ? { text: row.CauHoi, options, correct } : { text: row.CauHoi, correct },
+            });
           });
+
+          if (questions.length === 0) {
+            throw new Error(`Không có dòng nào dùng được. ${badRows.slice(0, 3).join('; ')}`);
+          }
 
           const res = await api.post('/import', { topicId, questions });
           setSuccessCount(res.data.count);
+          setSkippedRows(badRows);
+          setDuplicateCount(res.data.duplicates || 0);
           onSuccess(res.data.count);
         } catch (err: any) {
-          setError(err.response?.data?.error ? `${err.response.data.error}: ${JSON.stringify(err.response.data.details || '')}` : (err.message || 'Có lỗi xảy ra khi xử lý file'));
+          setError(err.response?.data?.error || err.message || 'Có lỗi xảy ra khi xử lý file');
         } finally {
           setLoading(false);
         }
@@ -159,6 +220,18 @@ export default function ImportModal({ isOpen, onClose, topicId, topicName, onSuc
               <CheckCircle className="text-green-500 w-16 h-16 mx-auto mb-4" />
               <h4 className="text-2xl font-bold text-ink mb-2">Thành công!</h4>
               <p className="text-ink-muted">Đã thêm {successCount} câu hỏi vào hệ thống.</p>
+              {duplicateCount > 0 && (
+                <p className="text-sm text-ink-muted mt-2">Bỏ qua {duplicateCount} câu đã có sẵn trong chủ đề này.</p>
+              )}
+              {skippedRows.length > 0 && (
+                <div className="mt-4 text-left text-sm bg-gold-100/50 border border-gold-100 rounded-2xl p-4 max-h-40 overflow-y-auto">
+                  <p className="font-semibold text-ink mb-1">Bỏ qua {skippedRows.length} dòng lỗi:</p>
+                  <ul className="list-disc pl-5 text-ink-muted space-y-0.5">
+                    {skippedRows.slice(0, 10).map((row) => <li key={row}>{row}</li>)}
+                  </ul>
+                  {skippedRows.length > 10 && <p className="text-ink-muted mt-1">...và {skippedRows.length - 10} dòng khác.</p>}
+                </div>
+              )}
               <button onClick={onClose} className="mt-6 px-6 py-2 bg-cream text-ink font-semibold rounded-xl hover:bg-cream-border transition-colors">
                 Đóng
               </button>

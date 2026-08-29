@@ -151,12 +151,12 @@ export default function QuestionBank() {
 
         {/* Main Content: Topics & Exams */}
         <div className="md:col-span-3 space-y-6">
-          <div className="flex justify-between items-center">
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
             <h2 className="text-xl font-bold text-ink flex items-center gap-2">
               <Folder className="text-primary" /> 
               Chủ đề môn {selectedSubject?.name}
             </h2>
-            <div className="flex gap-2">
+            <div className="flex gap-2 shrink-0">
               <button 
                 onClick={() => setIsQuickCreateOpen(true)}
                 className="px-4 py-2 bg-gradient-to-r from-primary to-primary-dark text-white rounded-xl font-bold flex items-center gap-2 hover:opacity-90 transition-opacity shadow-md"
@@ -215,7 +215,7 @@ export default function QuestionBank() {
                 
                 return (
                   <div key={topic.id} className="bg-white rounded-3xl border border-cream-border shadow-sm overflow-hidden flex flex-col">
-                    <div className="p-6 flex items-center justify-between bg-cream/50 group border-b border-cream-border shrink-0">
+                    <div className="p-6 flex flex-wrap gap-4 items-center justify-between bg-cream/50 border-b border-cream-border shrink-0">
                       <div className="flex items-center gap-4">
                         <div className="w-12 h-12 bg-terracotta-100 text-primary-dark rounded-2xl flex items-center justify-center">
                           <BookOpen size={24} />
@@ -226,16 +226,16 @@ export default function QuestionBank() {
                         </div>
                       </div>
                       
-                      <div className="flex gap-2">
+                      <div className="flex flex-wrap gap-2">
                         <button
                           onClick={() => setCreateExamTopic(topic)}
-                          className="opacity-0 group-hover:opacity-100 px-4 py-2 bg-gold-100 text-gold-600 border border-gold-100 rounded-xl hover:bg-gold-600 hover:text-white transition-all font-medium flex items-center gap-2 shadow-sm"
+                          className="px-4 py-2 bg-gold-100 text-gold-600 border border-gold-100 rounded-xl hover:bg-gold-600 hover:text-white transition-all font-medium flex items-center gap-2 shadow-sm"
                         >
                           <Plus size={18} /> Tạo Đề Bài
                         </button>
                         <button
                           onClick={() => setImportModalTopic(topic)}
-                          className="opacity-0 group-hover:opacity-100 px-4 py-2 bg-white border border-primary text-primary rounded-xl hover:bg-primary hover:text-white transition-all font-medium flex items-center gap-2 shadow-sm"
+                          className="px-4 py-2 bg-white border border-primary text-primary rounded-xl hover:bg-primary hover:text-white transition-all font-medium flex items-center gap-2 shadow-sm"
                         >
                           <Upload size={18} /> Nhập (CSV)
                         </button>

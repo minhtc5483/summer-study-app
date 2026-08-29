@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { api } from '../../lib/api';
-import { BookOpen, Layers, Plus, Trash2, Edit2, Check, X, Lock, KeyRound } from 'lucide-react';
+import { BookOpen, Layers, Plus, Trash2, Edit2, Check, X, Lock, KeyRound, ShieldCheck } from 'lucide-react';
+import { useManageAccessStore } from '../../store/useManageAccessStore';
 
 interface Grade {
   id: string;
@@ -38,20 +39,67 @@ export default function Settings() {
   const [pinSaving, setPinSaving] = useState(false);
   const [pinError, setPinError] = useState('');
 
+  // Parent management PIN — the gate on the whole /parent area (see ManagePinGate).
+  const setManageToken = useManageAccessStore((s) => s.setManageToken);
+  const [hasManagePin, setHasManagePin] = useState<boolean | null>(null);
+  const [managePin, setManagePin] = useState('');
+  const [managePassword, setManagePassword] = useState('');
+  const [manageSaving, setManageSaving] = useState(false);
+  const [manageError, setManageError] = useState('');
+  const [manageSaved, setManageSaved] = useState(false);
+
+  const handleSaveManagePin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!/^\d{4,8}$/.test(managePin)) {
+      setManageError('Mã PIN phải gồm 4-8 chữ số.');
+      return;
+    }
+    setManageSaving(true);
+    setManageError('');
+    try {
+      const res = await api.put('/auth/manage-pin', { pin: managePin, password: managePassword });
+      setManageToken(res.data.manageToken);
+      setHasManagePin(true);
+      setManagePin('');
+      setManagePassword('');
+      setManageSaved(true);
+    } catch (error: any) {
+      setManageError(error.response?.data?.error || 'Không lưu được mã PIN, thử lại nhé.');
+    } finally {
+      setManageSaving(false);
+    }
+  };
+
+  const handleClearManagePin = async () => {
+    if (!confirm('Bỏ mã PIN quản lý? Bất kỳ ai cầm máy đã đăng nhập đều vào được khu quản lý.')) return;
+    const password = prompt('Nhập mật khẩu tài khoản để xác nhận:');
+    if (!password) return;
+    try {
+      await api.put('/auth/manage-pin', { pin: '', password });
+      setManageToken(null);
+      setHasManagePin(false);
+      setManageSaved(false);
+    } catch (error: any) {
+      setManageError(error.response?.data?.error || 'Không bỏ được mã PIN.');
+    }
+  };
+
   useEffect(() => {
     fetchData();
   }, []);
 
   const fetchData = async () => {
     try {
-      const [gradesRes, subjectsRes, studentsRes] = await Promise.all([
+      const [gradesRes, subjectsRes, studentsRes, managePinRes] = await Promise.all([
         api.get('/grades'),
         api.get('/subjects'),
-        api.get('/students')
+        api.get('/students'),
+        api.get('/auth/manage-pin')
       ]);
       setGrades(gradesRes.data);
       setSubjects(subjectsRes.data);
       setStudents(studentsRes.data);
+      setHasManagePin(!!managePinRes.data.hasPin);
     } catch (error) {
       console.error('Failed to fetch settings data', error);
     }
@@ -140,6 +188,62 @@ export default function Settings() {
       <div>
         <h2 className="text-3xl font-bold text-ink">Cài Đặt Hệ Thống</h2>
         <p className="text-ink-muted mt-2">Quản lý danh sách các khối lớp và môn học khả dụng.</p>
+      </div>
+
+      {/* Parent management PIN */}
+      <div className="bg-white rounded-3xl shadow-sm border border-cream-border p-6">
+        <div className="flex items-center gap-3 mb-2">
+          <div className="w-12 h-12 bg-terracotta-100 rounded-2xl flex items-center justify-center text-primary-dark">
+            <ShieldCheck size={24} />
+          </div>
+          <div>
+            <h3 className="text-xl font-bold text-ink">Mã PIN quản lý</h3>
+            <p className="text-xs text-ink-muted font-medium">
+              {hasManagePin === null ? 'Đang tải...' : hasManagePin ? 'Đang bật — mỗi lần vào khu quản lý phải nhập PIN' : 'Chưa đặt — ai cầm máy cũng vào được khu quản lý'}
+            </p>
+          </div>
+        </div>
+        <p className="text-ink-muted text-sm mb-6">
+          Máy đã đăng nhập sẽ ghi nhớ tài khoản rất lâu nên không hỏi lại mật khẩu. Mã PIN này chặn ở cửa khu quản lý,
+          và có hiệu lực 30 phút cho mỗi lần nhập.
+        </p>
+
+        <form onSubmit={handleSaveManagePin} className="flex flex-wrap items-end gap-3">
+          <div>
+            <label className="block text-xs font-medium text-ink-muted mb-1">{hasManagePin ? 'Mã PIN mới' : 'Mã PIN'} (4-8 chữ số)</label>
+            <input
+              type="password"
+              inputMode="numeric"
+              value={managePin}
+              onChange={(e) => { setManagePin(e.target.value.replace(/\D/g, '').slice(0, 8)); setManageSaved(false); }}
+              className="w-32 px-4 py-2 rounded-xl border border-cream-border text-center tracking-widest focus:ring-2 focus:ring-primary"
+              placeholder="••••"
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-ink-muted mb-1">Mật khẩu tài khoản</label>
+            <input
+              type="password"
+              value={managePassword}
+              onChange={(e) => setManagePassword(e.target.value)}
+              className="w-56 px-4 py-2 rounded-xl border border-cream-border focus:ring-2 focus:ring-primary"
+            />
+          </div>
+          <button
+            type="submit"
+            disabled={manageSaving || !managePin || !managePassword}
+            className="px-6 py-2 bg-primary text-white rounded-xl font-semibold hover:bg-primary-dark disabled:opacity-50"
+          >
+            {manageSaving ? 'Đang lưu...' : hasManagePin ? 'Đổi mã PIN' : 'Bật mã PIN'}
+          </button>
+          {hasManagePin && (
+            <button type="button" onClick={handleClearManagePin} className="px-4 py-2 text-ink-muted hover:text-danger font-medium">
+              Bỏ mã PIN
+            </button>
+          )}
+        </form>
+        {manageError && <p className="text-sm text-danger font-medium mt-3">{manageError}</p>}
+        {manageSaved && <p className="text-sm text-secondary-dark font-medium mt-3">Đã lưu mã PIN quản lý.</p>}
       </div>
 
       {/* Per-student PIN */}

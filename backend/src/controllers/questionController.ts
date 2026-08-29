@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import { prisma } from '../index';
 import { z } from 'zod';
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import { GoogleGenAI, Type } from '@google/genai';
 import fs from 'fs';
 const getQuestionsSchema = z.object({
   topicId: z.string().optional(),
@@ -81,114 +81,159 @@ export const importQuestions = async (req: Request, res: Response) => {
 
     const { topicId, questions } = parsed.data;
 
-    const data = questions.map(q => ({
-      topicId,
-      type: q.type,
-      content: typeof q.content === 'string' ? q.content : JSON.stringify(q.content),
-      level: q.level,
-      points: q.points
-    }));
+    const topic = await prisma.topic.findUnique({ where: { id: topicId } });
+    if (!topic) {
+      return res.status(404).json({ error: 'Không tìm thấy chủ đề để nhập câu hỏi.' });
+    }
 
-    const result = await prisma.question.createMany({
-      data
-    });
-    res.json({ message: 'Import successful', count: result.count });
+    const contentOf = (q: { content: any }) =>
+      typeof q.content === 'string' ? q.content : JSON.stringify(q.content);
+    const textOf = (content: string) => {
+      try {
+        return String(JSON.parse(content).text ?? '').trim().toLowerCase();
+      } catch {
+        return content.trim().toLowerCase();
+      }
+    };
+
+    // Re-importing the same file is the normal way people retry a failed import, so silently
+    // creating a second copy of every question is worse than useless. Match on the question
+    // text (the content JSON also carries option order, which differs harmlessly).
+    const existing = await prisma.question.findMany({ where: { topicId }, select: { content: true } });
+    const seen = new Set(existing.map((q) => textOf(q.content)));
+
+    const data: { topicId: string; type: string; content: string; level: number; points: number }[] = [];
+    let duplicates = 0;
+    for (const q of questions) {
+      const content = contentOf(q);
+      const key = textOf(content);
+      if (!key || seen.has(key)) {
+        duplicates++;
+        continue;
+      }
+      seen.add(key);
+      data.push({ topicId, type: q.type, content, level: q.level, points: q.points });
+    }
+
+    const result = data.length > 0 ? await prisma.question.createMany({ data }) : { count: 0 };
+    res.json({ message: 'Import successful', count: result.count, duplicates });
   } catch (error) {
+    console.error('Import questions error:', error);
     res.status(500).json({ error: 'Server error' });
   }
 };
 
+// Vision/OCR stays on the full flash model — reading a scanned worksheet is harder than
+// writing questions from scratch, and this runs once per upload. The responseSchema is what
+// keeps it fast enough for the tunnel's 100s budget (and removes the old strip-the-```json
+// -fences-and-hope parsing).
+const importedQuestionSchema = {
+  type: Type.ARRAY,
+  items: {
+    type: Type.OBJECT,
+    properties: {
+      type: { type: Type.STRING, enum: ['MULTIPLE_CHOICE', 'FILL_BLANK'] },
+      level: { type: Type.INTEGER },
+      points: { type: Type.INTEGER },
+      text: { type: Type.STRING },
+      options: { type: Type.ARRAY, items: { type: Type.STRING } },
+      correct: { type: Type.STRING },
+    },
+    required: ['type', 'level', 'points', 'text', 'correct'],
+  },
+};
+
+interface ImportedQuestion {
+  type: string;
+  level: number;
+  points: number;
+  text: string;
+  options?: string[];
+  correct: string;
+}
+
 export const importPDF = async (req: Request, res: Response) => {
+  const file = req.file;
   try {
     const { topicId } = req.body;
-    const file = req.file;
 
     if (!file || !topicId) {
-      return res.status(400).json({ error: 'Missing file or topicId' });
+      return res.status(400).json({ error: 'Thiếu file hoặc chủ đề.' });
     }
 
     const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey) {
-      return res.status(500).json({ error: 'GEMINI_API_KEY is not set' });
+      return res.status(500).json({ error: 'Chưa cấu hình GEMINI_API_KEY trên server.' });
     }
 
-    const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: 'gemini-flash-latest' });
+    const base64Data = fs.readFileSync(file.path).toString('base64');
 
-    const fileBytes = fs.readFileSync(file.path);
-    const base64Data = fileBytes.toString('base64');
-
-    const prompt = `Bạn là một trợ lý giáo dục AI. Hãy đọc nội dung trong hình ảnh hoặc tài liệu PDF được cung cấp (thường là bài tập cho trẻ tiểu học) và trích xuất tất cả các câu hỏi (cả trắc nghiệm và tự luận) ra định dạng JSON.
-
-Yêu cầu định dạng bắt buộc cho output là một mảng JSON:
-[
-  // Ví dụ 1: Câu trắc nghiệm
-  {
-    "type": "MULTIPLE_CHOICE",
-    "level": 1,
-    "points": 10,
-    "content": {
-      "text": "Câu hỏi trắc nghiệm là gì?",
-      "options": ["Đáp án 1", "Đáp án 2", "Đáp án 3", "Đáp án 4"],
-      "correct": "Đáp án đúng"
-    }
-  },
-  // Ví dụ 2: Câu tự luận (chỉ cần điền số hoặc chữ ngắn)
-  {
-    "type": "FILL_BLANK",
-    "level": 2,
-    "points": 20,
-    "content": {
-      "text": "Nội dung câu hỏi tự luận/đặt tính rồi tính...",
-      "correct": "Kết quả đúng (chỉ ghi số hoặc đáp án ngắn)"
-    }
-  }
-]
+    const prompt = `Bạn là một trợ lý giáo dục AI. Hãy đọc nội dung trong hình ảnh hoặc tài liệu PDF được cung cấp (bài tập cho trẻ tiểu học Việt Nam) và trích xuất tất cả các câu hỏi.
 
 Quy tắc:
-1. Đối với MULTIPLE_CHOICE, 'correct' phải khớp hoàn toàn (exact match) với một trong các chuỗi nằm trong mảng 'options'. Không ghi A, B, C, D nếu mảng options chứa giá trị nội dung.
-2. Đối với FILL_BLANK (Tự luận), tuyệt đối không trả về trường 'options'. Trường 'correct' chỉ chứa kết quả cuối cùng (ví dụ: "45", "15 cm").
-3. Output CHỈ LÀ MỘT CHUỖI JSON HỢP LỆ, không được có thẻ \`\`\`json ở đầu và \`\`\` ở cuối, không được có bất kỳ bình luận nào.`;
+1. Câu trắc nghiệm: type = "MULTIPLE_CHOICE", điền mảng "options" chứa các lựa chọn, và "correct" phải trùng khớp hoàn toàn với một chuỗi trong "options" (không ghi A, B, C, D).
+2. Câu tự luận / đặt tính rồi tính: type = "FILL_BLANK", bỏ trống "options", "correct" chỉ chứa kết quả cuối cùng (ví dụ: "45", "15 cm").
+3. "level" là 1 (dễ), 2 (trung bình) hoặc 3 (khó). "points" thường là 10.
+4. Giữ nguyên tiếng Việt có dấu như trong tài liệu.`;
 
-    const result = await model.generateContent([
-      prompt,
-      {
-        inlineData: {
-          mimeType: file.mimetype,
-          data: base64Data
-        }
-      }
-    ]);
+    const ai = new GoogleGenAI({ apiKey });
+    const result = await ai.models.generateContent({
+      model: 'gemini-flash-latest',
+      contents: [{ parts: [{ text: prompt }, { inlineData: { mimeType: file.mimetype, data: base64Data } }] }],
+      config: { responseMimeType: 'application/json', responseSchema: importedQuestionSchema },
+    });
 
-    let responseText = result.response.text();
-    responseText = responseText.replace(/```json/gi, '').replace(/```/g, '').trim();
-
-    let questionsParsed = [];
+    let questionsParsed: ImportedQuestion[];
     try {
-      questionsParsed = JSON.parse(responseText);
-    } catch (parseError) {
-      console.error('Failed to parse AI response:', responseText);
-      return res.status(400).json({ error: 'AI trả về dữ liệu không đúng định dạng JSON' });
+      questionsParsed = JSON.parse(result.text ?? '');
+    } catch {
+      console.error('Failed to parse AI response:', result.text);
+      return res.status(400).json({ error: 'AI trả về dữ liệu không đúng định dạng. Bạn thử chụp rõ hơn rồi tải lại nhé.' });
     }
 
-    const data = questionsParsed.map((q: any) => ({
+    // Bỏ những câu AI đọc được một nửa: trắc nghiệm mà đáp án đúng không nằm trong các lựa chọn
+    // thì bé sẽ không bao giờ trả lời đúng được, thà bỏ còn hơn đưa vào kho.
+    const valid = (questionsParsed || []).filter((q) => {
+      if (!q?.text || !q.correct) return false;
+      if (q.type === 'MULTIPLE_CHOICE') {
+        return Array.isArray(q.options) && q.options.length >= 2 && q.options.includes(q.correct);
+      }
+      return true;
+    });
+
+    if (valid.length === 0) {
+      return res.status(400).json({ error: 'AI không đọc được câu hỏi nào từ file này. Bạn thử chụp rõ hơn hoặc dùng file CSV nhé.' });
+    }
+
+    const data = valid.map((q) => ({
       topicId,
-      type: q.type || 'MULTIPLE_CHOICE',
-      content: JSON.stringify(q.content),
-      level: q.level || 1,
-      points: q.points || 10
+      type: q.type === 'FILL_BLANK' ? 'FILL_BLANK' : 'MULTIPLE_CHOICE',
+      content: JSON.stringify(
+        q.type === 'FILL_BLANK'
+          ? { text: q.text, correct: q.correct }
+          : { text: q.text, options: q.options, correct: q.correct }
+      ),
+      level: q.level >= 1 && q.level <= 3 ? q.level : 1,
+      points: q.points > 0 ? q.points : 10,
     }));
 
-    const createResult = await prisma.question.createMany({
-      data
-    });
-    
-    fs.unlinkSync(file.path);
+    const createResult = await prisma.question.createMany({ data });
 
-    res.json({ message: 'Import successful', count: createResult.count });
-
-  } catch (error) {
+    res.json({ message: 'Import successful', count: createResult.count, skipped: questionsParsed.length - valid.length });
+  } catch (error: any) {
     console.error('Import PDF Error:', error);
-    res.status(500).json({ error: 'Server error parsing AI' });
+    const status = error?.status;
+    if (status === 429) {
+      return res.status(429).json({ error: 'Đã dùng hết hạn mức AI miễn phí của Google cho hôm nay. Bạn thử lại vào ngày mai, hoặc dùng file CSV nhé.' });
+    }
+    if (status === 503) {
+      return res.status(503).json({ error: 'AI của Google đang quá tải. Vui lòng thử lại sau vài phút nhé.' });
+    }
+    res.status(500).json({ error: 'Có lỗi khi AI đọc file. Vui lòng thử lại.' });
+  } finally {
+    // Uploaded scans piled up in uploads/ whenever the old code threw before its unlink.
+    if (file?.path) {
+      fs.promises.unlink(file.path).catch(() => {});
+    }
   }
 };

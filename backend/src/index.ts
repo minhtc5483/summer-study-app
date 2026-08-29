@@ -13,6 +13,7 @@ import path from 'path';
 import { PrismaClient } from '@prisma/client';
 import fs from 'fs';
 import routes from './routes';
+import { failInterruptedAiExamJobs } from './controllers/aiExamJobController';
 import './cron'; // Start cron jobs
 
 const app = express();
@@ -61,7 +62,10 @@ app.use((req, res, next) => {
     },
   })(req, res, next);
 });
-app.use(express.json());
+// A 30-question CSV is only ~9KB, but a parent importing a whole subject in one file blows
+// straight past body-parser's 100KB default and gets an opaque 413 (the browser only shows
+// "Có lỗi xảy ra"). 5MB covers ~15k questions with room to spare.
+app.use(express.json({ limit: '5mb' }));
 app.use('/uploads', express.static(uploadsDir));
 
 // API Routes
@@ -77,4 +81,6 @@ app.use((req, res) => {
 
 app.listen(port, () => {
   console.log(`Server is running at http://localhost:${port}`);
+  // AI exam jobs run in this process, so a restart strands any that were mid-flight.
+  failInterruptedAiExamJobs().catch((err) => console.error('Failed to reconcile AI exam jobs:', err));
 });

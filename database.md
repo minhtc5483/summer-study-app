@@ -17,3 +17,5 @@ Results
 Rewards
 
 WrongQuestions
+
+AiExamJobs

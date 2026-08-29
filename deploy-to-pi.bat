@@ -55,7 +55,7 @@ set /p RUNBUILD="Ban co muon SSH vao Pi de tu dong npm install + build + restart
 if /i "%RUNBUILD%"=="y" (
     echo.
     echo Dang chay tren Pi, se hoi mat khau them 1 lan...
-    ssh %PI_USER%@%PI_HOST% "cd %PI_DEST%/backend && npm install && npm run build && cd %PI_DEST%/frontend && npm install && npm run build && pm2 restart %PM2_NAME%"
+    ssh %PI_USER%@%PI_HOST% "cd %PI_DEST%/backend && npm install && npx prisma db push && npm run build && cd %PI_DEST%/frontend && npm install && npm run build && pm2 restart %PM2_NAME%"
     if errorlevel 1 (
         echo.
         echo [LOI] Buoc build/restart tren Pi bi loi. Kiem tra ten process pm2 bang: pm2 list
@@ -67,7 +67,7 @@ if /i "%RUNBUILD%"=="y" (
     echo.
     echo Ban tu vao Pi lam not, chay lenh sau:
     echo   ssh %PI_USER%@%PI_HOST%
-    echo   cd %PI_DEST%/backend ^&^& npm install ^&^& npm run build
+    echo   cd %PI_DEST%/backend ^&^& npm install ^&^& npx prisma db push ^&^& npm run build
     echo   cd %PI_DEST%/frontend ^&^& npm install ^&^& npm run build
     echo   pm2 restart %PM2_NAME%
 )

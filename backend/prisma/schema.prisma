@@ -11,6 +11,9 @@ model Parent {
   id           String    @id @default(uuid())
   username     String    @unique
   passwordHash String
+  // bcrypt hash of the short PIN that unlocks the parent management area on an already
+  // logged-in device. null = no PIN set yet (the dashboard then asks the parent to set one).
+  managePinHash String?
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
   students     Student[]
@@ -189,4 +192,20 @@ model PointExchange {
   status    String   @default("PENDING") // PENDING, FULFILLED
   createdAt DateTime @default(now())
   student   Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+}
+
+// One "Tạo Đề Nhanh AI" request. The Gemini call takes seconds to tens of seconds, which is
+// long enough to hit Cloudflare Tunnel's 100s origin timeout (524) when the parent is on the
+// public domain. So the HTTP request only enqueues a job and returns immediately; the work
+// runs in the background on the server and the browser polls this row for the result.
+model AiExamJob {
+  id        String   @id @default(uuid())
+  parentId  String
+  status    String   @default("PENDING") // PENDING, RUNNING, DONE, FAILED
+  params    String   // JSON snapshot of the request body, so the worker is self-contained
+  examId    String?  // set when status = DONE
+  examName  String?
+  error     String?  // Vietnamese, parent-facing message when status = FAILED
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }

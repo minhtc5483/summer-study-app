@@ -1,7 +1,9 @@
 
 import { useAuthStore } from '../store/useAuthStore';
+import { useManageAccessStore } from '../store/useManageAccessStore';
+import { ManagePinLock, ManagePinSetupPrompt } from './parent/ManagePinGate';
 import { Navigate, Outlet, NavLink } from 'react-router-dom';
-import { Users, LogOut, Settings, BarChart, BookOpen, Bell, CheckCircle2, GraduationCap } from 'lucide-react';
+import { Users, LogOut, Settings, BarChart, BookOpen, Bell, CheckCircle2, GraduationCap, Menu, X } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { api } from '../lib/api';
 
@@ -22,11 +24,33 @@ interface AppNotification {
 
 export default function ParentDashboard() {
   const { token, logout } = useAuthStore();
+  const manageToken = useManageAccessStore((s) => s.manageToken);
   const [notifications, setNotifications] = useState<AppNotification[]>([]);
   const [showNotifications, setShowNotifications] = useState(false);
+  // null while we're still asking the server whether this parent has a management PIN.
+  const [hasManagePin, setHasManagePin] = useState<boolean | null>(null);
+  const [setupSkipped, setSetupSkipped] = useState(false);
+  // The sidebar is a fixed 256px column, which left a phone with a ~120px content strip —
+  // unusable, and the reason the "Nhập (CSV)" flow was unreachable on a phone. Below md it
+  // becomes a drawer opened from the top bar.
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
   useEffect(() => {
     if (!token) return;
+    let isMounted = true;
+    api
+      .get('/auth/manage-pin')
+      .then((res) => isMounted && setHasManagePin(!!res.data.hasPin))
+      .catch(() => isMounted && setHasManagePin(false));
+    return () => {
+      isMounted = false;
+    };
+  }, [token]);
+
+  const locked = hasManagePin === true && !manageToken;
+
+  useEffect(() => {
+    if (!token || locked) return;
     
     let isMounted = true;
     const fetchNotifications = async () => {
@@ -45,7 +69,7 @@ export default function ParentDashboard() {
       isMounted = false;
       clearInterval(interval);
     };
-  }, [token]);
+  }, [token, locked]);
 
   const unreadCount = notifications.filter(n => !n.isRead).length;
 
@@ -64,10 +88,41 @@ export default function ParentDashboard() {
     return <Navigate to="/login" replace />;
   }
 
+  // Don't render the dashboard (or let its pages fire requests) until we know whether a PIN
+  // is required — otherwise every child page would flash and then 403.
+  if (hasManagePin === null) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-cream text-ink-muted font-medium">
+        Đang tải...
+      </div>
+    );
+  }
+
+  if (locked) {
+    return <ManagePinLock />;
+  }
+
   return (
     <div className="flex h-screen bg-cream relative">
-      {/* Sidebar */}
-      <aside className="w-64 bg-white shadow-lg flex flex-col shrink-0">
+      {hasManagePin === false && !setupSkipped && (
+        <ManagePinSetupPrompt onDone={() => setHasManagePin(true)} onSkip={() => setSetupSkipped(true)} />
+      )}
+      {/* Sidebar — permanent from md up, a slide-over drawer on phones */}
+      {mobileNavOpen && (
+        <div className="fixed inset-0 bg-ink/40 z-40 md:hidden" onClick={() => setMobileNavOpen(false)} />
+      )}
+      <aside
+        className={`w-64 bg-white shadow-lg flex flex-col shrink-0 z-50 md:z-auto fixed md:static inset-y-0 left-0 transition-transform md:translate-x-0 ${
+          mobileNavOpen ? 'translate-x-0' : '-translate-x-full'
+        }`}
+      >
+        <button
+          onClick={() => setMobileNavOpen(false)}
+          className="md:hidden absolute top-4 right-4 p-2 text-ink-muted hover:text-ink"
+          aria-label="Đóng menu"
+        >
+          <X size={20} />
+        </button>
         <div className="p-6 border-b border-cream-border flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-primary text-white flex items-center justify-center shrink-0">
             <GraduationCap size={22} />
@@ -90,6 +145,7 @@ export default function ParentDashboard() {
                     : 'text-ink-muted hover:bg-cream'
                 }`
               }
+              onClick={() => setMobileNavOpen(false)}
             >
               {({ isActive }) => (
                 <>
@@ -113,7 +169,15 @@ export default function ParentDashboard() {
       {/* Main Content */}
       <main className="flex-1 flex flex-col overflow-hidden relative">
         {/* Header bar for notifications */}
-        <header className="h-16 bg-white border-b border-cream-border flex items-center justify-end px-8 relative z-50">
+        <header className="h-16 bg-white border-b border-cream-border flex items-center justify-between md:justify-end px-4 md:px-8 relative z-30">
+          <button
+            onClick={() => setMobileNavOpen(true)}
+            className="md:hidden flex items-center gap-2 p-2 -ml-2 text-ink-muted hover:text-ink font-semibold"
+            aria-label="Mở menu"
+          >
+            <Menu size={22} />
+            <span className="text-sm">Menu</span>
+          </button>
           <div className="relative">
             <button 
               onClick={() => setShowNotifications(!showNotifications)}
@@ -183,7 +247,7 @@ export default function ParentDashboard() {
           </div>
         </header>
 
-        <div className="flex-1 p-8 overflow-y-auto">
+        <div className="flex-1 p-4 md:p-8 overflow-y-auto">
           <Outlet />
         </div>
       </main>

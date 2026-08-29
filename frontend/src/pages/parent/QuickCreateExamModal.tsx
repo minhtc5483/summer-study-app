@@ -29,6 +29,7 @@ export default function QuickCreateExamModal({ isOpen, onClose, subjectId, subje
   
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [progress, setProgress] = useState('');
 
   useEffect(() => {
     if (isOpen) {
@@ -45,6 +46,7 @@ export default function QuickCreateExamModal({ isOpen, onClose, subjectId, subje
       setIsScheduled(false);
       setDueDays(3);
       setError('');
+      setProgress('');
     }
   }, [isOpen, subjectId]);
 
@@ -52,6 +54,22 @@ export default function QuickCreateExamModal({ isOpen, onClose, subjectId, subje
     setSelectedStudents(prev => 
       prev.includes(id) ? prev.filter(sId => sId !== id) : [...prev, id]
     );
+  };
+
+  // Generating an exam takes seconds to tens of seconds, and on the public domain the request
+  // would die at Cloudflare Tunnel's 100s origin timeout long before Gemini answered. The
+  // server now answers immediately with a job id and does the work in the background; this
+  // polls it. 5 minutes is far more headroom than the ~5s the generation actually takes.
+  const waitForJob = async (jobId: string) => {
+    const startedAt = Date.now();
+    while (Date.now() - startedAt < 5 * 60 * 1000) {
+      const { data } = await api.get(`/exams/jobs/${jobId}`);
+      if (data.status === 'DONE') return data;
+      if (data.status === 'FAILED') throw new Error(data.error || 'AI không tạo được đề bài.');
+      setProgress(`AI đang soạn đề... (${Math.round((Date.now() - startedAt) / 1000)} giây)`);
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+    }
+    throw new Error('Quá thời gian chờ. Bạn thử lại sau vài phút nhé.');
   };
 
   const handleSubmit = async () => {
@@ -62,6 +80,7 @@ export default function QuickCreateExamModal({ isOpen, onClose, subjectId, subje
     
     setLoading(true);
     setError('');
+    setProgress('');
     try {
       if (isScheduled) {
         await api.post('/exams/ai-schedules', {
@@ -76,7 +95,7 @@ export default function QuickCreateExamModal({ isOpen, onClose, subjectId, subje
         });
         alert('Lên lịch tự động thành công! AI sẽ giao bài vào 6h sáng mỗi ngày.');
       } else {
-        await api.post('/exams/quick-create', {
+        const res = await api.post('/exams/quick-create', {
           subjectId,
           topicId: selectedTopicId || null,
           studentIds: selectedStudents,
@@ -86,13 +105,16 @@ export default function QuickCreateExamModal({ isOpen, onClose, subjectId, subje
           useInternetSearch,
           difficulty: difficulty || undefined
         });
+        setProgress('AI đang soạn đề...');
+        await waitForJob(res.data.jobId);
       }
       onSuccess();
       onClose();
     } catch (err: any) {
-      setError(err.response?.data?.error || 'Có lỗi xảy ra khi tạo/lên lịch');
+      setError(err.response?.data?.error || err.message || 'Có lỗi xảy ra khi tạo/lên lịch');
     } finally {
       setLoading(false);
+      setProgress('');
     }
   };
 
@@ -115,6 +137,13 @@ export default function QuickCreateExamModal({ isOpen, onClose, subjectId, subje
           {error && (
             <div className="p-4 bg-red-50 text-red-600 border border-red-100 rounded-2xl text-sm font-medium">
               {error}
+            </div>
+          )}
+
+          {progress && (
+            <div className="p-4 bg-terracotta-100 text-primary-dark border border-terracotta-100 rounded-2xl text-sm font-medium flex items-center gap-3">
+              <Loader2 size={18} className="animate-spin shrink-0" />
+              {progress}
             </div>
           )}
 
@@ -160,9 +189,12 @@ export default function QuickCreateExamModal({ isOpen, onClose, subjectId, subje
                   className="w-5 h-5 text-primary rounded focus:ring-primary"
                 />
                 <span className="font-bold text-ink flex items-center gap-2">
-                  Tìm kiếm bài tập mới trên Internet
+                  Để AI soạn câu hỏi mới
                 </span>
               </label>
+              <p className="text-xs text-ink-muted mt-1 ml-8">
+                Bỏ trống: AI chọn câu từ Kho Bài Tập sẵn có. Bật: AI tự viết câu hỏi mới và lưu vào kho.
+              </p>
             </div>
 
             <div className="grid grid-cols-2 gap-4">

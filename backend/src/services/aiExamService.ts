@@ -1,24 +1,84 @@
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import { GoogleGenAI, Type } from '@google/genai';
 import { prisma } from '../index';
 
-// Gemini occasionally returns 503 "high demand" (or 429 rate-limit) errors that are
-// transient by Google's own description — retrying after a short delay usually succeeds
-// without the parent needing to do anything. Only these known-transient errors are retried;
-// anything else (bad prompt, invalid API key, ...) fails immediately.
-function isTransientAiError(err: any): boolean {
-  const status = err?.status ?? err?.response?.status;
-  const message = String(err?.message || '');
-  return status === 503 || status === 429 || /503|429|overloaded|high demand|service unavailable|quota/i.test(message);
+// gemini-flash-latest with a free-form prompt took ~42s to write 30 questions, which is
+// long enough to trip Cloudflare Tunnel's 100s origin timeout once a retry is involved.
+// flash-lite with a responseSchema does the same job in ~4-6s and returns guaranteed-valid
+// JSON, so the old "find the first [...] with a regex" salvage step is gone too.
+const MODEL = 'gemini-flash-lite-latest';
+
+const questionSchema = {
+  type: Type.ARRAY,
+  items: {
+    type: Type.OBJECT,
+    properties: {
+      text: { type: Type.STRING },
+      level: { type: Type.INTEGER },
+      options: { type: Type.ARRAY, items: { type: Type.STRING } },
+      correct: { type: Type.STRING },
+    },
+    required: ['text', 'level', 'options', 'correct'],
+  },
+};
+
+const idSchema = { type: Type.ARRAY, items: { type: Type.STRING } };
+
+interface GeneratedQuestion {
+  text: string;
+  level: number;
+  options: string[];
+  correct: string;
 }
 
-async function generateContentWithRetry(model: any, prompt: string, retries = 3) {
+// Gemini occasionally returns 503 "high demand" errors that are transient by Google's own
+// description — retrying after a short delay usually succeeds. 429 is NOT retried here: on
+// the free tier it means the daily quota is gone, and hammering it just burns the remaining
+// window while the parent waits (see toParentFacingError for the message they get instead).
+function isRetryableAiError(err: any): boolean {
+  const status = err?.status ?? err?.response?.status;
+  const message = String(err?.message || '');
+  return status === 503 || /\b503\b|overloaded|high demand|service unavailable/i.test(message);
+}
+
+function isQuotaError(err: any): boolean {
+  const status = err?.status ?? err?.response?.status;
+  const message = String(err?.message || '');
+  return status === 429 || /\b429\b|RESOURCE_EXHAUSTED|quota/i.test(message);
+}
+
+// Turns whatever Gemini threw into something a parent can act on. Anything already written
+// in Vietnamese by our own code is passed through untouched.
+export function toParentFacingError(err: any): Error {
+  if (isQuotaError(err)) {
+    return new Error(
+      'Đã dùng hết hạn mức AI miễn phí của Google cho hôm nay. Bạn thử lại vào ngày mai, hoặc tạo đề thủ công từ Kho Bài Tập nhé.'
+    );
+  }
+  if (isRetryableAiError(err)) {
+    return new Error('AI của Google đang quá tải. Vui lòng thử lại sau vài phút nhé.');
+  }
+  return new Error(err?.message || 'Có lỗi xảy ra khi tạo đề bằng AI.');
+}
+
+async function generateJson<T>(prompt: string, responseSchema: any, retries = 3): Promise<T> {
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) {
+    throw new Error('Chưa cấu hình GEMINI_API_KEY trên server.');
+  }
+  const ai = new GoogleGenAI({ apiKey });
+
   let lastError: any;
   for (let attempt = 1; attempt <= retries; attempt++) {
     try {
-      return await model.generateContent(prompt);
+      const result = await ai.models.generateContent({
+        model: MODEL,
+        contents: prompt,
+        config: { responseMimeType: 'application/json', responseSchema },
+      });
+      return JSON.parse(result.text ?? '') as T;
     } catch (err: any) {
       lastError = err;
-      if (!isTransientAiError(err) || attempt === retries) throw err;
+      if (!isRetryableAiError(err) || attempt === retries) throw err;
       await new Promise((resolve) => setTimeout(resolve, 800 * attempt));
     }
   }
@@ -26,159 +86,121 @@ async function generateContentWithRetry(model: any, prompt: string, retries = 3)
 }
 
 export async function generateAiExam(
-  subjectId: string, 
-  studentIds: string[], 
-  numberOfQuestions: number, 
-  timeLimit?: number | null, 
+  subjectId: string,
+  studentIds: string[],
+  numberOfQuestions: number,
+  timeLimit?: number | null,
   dueDate?: Date | null,
   targetTopicId?: string | null,
-  useInternetSearch?: boolean,
+  // Historically called "tìm kiếm Internet", but the request never enabled Google Search
+  // grounding — and the free-tier API key can't: enabling it returns 429 immediately. What
+  // this flag actually does, and always did, is have Gemini WRITE brand-new questions from
+  // its own knowledge instead of picking from the existing question bank. The UI label now
+  // says so; the name is kept because AiExamSchedule rows persist it.
+  writeNewQuestions?: boolean,
   difficulty?: number
 ) {
   // Lấy tất cả câu hỏi thuộc môn học (hoặc cụ thể một topic)
-  let filter: any = { subjectId };
+  const filter: any = { subjectId };
   if (targetTopicId) {
     filter.id = targetTopicId;
   }
-  
+
   const topics = await prisma.topic.findMany({
     where: filter,
-    include: { questions: { select: { id: true, level: true, type: true } } }
+    include: { questions: { select: { id: true, level: true, type: true } } },
   });
 
   let allQuestions: any[] = [];
-  topics.forEach(t => {
-    allQuestions = allQuestions.concat(t.questions.map(q => ({ ...q, topicName: t.name, topicId: t.id })));
+  topics.forEach((t) => {
+    allQuestions = allQuestions.concat(t.questions.map((q) => ({ ...q, topicName: t.name, topicId: t.id })));
   });
 
-  if (!useInternetSearch && allQuestions.length < numberOfQuestions) {
-    throw new Error(`Kho bài tập chỉ có ${allQuestions.length} câu, không đủ để tạo đề ${numberOfQuestions} câu.`);
+  if (!writeNewQuestions && allQuestions.length < numberOfQuestions) {
+    throw new Error(
+      `Kho bài tập chỉ có ${allQuestions.length} câu, không đủ để tạo đề ${numberOfQuestions} câu. Hãy nhập thêm câu hỏi (nút "Nhập CSV") hoặc bật "Để AI soạn câu hỏi mới".`
+    );
   }
 
   let selectedIds: string[] = [];
-  const apiKey = process.env.GEMINI_API_KEY;
 
-  if (!apiKey && useInternetSearch) {
-    throw new Error('Chưa cấu hình GEMINI_API_KEY trên server. Không thể tìm kiếm Internet.');
-  }
+  if (writeNewQuestions) {
+    const subject = await prisma.subject.findUnique({ where: { id: subjectId } });
+    const topicName = targetTopicId ? topics.find((t) => t.id === targetTopicId)?.name : 'tổng hợp';
+    const diffString = difficulty === 3 ? 'Khó' : difficulty === 2 ? 'Trung bình' : 'Dễ';
 
-  if (apiKey) {
+    const prompt = `Bạn là một chuyên gia giáo dục tiểu học Việt Nam. Hãy soạn đúng ${numberOfQuestions} câu hỏi trắc nghiệm môn ${subject?.name}, chủ đề ${topicName}, bám sát chương trình sách giáo khoa hiện hành.
+Yêu cầu mức độ: ${difficulty ? diffString : 'đa dạng (mức 1 dễ, mức 2 trung bình, mức 3 khó)'}.
+Mỗi câu có đúng 4 lựa chọn khác nhau, và trường "correct" phải trùng khớp hoàn toàn với một trong 4 lựa chọn đó.
+Trường "level" là số 1, 2 hoặc 3.`;
+
+    let newQuestions: GeneratedQuestion[];
     try {
-      const genAI = new GoogleGenerativeAI(apiKey);
-      const model = genAI.getGenerativeModel({ model: 'gemini-flash-latest' });
-      
-      if (useInternetSearch) {
-        // Sinh câu hỏi mới hoàn toàn bằng cách lấy kiến thức từ internet
-        const subject = await prisma.subject.findUnique({ where: { id: subjectId } });
-        const topicName = targetTopicId ? topics.find(t => t.id === targetTopicId)?.name : 'tổng hợp';
-        
-        const diffString = difficulty === 3 ? "Khó" : difficulty === 2 ? "Trung bình" : "Dễ";
-        const prompt = `Bạn là một chuyên gia giáo dục. Hãy tìm kiếm trên internet các dạng bài tập mới nhất, chuẩn nhất theo sách giáo khoa để tạo ra đúng ${numberOfQuestions} câu hỏi trắc nghiệm môn ${subject?.name}, chủ đề ${topicName}.
-        Yêu cầu mức độ: ${difficulty ? diffString : 'Đa dạng mức độ (Dễ, Trung bình, Khó)'}.
-        BẮT BUỘC trả về mảng JSON chứa đủ ${numberOfQuestions} câu hỏi. KHÔNG ĐƯỢC trả về mảng rỗng.
-        Trả về DUY NHẤT một mảng JSON các object câu hỏi theo định dạng:
-        [{
-          "text": "Nội dung câu hỏi",
-          "level": ${difficulty ? difficulty : '1, 2 hoặc 3'},
-          "type": "MULTIPLE_CHOICE",
-          "options": ["Đáp án A", "Đáp án B", "Đáp án C", "Đáp án D"],
-          "correct": "Đáp án đúng (phải khớp hoàn toàn với một trong các lựa chọn trong mảng options)"
-        }]`;
-        
-        const result = await generateContentWithRetry(model, prompt);
-        let responseText = result.response.text();
-
-        // Trích xuất JSON bằng regex để loại bỏ văn bản rác xung quanh
-        const jsonMatch = responseText.match(/\[[\s\S]*\]/);
-        if (!jsonMatch) {
-          throw new Error("Không thể trích xuất mảng JSON từ kết quả của AI: " + responseText);
-        }
-        
-        const newQuestions = JSON.parse(jsonMatch[0]);
-        if (!Array.isArray(newQuestions) || newQuestions.length === 0) {
-           throw new Error("AI trả về mảng câu hỏi rỗng hoặc không hợp lệ: " + responseText);
-        }
-
-        // Lưu vào DB
-        const savedQuestions = [];
-        const finalTopicId = targetTopicId || topics[0]?.id;
-        if (!finalTopicId) throw new Error('Không có chủ đề nào để lưu câu hỏi');
-        
-        for (const q of newQuestions) {
-          const contentObj = {
-            text: q.text,
-            options: q.options,
-            correct: q.correct
-          };
-          
-          const created = await prisma.question.create({
-            data: {
-              topicId: finalTopicId,
-              content: JSON.stringify(contentObj),
-              level: q.level || 1,
-              type: q.type || 'MULTIPLE_CHOICE'
-            }
-          });
-          savedQuestions.push(created.id);
-        }
-        selectedIds = savedQuestions;
-      } else {
-        const filteredQuestions = difficulty ? allQuestions.filter(q => q.level === difficulty) : allQuestions;
-        if (filteredQuestions.length < numberOfQuestions) {
-           console.warn("Không đủ câu hỏi ở độ khó này, dùng toàn bộ kho câu hỏi");
-        }
-        const pool = filteredQuestions.length >= numberOfQuestions ? filteredQuestions : allQuestions;
-        
-        const questionInfo = pool.map((q, idx) => `[${idx}] ID: ${q.id} | Chủ đề: ${q.topicName} | Mức độ: ${q.level}`).join('\n');
-        
-        const prompt = `Bạn là một chuyên gia giáo dục AI. Hãy chọn ra đúng ${numberOfQuestions} câu hỏi từ danh sách dưới đây để tạo thành một đề thi cân bằng, đa dạng chủ đề và độ khó phù hợp.
-        
-  Danh sách câu hỏi:
-  ${questionInfo}
-  
-  Chỉ trả về MỘT mảng JSON hợp lệ chứa CHÍNH XÁC ${numberOfQuestions} ID của các câu hỏi bạn đã chọn. Không trả về bất cứ chữ nào khác.
-  Ví dụ: ["id1", "id2", "id3"]`;
-  
-        const result = await generateContentWithRetry(model, prompt);
-        let responseText = result.response.text().replace(/```json/gi, '').replace(/```/g, '').trim();
-        
-        selectedIds = JSON.parse(responseText);
-        
-        // Cần đảm bảo selectedIds là mảng string và nằm trong allQuestions
-        selectedIds = selectedIds.filter(id => allQuestions.some(q => q.id === id));
-      }
-    } catch (err: any) {
-      console.error("Gemini Quick Create Error:", err);
-      if (useInternetSearch) {
-        // Đã thử lại vài lần ở generateContentWithRetry mà vẫn lỗi do quá tải/rate-limit —
-        // báo cho phụ huynh một câu dễ hiểu thay vì để lộ thông báo kỹ thuật thô của Gemini
-        // (URL, mã lỗi HTTP, ...). Các lỗi khác (JSON không hợp lệ, thiếu cấu hình, ...) vẫn
-        // giữ nguyên thông báo cụ thể vì đã được viết sẵn bằng tiếng Việt, dễ hiểu.
-        throw new Error(isTransientAiError(err)
-          ? 'AI đang quá tải do có nhiều người dùng cùng lúc. Vui lòng thử lại sau vài phút nhé.'
-          : (err.message || 'Lỗi khi tạo đề từ Internet'));
-      }
+      newQuestions = await generateJson<GeneratedQuestion[]>(prompt, questionSchema);
+    } catch (err) {
+      console.error('Gemini Quick Create Error:', err);
+      throw toParentFacingError(err);
     }
-  }
 
-  // Nếu Gemini lỗi hoặc không đủ câu do hallucination, fallback về random
-  if (!useInternetSearch && selectedIds.length < numberOfQuestions) {
-    const pool = difficulty ? allQuestions.filter(q => q.level === difficulty) : allQuestions;
-    const fallbackPool = pool.length >= numberOfQuestions ? pool : allQuestions;
-    const shuffled = [...fallbackPool].sort(() => 0.5 - Math.random());
-    selectedIds = shuffled.slice(0, numberOfQuestions).map(q => q.id);
-  }
+    // Chỉ giữ những câu hợp lệ: đáp án đúng phải nằm trong danh sách lựa chọn.
+    const valid = (newQuestions || []).filter(
+      (q) => q && q.text && Array.isArray(q.options) && q.options.length >= 2 && q.options.includes(q.correct)
+    );
+    if (valid.length === 0) {
+      throw new Error('AI không tạo được câu hỏi hợp lệ nào. Vui lòng thử lại.');
+    }
 
-  if (useInternetSearch && selectedIds.length === 0) {
-    throw new Error('Đã có lỗi xảy ra: AI không thể tạo được câu hỏi nào. Vui lòng thử lại.');
+    const finalTopicId = targetTopicId || topics[0]?.id;
+    if (!finalTopicId) throw new Error('Không có chủ đề nào để lưu câu hỏi.');
+
+    const created = await Promise.all(
+      valid.slice(0, numberOfQuestions).map((q) =>
+        prisma.question.create({
+          data: {
+            topicId: finalTopicId,
+            content: JSON.stringify({ text: q.text, options: q.options, correct: q.correct }),
+            level: q.level >= 1 && q.level <= 3 ? q.level : 1,
+            type: 'MULTIPLE_CHOICE',
+          },
+        })
+      )
+    );
+    selectedIds = created.map((c) => c.id);
+  } else {
+    const filteredQuestions = difficulty ? allQuestions.filter((q) => q.level === difficulty) : allQuestions;
+    const pool = filteredQuestions.length >= numberOfQuestions ? filteredQuestions : allQuestions;
+
+    try {
+      const questionInfo = pool.map((q, idx) => `[${idx}] ID: ${q.id} | Chủ đề: ${q.topicName} | Mức độ: ${q.level}`).join('\n');
+      const prompt = `Bạn là một chuyên gia giáo dục AI. Hãy chọn ra đúng ${numberOfQuestions} câu hỏi từ danh sách dưới đây để tạo thành một đề thi cân bằng, đa dạng chủ đề và độ khó phù hợp.
+
+Danh sách câu hỏi:
+${questionInfo}
+
+Trả về mảng ID của các câu hỏi bạn đã chọn.`;
+
+      const ids = await generateJson<string[]>(prompt, idSchema);
+      selectedIds = (ids || []).filter((id) => pool.some((q) => q.id === id));
+    } catch (err) {
+      // Chọn câu từ kho là việc AI làm cho "đẹp" chứ không bắt buộc — hết hạn mức hay quá
+      // tải thì bốc ngẫu nhiên vẫn ra được đề, không cần làm phiền phụ huynh.
+      console.error('Gemini selection failed, falling back to random:', err);
+    }
+
+    if (selectedIds.length < numberOfQuestions) {
+      const shuffled = [...pool].sort(() => 0.5 - Math.random());
+      selectedIds = shuffled.slice(0, numberOfQuestions).map((q) => q.id);
+    }
   }
 
   // Chọn topic đại diện (lấy topic có nhiều câu hỏi được chọn nhất)
   const topicCount: Record<string, number> = {};
-  allQuestions.filter(q => selectedIds.includes(q.id)).forEach(q => {
-    topicCount[q.topicId] = (topicCount[q.topicId] || 0) + 1;
-  });
-  const mainTopicId = Object.keys(topicCount).sort((a,b) => (topicCount[b] || 0) - (topicCount[a] || 0))[0];
+  allQuestions
+    .filter((q) => selectedIds.includes(q.id))
+    .forEach((q) => {
+      topicCount[q.topicId] = (topicCount[q.topicId] || 0) + 1;
+    });
+  const mainTopicId = Object.keys(topicCount).sort((a, b) => (topicCount[b] || 0) - (topicCount[a] || 0))[0];
   const finalTopicId = targetTopicId || mainTopicId || topics[0]?.id;
 
   if (!finalTopicId) {
@@ -192,17 +214,17 @@ export async function generateAiExam(
       timeLimit: timeLimit || 15,
       dueDate: dueDate,
       questions: {
-        create: selectedIds.map(qId => ({ questionId: qId }))
+        create: selectedIds.map((qId) => ({ questionId: qId })),
       },
       students: {
-        connect: studentIds.map(id => ({ id }))
-      }
+        connect: studentIds.map((id) => ({ id })),
+      },
     },
     include: {
       questions: true,
       students: true,
-      topic: true
-    }
+      topic: true,
+    },
   });
 
   return exam;

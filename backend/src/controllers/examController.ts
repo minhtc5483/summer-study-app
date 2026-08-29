@@ -2,8 +2,6 @@ import { Request, Response } from 'express';
 import { prisma } from '../index';
 import { AuthRequest } from '../middlewares/auth';
 import { z } from 'zod';
-import { GoogleGenerativeAI } from '@google/generative-ai';
-import { generateAiExam } from '../services/aiExamService';
 
 // POST /exams
 const createExamSchema = z.object({
@@ -201,44 +199,6 @@ export const deleteExam = async (req: AuthRequest, res: Response) => {
     res.json({ message: 'Deleted successfully' });
   } catch (error) {
     res.status(500).json({ error: 'Server error' });
-  }
-};
-
-const quickCreateSchema = z.object({
-  subjectId: z.string(),
-  topicId: z.string().optional().nullable(),
-  studentIds: z.array(z.string()),
-  numberOfQuestions: z.number().int().min(1).max(50),
-  timeLimit: z.number().int().min(1).optional(),
-  dueDate: z.string().optional().nullable(),
-  useInternetSearch: z.boolean().optional(),
-  difficulty: z.number().int().min(1).max(3).optional()
-});
-
-export const quickCreateExam = async (req: AuthRequest, res: Response) => {
-  try {
-    const parsed = quickCreateSchema.safeParse(req.body);
-    if (!parsed.success) {
-      return res.status(400).json({ error: 'Validation failed', details: parsed.error.issues });
-    }
-
-    const { subjectId, topicId, studentIds, numberOfQuestions, timeLimit, dueDate, useInternetSearch, difficulty } = parsed.data;
-
-    const exam = await generateAiExam(
-      subjectId,
-      studentIds,
-      numberOfQuestions,
-      timeLimit,
-      dueDate ? new Date(dueDate) : null,
-      topicId,
-      useInternetSearch,
-      difficulty
-    );
-
-    res.status(201).json(exam);
-  } catch (error: any) {
-    console.error(error);
-    res.status(400).json({ error: error.message || 'Server error' });
   }
 };
 

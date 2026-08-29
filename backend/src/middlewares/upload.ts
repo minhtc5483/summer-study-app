@@ -20,4 +20,7 @@ const fileFilter = (req: Request, file: Express.Multer.File, cb: multer.FileFilt
   }
 };
 
-export const upload = multer({ storage: storage, fileFilter: fileFilter });
+// Gemini takes the scan inline (base64, so ~1.33x on the wire) and the whole upload has to
+// finish inside Cloudflare Tunnel's 100s window — an unbounded photo from a modern phone
+// blows both budgets. 15MB is generous for a worksheet scan.
+export const upload = multer({ storage: storage, fileFilter: fileFilter, limits: { fileSize: 15 * 1024 * 1024 } });
