@@ -22,6 +22,8 @@ PUT /auth/manage-pin
 
 POST /auth/manage-pin/verify
 
+PUT /auth/password
+
 POST /exams/quick-create
 
 GET /exams/jobs/:id

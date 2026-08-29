@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { api } from '../../lib/api';
 import { BookOpen, Layers, Plus, Trash2, Edit2, Check, X, Lock, KeyRound, ShieldCheck } from 'lucide-react';
 import { useManageAccessStore } from '../../store/useManageAccessStore';
+import ChangePasswordCard from './ChangePasswordCard';
 
 interface Grade {
   id: string;
@@ -245,6 +246,8 @@ export default function Settings() {
         {manageError && <p className="text-sm text-danger font-medium mt-3">{manageError}</p>}
         {manageSaved && <p className="text-sm text-secondary-dark font-medium mt-3">Đã lưu mã PIN quản lý.</p>}
       </div>
+
+      <ChangePasswordCard />
 
       {/* Per-student PIN */}
       <div className="bg-white rounded-3xl shadow-sm border border-cream-border p-6">

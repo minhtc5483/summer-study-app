@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { register, login, getMe, refresh, getManagePinStatus, setManagePin, verifyManagePin } from './controllers/authController';
+import { register, login, getMe, refresh, getManagePinStatus, setManagePin, verifyManagePin, changePassword } from './controllers/authController';
 import { verifyFamilyPin, verifyStudentPin } from './controllers/kidsAccessController';
 import { getStudents, getPublicStudents, getStudentHistory, createStudent, updateStudent, deleteStudent, setStudentPin } from './controllers/studentController';
 import { authenticate } from './middlewares/auth';
@@ -24,6 +24,9 @@ router.get('/auth/me', authenticate, getMe);
 router.get('/auth/manage-pin', authenticate, getManagePinStatus);
 router.put('/auth/manage-pin', authenticate, setManagePin);
 router.post('/auth/manage-pin/verify', authRateLimit, authenticate, verifyManagePin);
+
+// Rate-limited like login: it takes the current password, so it's another place to guess one.
+router.put('/auth/password', authRateLimit, authenticate, requireManage, changePassword);
 
 // Legacy family-wide PIN gate — kept for backward compatibility, no longer used by the
 // "who's studying" screen (see /public/students/:studentId/verify-pin below).

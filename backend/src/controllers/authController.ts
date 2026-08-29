@@ -229,3 +229,43 @@ export const verifyManagePin = async (req: AuthRequest, res: Response) => {
     res.status(500).json({ error: 'Server error' });
   }
 };
+
+// Đổi mật khẩu tài khoản phụ huynh. Trước đây quên mật khẩu là phải SSH vào Raspberry Pi
+// chạy script cập nhật thẳng vào database — không có màn hình nào trong app làm được việc này.
+// Vẫn bắt nhập mật khẩu hiện tại: trang Cài Đặt nằm sau chốt PIN quản lý, nhưng PIN chỉ dài
+// 4-8 chữ số nên nó không đủ mạnh để một mình gác việc chiếm tài khoản.
+const changePasswordSchema = z.object({
+  currentPassword: z.string().min(1),
+  newPassword: z.string().min(6, 'Mật khẩu mới phải có ít nhất 6 ký tự'),
+});
+
+export const changePassword = async (req: AuthRequest, res: Response) => {
+  try {
+    const parsed = changePasswordSchema.safeParse(req.body);
+    if (!parsed.success) {
+      return res.status(400).json({ error: 'Mật khẩu mới phải có ít nhất 6 ký tự.' });
+    }
+
+    const { currentPassword, newPassword } = parsed.data;
+
+    const parent = await prisma.parent.findUnique({ where: { id: req.user!.id } });
+    if (!parent || !(await verifyPassword(currentPassword, parent.passwordHash))) {
+      return res.status(401).json({ error: 'Mật khẩu hiện tại không đúng.' });
+    }
+
+    if (currentPassword === newPassword) {
+      return res.status(400).json({ error: 'Mật khẩu mới trùng với mật khẩu cũ.' });
+    }
+
+    await prisma.parent.update({
+      where: { id: parent.id },
+      data: { passwordHash: await hashPassword(newPassword) },
+    });
+
+    // Các phiên đăng nhập khác vẫn dùng được token cũ cho tới khi hết hạn — app không có cơ
+    // chế thu hồi token. Nói rõ điều này cho phụ huynh thay vì để họ tưởng đã đá được máy khác.
+    res.json({ message: 'Đã đổi mật khẩu' });
+  } catch (error) {
+    res.status(500).json({ error: 'Server error' });
+  }
+};
