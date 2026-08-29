@@ -8,7 +8,7 @@ REM ============================================
 set PI_USER=pi
 set PI_HOST=192.168.10.121
 set PI_DEST=~/summer-study-app
-set PM2_NAME=summer-study-app
+set PM2_NAME=summer-study-backend
 
 set LOCAL_SRC=%~dp0
 set STAGING=%TEMP%\summer-study-app-deploy
