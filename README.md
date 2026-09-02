@@ -23,7 +23,8 @@ npx prisma db push
 # Khởi động server
 npm run dev
 ```
-Backend sẽ chạy tại `http://localhost:3000`
+Backend sẽ chạy tại `http://localhost:3000` khi chạy dev cục bộ.
+Lưu ý: trên Raspberry Pi production, cổng thực tế là **3001** (3000 bị một Docker container khác trên Pi chiếm) — xem `ecosystem.config.js` và `api.md`.
 
 ### 2. Khởi tạo Frontend
 Mở một terminal MỚI và chạy các lệnh sau:
@@ -44,19 +45,21 @@ Frontend sẽ chạy tại `http://localhost:5173`
 ## Hướng dẫn cài đặt PWA (Tương lai)
 Dự án được cấu hình bằng Vite. Để biến thành PWA, hãy cài plugin `vite-plugin-pwa` và thêm file `manifest.json`. Kiến trúc hiện tại đã hoàn toàn tách biệt frontend và backend để hỗ trợ tốt nhất cho PWA.
 
+## Triển khai lên Raspberry Pi (Production)
 
-Cài NodeJS
+Chạy `deploy-to-pi.bat` từ máy Windows đang phát triển — script này copy code qua `scp` (không dùng `git push` từ máy dev), rồi tuỳ chọn tự SSH vào Pi để build + restart. Nếu tự làm thủ công trên Pi:
 
-Clone source
-
+```bash
+cd ~/summer-study-app/backend
 npm install
-
+npx prisma db push   # chỉ cần khi schema.prisma vừa đổi
 npm run build
 
-npm run server
+cd ~/summer-study-app/frontend
+npm install
+npm run build
 
-pm2 start ecosystem.config.js
+pm2 restart summer-study-backend
+```
 
-pm2 save
-
-pm2 startup
+Server production chạy qua PM2 với cấu hình ở `ecosystem.config.js` (cổng **3001**, không phải 3000), phía trước là Cloudflare Tunnel trỏ tới cổng đó. Các biến bí mật (`JWT_SECRET`, `KIDS_ACCESS_SECRET`, `GEMINI_API_KEY`, ...) chỉ nằm trong `backend/.env` trên Pi — không commit vào git, không đặt trong `ecosystem.config.js`.
