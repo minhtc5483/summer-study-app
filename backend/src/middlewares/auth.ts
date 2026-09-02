@@ -33,12 +33,11 @@ export const authenticate = (req: AuthRequest, res: Response, next: NextFunction
   }
 };
 
-export const generateToken = (payload: { id: string; username: string }) => {
-  return jwt.sign(payload, JWT_SECRET, { expiresIn: '7d' });
-};
-
-export const generateTokens = (payload: { id: string; username: string }) => {
+// tokenVersion is only ever embedded in the refresh token, not the access token — see
+// Parent.tokenVersion in schema.prisma. Access tokens are short-lived (15m) and don't need
+// revocation; refresh tokens live 7 days and this is what makes a used one single-use.
+export const generateTokens = (payload: { id: string; username: string }, tokenVersion: number) => {
   const accessToken = jwt.sign(payload, JWT_SECRET, { expiresIn: '15m' });
-  const refreshToken = jwt.sign(payload, JWT_REFRESH_SECRET, { expiresIn: '7d' });
+  const refreshToken = jwt.sign({ ...payload, tokenVersion }, JWT_REFRESH_SECRET, { expiresIn: '7d' });
   return { accessToken, refreshToken };
 };

@@ -4,9 +4,9 @@ import { verifyFamilyPin, verifyStudentPin } from './controllers/kidsAccessContr
 import { getStudents, getPublicStudents, getStudentHistory, createStudent, updateStudent, deleteStudent, setStudentPin } from './controllers/studentController';
 import { authenticate } from './middlewares/auth';
 import { requireManage } from './middlewares/manageAccess';
-import { requireKidsAccess } from './middlewares/kidsAccess';
+import { requireKidsAccess, requireStudentMatch } from './middlewares/kidsAccess';
 import { upload } from './middlewares/upload';
-import { authRateLimit, aiRateLimit } from './middlewares/rateLimit';
+import { authRateLimit, aiRateLimit, refreshRateLimit } from './middlewares/rateLimit';
 
 const router = Router();
 
@@ -14,7 +14,7 @@ const router = Router();
 router.post('/auth/register', authRateLimit, register);
 router.post('/login', authRateLimit, login); // Alias for login as per api.md
 router.post('/auth/login', authRateLimit, login);
-router.post('/auth/refresh', refresh);
+router.post('/auth/refresh', refreshRateLimit, refresh);
 router.get('/auth/me', authenticate, getMe);
 
 // Second factor for the management area. The login session never really expires (tokens sit
@@ -125,11 +125,45 @@ router.put('/point-exchanges/:id/fulfill', authenticate, requireManage, fulfillE
 // screen must show names/avatars *before* any PIN is entered so a kid can pick their own
 // profile and be prompted for their own PIN, not the whole family's.
 router.get('/public/students', getPublicStudents);
-router.get('/public/students/:studentId/history', requireKidsAccess, getStudentHistory);
-router.get('/public/exams', requireKidsAccess, getExams);
-router.get('/public/exams/:id', requireKidsAccess, getExamById);
-router.post('/public/submit', requireKidsAccess, savePublicProgress);
-router.get('/public/rewards/:studentId', requireKidsAccess, getRewards);
-router.post('/public/exchange-points', requireKidsAccess, exchangePoints);
+router.get(
+  '/public/students/:studentId/history',
+  requireKidsAccess,
+  requireStudentMatch((req) => req.params.studentId as string | undefined),
+  getStudentHistory
+);
+// studentId here is an optional query param (which student's exam list / saved result to
+// include) — requireStudentMatch is a no-op when it's omitted, same as the exam catalog
+// itself being shared across the whole family by design (see Subject/Topic/Question/Exam
+// in database.md). It only matters, and is enforced, when a specific student is named.
+router.get(
+  '/public/exams',
+  requireKidsAccess,
+  requireStudentMatch((req) => req.query.studentId as string | undefined),
+  getExams
+);
+router.get(
+  '/public/exams/:id',
+  requireKidsAccess,
+  requireStudentMatch((req) => req.query.studentId as string | undefined),
+  getExamById
+);
+router.post(
+  '/public/submit',
+  requireKidsAccess,
+  requireStudentMatch((req) => req.body?.studentId),
+  savePublicProgress
+);
+router.get(
+  '/public/rewards/:studentId',
+  requireKidsAccess,
+  requireStudentMatch((req) => req.params.studentId as string | undefined),
+  getRewards
+);
+router.post(
+  '/public/exchange-points',
+  requireKidsAccess,
+  requireStudentMatch((req) => req.body?.studentId),
+  exchangePoints
+);
 
 export default router;

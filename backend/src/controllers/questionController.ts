@@ -29,10 +29,37 @@ export const getQuestions = async (req: Request, res: Response) => {
   }
 };
 
+// Every question renderer in the app (Quiz.tsx, ExamResultDetailModal, the AI generators,
+// CSV import) assumes this exact shape without re-checking it — a stored row missing `text`
+// or `correct` doesn't error, it silently breaks whichever screen reads it later, and is much
+// harder to trace back to "someone POSTed something malformed" once it's sitting in the DB.
+// `content` used to be z.any(); this validates the real shape before anything gets saved,
+// and accepts either a JSON string or a plain object since callers send both.
+const questionContentSchema = z
+  .object({
+    text: z.string().min(1, 'Thiếu nội dung câu hỏi (text)'),
+    options: z.array(z.string()).optional(),
+    correct: z.string().min(1, 'Thiếu đáp án đúng (correct)'),
+  })
+  .refine((c) => !c.options || c.options.length === 0 || c.options.includes(c.correct), {
+    message: 'correct phải khớp với một trong các lựa chọn trong options',
+  });
+
+const questionContentInput = z.preprocess((val) => {
+  if (typeof val === 'string') {
+    try {
+      return JSON.parse(val);
+    } catch {
+      return val; // not valid JSON — let questionContentSchema report a clear shape error
+    }
+  }
+  return val;
+}, questionContentSchema);
+
 const createQuestionSchema = z.object({
   topicId: z.string(),
   type: z.string(),
-  content: z.any(),
+  content: questionContentInput,
   level: z.union([z.string().regex(/^\d+$/).transform(Number), z.number()]).optional().default(1),
   points: z.union([z.string().regex(/^\d+$/).transform(Number), z.number()]).optional().default(10)
 });
@@ -45,7 +72,7 @@ export const createQuestion = async (req: Request, res: Response) => {
     }
 
     const { topicId, type, content, level, points } = parsed.data;
-    const contentString = typeof content === 'string' ? content : JSON.stringify(content);
+    const contentString = JSON.stringify(content);
 
     const question = await prisma.question.create({
       data: {
@@ -66,7 +93,7 @@ const importQuestionsSchema = z.object({
   topicId: z.string(),
   questions: z.array(z.object({
     type: z.string(),
-    content: z.any(),
+    content: questionContentInput,
     level: z.number().optional().default(1),
     points: z.number().optional().default(10)
   }))
@@ -86,8 +113,7 @@ export const importQuestions = async (req: Request, res: Response) => {
       return res.status(404).json({ error: 'Không tìm thấy chủ đề để nhập câu hỏi.' });
     }
 
-    const contentOf = (q: { content: any }) =>
-      typeof q.content === 'string' ? q.content : JSON.stringify(q.content);
+    const contentOf = (q: { content: any }) => JSON.stringify(q.content);
     const textOf = (content: string) => {
       try {
         return String(JSON.parse(content).text ?? '').trim().toLowerCase();

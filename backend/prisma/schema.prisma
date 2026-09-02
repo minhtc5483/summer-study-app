@@ -14,6 +14,12 @@ model Parent {
   // bcrypt hash of the short PIN that unlocks the parent management area on an already
   // logged-in device. null = no PIN set yet (the dashboard then asks the parent to set one).
   managePinHash String?
+  // Bumped on every successful /auth/refresh. Each refresh token embeds the version it was
+  // issued with; refresh() rejects one whose version doesn't match the current row, so a
+  // refresh token can only ever be used once — replaying an old one (stolen from a log, a
+  // second device that got disconnected mid-rotation, ...) fails instead of silently minting
+  // more tokens forever.
+  tokenVersion Int       @default(0)
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
   students     Student[]

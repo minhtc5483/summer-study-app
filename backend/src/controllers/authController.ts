@@ -77,7 +77,7 @@ export const register = async (req: Request, res: Response) => {
       },
     });
 
-    const tokens = generateTokens({ id: parent.id, username: parent.username });
+    const tokens = generateTokens({ id: parent.id, username: parent.username }, parent.tokenVersion);
     res.json({ token: tokens.accessToken, refreshToken: tokens.refreshToken, user: { id: parent.id, username: parent.username } });
   } catch (error) {
     res.status(500).json({ error: 'Server error' });
@@ -105,7 +105,7 @@ export const login = async (req: Request, res: Response) => {
       });
     }
 
-    const tokens = generateTokens({ id: parent.id, username: parent.username });
+    const tokens = generateTokens({ id: parent.id, username: parent.username }, parent.tokenVersion);
     res.json({ token: tokens.accessToken, refreshToken: tokens.refreshToken, user: { id: parent.id, username: parent.username } });
   } catch (error) {
     res.status(500).json({ error: 'Server error' });
@@ -119,14 +119,26 @@ export const refresh = async (req: Request, res: Response) => {
   }
 
   try {
-    const decoded = jwt.verify(refreshToken, JWT_REFRESH_SECRET) as { id: string; username: string };
-    
+    const decoded = jwt.verify(refreshToken, JWT_REFRESH_SECRET) as { id: string; username: string; tokenVersion?: number };
+
     const parent = await prisma.parent.findUnique({ where: { id: decoded.id } });
     if (!parent) {
       return res.status(401).json({ error: 'Invalid token' });
     }
 
-    const tokens = generateTokens({ id: parent.id, username: parent.username });
+    // Single-use rotation: this exact refresh token only works once. A mismatch means
+    // either it was already used (a newer one already rotated tokenVersion forward) or it
+    // predates rotation entirely (undefined) — either way, not valid anymore.
+    if (decoded.tokenVersion !== parent.tokenVersion) {
+      return res.status(401).json({ error: 'Invalid or expired refresh token' });
+    }
+
+    const rotated = await prisma.parent.update({
+      where: { id: parent.id },
+      data: { tokenVersion: { increment: 1 } },
+    });
+
+    const tokens = generateTokens({ id: parent.id, username: parent.username }, rotated.tokenVersion);
     res.json({ token: tokens.accessToken, refreshToken: tokens.refreshToken });
   } catch (error) {
     res.status(401).json({ error: 'Invalid or expired refresh token' });

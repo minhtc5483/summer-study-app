@@ -5,7 +5,7 @@ import { z } from 'zod';
 import sharp from 'sharp';
 import fs from 'fs';
 import bcrypt from 'bcryptjs';
-import { BADGES } from './rewardController';
+import { getEarnedBadges } from './rewardController';
 
 export const getPublicStudents = async (req: Request, res: Response) => {
   try {
@@ -17,11 +17,7 @@ export const getPublicStudents = async (req: Request, res: Response) => {
     // This is the unauthenticated "who's studying" screen — never leak the PIN hash,
     // only whether one is set (frontend uses this to decide whether to prompt for it).
     const studentsWithBadges = students.map(({ pinHash, ...student }) => {
-      const earnedBadges = BADGES.filter(badge => {
-        if (badge.type === 'score' && student.totalScore >= badge.requirement) return true;
-        if (badge.type === 'streak' && student.currentStreak >= badge.requirement) return true;
-        return false;
-      });
+      const earnedBadges = getEarnedBadges(student.totalScore, student.currentStreak);
       return { ...student, hasPin: !!pinHash, earnedBadges };
     });
 
@@ -56,9 +52,14 @@ export const getStudentHistory = async (req: Request, res: Response) => {
     const history: any[] = [];
     
     (examResults as any[]).forEach(er => {
-      const totalQuestions = er.exam?.questions?.length || 0;
-      // Estimate correct answers based on total score / 10 if standard points
-      const correctAnswers = Math.round(er.score / 10);
+      // ExamResult already stores the server-graded counts (see progressController.ts) —
+      // use those instead of guessing from the score, which stopped being a clean multiple
+      // of 10 per correct answer once questions could carry custom points (CSV import's
+      // "Diem" column) and once score started including a variable, accuracy-scaled speed
+      // bonus. Falls back to the old estimate only for pre-existing rows saved before those
+      // columns existed.
+      const totalQuestions = er.questionsAttempted ?? er.exam?.questions?.length ?? 0;
+      const correctAnswers = er.questionsCorrect ?? Math.round(er.score / 10);
       history.push({
         id: er.id,
         type: 'EXAM',
@@ -101,11 +102,7 @@ export const getStudents = async (req: AuthRequest, res: Response) => {
     });
 
     const studentsWithBadges = students.map(({ pinHash, ...student }) => {
-      const earnedBadges = BADGES.filter(badge => {
-        if (badge.type === 'score' && student.totalScore >= badge.requirement) return true;
-        if (badge.type === 'streak' && student.currentStreak >= badge.requirement) return true;
-        return false;
-      });
+      const earnedBadges = getEarnedBadges(student.totalScore, student.currentStreak);
       return { ...student, hasPin: !!pinHash, earnedBadges };
     });
 
@@ -134,17 +131,33 @@ export const createStudent = async (req: AuthRequest, res: Response) => {
     let avatarUrl = null;
 
     if (req.file) {
-      if (req.file.mimetype.startsWith('image/')) {
+      // multer's fileFilter only checks the client-reported mimetype (trivially spoofable —
+      // and express.static later derives the response Content-Type from the saved file's
+      // extension, not from what multer thought it was). Previously a non-"image/*" upload
+      // fell through to being served completely unprocessed at its own filename/extension —
+      // e.g. a file uploaded with a spoofed mimetype but named avatar.svg, containing a
+      // <script>, served back with Content-Type: image/svg+xml and executed same-origin
+      // (able to read the parent's JWT from localStorage) the moment anyone opened that URL
+      // directly. Every avatar must now actually decode as a real raster image and gets
+      // re-encoded to .webp — that both rejects anything sharp can't genuinely parse as an
+      // image and strips any markup/script a crafted file might have carried, since only the
+      // re-encoded pixel data is ever written or served.
+      if (!req.file.mimetype.startsWith('image/')) {
+        fs.unlinkSync(req.file.path);
+        return res.status(400).json({ error: 'Ảnh đại diện phải là file ảnh (JPG, PNG, WEBP...).' });
+      }
+      try {
         const compressedPath = req.file.path + '.webp';
         await sharp(req.file.path)
           .resize(300, 300, { fit: 'cover' })
           .webp({ quality: 75 })
           .toFile(compressedPath);
-          
+
         fs.unlinkSync(req.file.path);
         avatarUrl = `/uploads/${req.file.filename}.webp`;
-      } else {
-        avatarUrl = `/uploads/${req.file.filename}`;
+      } catch {
+        fs.unlinkSync(req.file.path);
+        return res.status(400).json({ error: 'File ảnh không hợp lệ hoặc bị hỏng.' });
       }
     }
 
@@ -190,17 +203,33 @@ export const updateStudent = async (req: AuthRequest, res: Response) => {
     let avatarUrl = undefined;
 
     if (req.file) {
-      if (req.file.mimetype.startsWith('image/')) {
+      // multer's fileFilter only checks the client-reported mimetype (trivially spoofable —
+      // and express.static later derives the response Content-Type from the saved file's
+      // extension, not from what multer thought it was). Previously a non-"image/*" upload
+      // fell through to being served completely unprocessed at its own filename/extension —
+      // e.g. a file uploaded with a spoofed mimetype but named avatar.svg, containing a
+      // <script>, served back with Content-Type: image/svg+xml and executed same-origin
+      // (able to read the parent's JWT from localStorage) the moment anyone opened that URL
+      // directly. Every avatar must now actually decode as a real raster image and gets
+      // re-encoded to .webp — that both rejects anything sharp can't genuinely parse as an
+      // image and strips any markup/script a crafted file might have carried, since only the
+      // re-encoded pixel data is ever written or served.
+      if (!req.file.mimetype.startsWith('image/')) {
+        fs.unlinkSync(req.file.path);
+        return res.status(400).json({ error: 'Ảnh đại diện phải là file ảnh (JPG, PNG, WEBP...).' });
+      }
+      try {
         const compressedPath = req.file.path + '.webp';
         await sharp(req.file.path)
           .resize(300, 300, { fit: 'cover' })
           .webp({ quality: 75 })
           .toFile(compressedPath);
-          
+
         fs.unlinkSync(req.file.path);
         avatarUrl = `/uploads/${req.file.filename}.webp`;
-      } else {
-        avatarUrl = `/uploads/${req.file.filename}`;
+      } catch {
+        fs.unlinkSync(req.file.path);
+        return res.status(400).json({ error: 'File ảnh không hợp lệ hoặc bị hỏng.' });
       }
     }
 

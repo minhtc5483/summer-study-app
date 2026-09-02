@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { prisma } from '../index';
+import { z } from 'zod';
 
 export const getGrades = async (req: Request, res: Response) => {
   try {
@@ -12,11 +13,19 @@ export const getGrades = async (req: Request, res: Response) => {
   }
 };
 
+const createGradeSchema = z.object({
+  name: z.string().min(1, 'Tên khối lớp không được để trống'),
+});
+
 export const createGrade = async (req: Request, res: Response) => {
   try {
-    const { name } = req.body;
+    const parsed = createGradeSchema.safeParse(req.body);
+    if (!parsed.success) {
+      return res.status(400).json({ error: 'Validation failed', details: parsed.error.issues });
+    }
+
     const grade = await prisma.grade.create({
-      data: { name }
+      data: { name: parsed.data.name }
     });
     res.json(grade);
   } catch (error) {

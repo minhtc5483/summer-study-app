@@ -153,19 +153,37 @@ Trường "level" là số 1, 2 hoặc 3.`;
     const finalTopicId = targetTopicId || topics[0]?.id;
     if (!finalTopicId) throw new Error('Không có chủ đề nào để lưu câu hỏi.');
 
-    const created = await Promise.all(
-      valid.slice(0, numberOfQuestions).map((q) =>
-        prisma.question.create({
-          data: {
-            topicId: finalTopicId,
-            content: JSON.stringify({ text: q.text, options: q.options, correct: q.correct }),
-            level: q.level >= 1 && q.level <= 3 ? q.level : 1,
-            type: 'MULTIPLE_CHOICE',
-          },
-        })
-      )
-    );
-    selectedIds = created.map((c) => c.id);
+    // Creating each Question is a separate write, and there's a real Exam.create() after
+    // them that can still fail (bad studentIds, a race on the topic being deleted, ...) —
+    // without a transaction that left the just-written questions behind with no exam
+    // pointing at them. Wrapping both in one transaction means either the whole "N new
+    // questions + the exam that uses them" lands, or none of it does.
+    return prisma.$transaction(async (tx) => {
+      const created = await Promise.all(
+        valid.slice(0, numberOfQuestions).map((q) =>
+          tx.question.create({
+            data: {
+              topicId: finalTopicId,
+              content: JSON.stringify({ text: q.text, options: q.options, correct: q.correct }),
+              level: q.level >= 1 && q.level <= 3 ? q.level : 1,
+              type: 'MULTIPLE_CHOICE',
+            },
+          })
+        )
+      );
+
+      return tx.exam.create({
+        data: {
+          topicId: finalTopicId,
+          name: `Đề Thi Nhanh AI - ${new Date().toLocaleDateString('vi-VN')}`,
+          timeLimit: timeLimit || 15,
+          dueDate: dueDate,
+          questions: { create: created.map((c) => ({ questionId: c.id })) },
+          students: { connect: studentIds.map((id) => ({ id })) },
+        },
+        include: { questions: true, students: true, topic: true },
+      });
+    });
   } else {
     const filteredQuestions = difficulty ? allQuestions.filter((q) => q.level === difficulty) : allQuestions;
     const pool = filteredQuestions.length >= numberOfQuestions ? filteredQuestions : allQuestions;

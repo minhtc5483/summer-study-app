@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { prisma } from '../index';
 import { AuthRequest } from '../middlewares/auth';
 import { z } from 'zod';
+import { computeStreak } from '../lib/streak';
 
 const wrongQuestionSchema = z.object({
   questionId: z.string(),
@@ -104,34 +105,6 @@ async function gradeExamSubmission(
     score: score + timeBonus,
     wrongQuestions
   };
-}
-
-// Same day-streak logic used by both the parent and kids submission paths.
-function computeStreak(student: { lastActive: Date | null; currentStreak: number }): number {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-
-  const lastActive = student.lastActive;
-  let newStreak = student.currentStreak;
-
-  if (lastActive) {
-    const lastActiveDate = new Date(lastActive);
-    lastActiveDate.setHours(0, 0, 0, 0);
-    const diffTime = Math.abs(today.getTime() - lastActiveDate.getTime());
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
-    if (diffDays === 1) {
-      newStreak += 1;
-    } else if (diffDays > 1) {
-      newStreak = 1; // reset streak if a day was missed
-    } else if (diffDays === 0 && newStreak === 0) {
-      newStreak = 1;
-    }
-  } else {
-    newStreak = 1;
-  }
-
-  return newStreak;
 }
 
 async function resolveTopicId(topicId: string | undefined, examId: string | undefined): Promise<string> {

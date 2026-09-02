@@ -35,8 +35,9 @@ export const verifyFamilyPin = (req: Request, res: Response) => {
 // kids-access token — there is no other way to get one now that the family-wide PIN screen
 // isn't shown first. So this endpoint is called for EVERY student on entry, PIN or not:
 // a student with no PIN configured (pinHash === null) gets the token immediately, no PIN
-// needed; a student with a PIN needs it verified first. Issues the same kind of token the
-// legacy family PIN does, so every existing /public/* route works unchanged.
+// needed; a student with a PIN needs it verified first. The token is bound to this one
+// student (requireStudentMatch enforces it elsewhere), so it can't be replayed against a
+// sibling's studentId to read or spend their points.
 export const verifyStudentPin = async (req: Request, res: Response) => {
   const studentId = req.params.studentId as string;
 
@@ -46,7 +47,7 @@ export const verifyStudentPin = async (req: Request, res: Response) => {
   }
 
   if (!student.pinHash) {
-    return res.json({ accessToken: issueKidsAccessToken() });
+    return res.json({ accessToken: issueKidsAccessToken(student.id) });
   }
 
   const parsed = pinSchema.safeParse(req.body);
@@ -59,5 +60,5 @@ export const verifyStudentPin = async (req: Request, res: Response) => {
     return res.status(401).json({ error: 'Sai mã PIN' });
   }
 
-  res.json({ accessToken: issueKidsAccessToken() });
+  res.json({ accessToken: issueKidsAccessToken(student.id) });
 };

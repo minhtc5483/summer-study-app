@@ -37,14 +37,42 @@ export default function Quiz() {
   const [isTimeUp, setIsTimeUp] = useState(false);
   const [timeBonus, setTimeBonus] = useState(0);
 
-  // Sound effects
+  // Sound effects — synthesized with the Web Audio API instead of fetched from mixkit.co.
+  // The app runs offline-capable/kiosk-style on a home Pi, and a third-party CDN dependency
+  // for something this small meant sound just silently stopped working with no network path
+  // to it, and would break the moment mixkit renamed or removed those files.
   const playSound = (type: 'correct' | 'wrong' | 'complete') => {
-    const audio = new Audio();
-    if (type === 'correct') audio.src = 'https://assets.mixkit.co/active_storage/sfx/2000/2000-preview.mp3';
-    if (type === 'wrong') audio.src = 'https://assets.mixkit.co/active_storage/sfx/2003/2003-preview.mp3';
-    if (type === 'complete') audio.src = 'https://assets.mixkit.co/active_storage/sfx/2019/2019-preview.mp3';
-    audio.volume = 0.5;
-    audio.play().catch(e => console.log('Audio blocked', e));
+    try {
+      const AudioContextCtor = window.AudioContext || (window as any).webkitAudioContext;
+      const ctx = new AudioContextCtor();
+      const now = ctx.currentTime;
+
+      // (frequency Hz, start offset in seconds, duration in seconds) per note.
+      const notes: [number, number, number][] =
+        type === 'correct'
+          ? [[523.25, 0, 0.12], [659.25, 0.1, 0.16]] // C5 -> E5, cheerful two-tone
+          : type === 'complete'
+          ? [[523.25, 0, 0.1], [659.25, 0.09, 0.1], [783.99, 0.18, 0.22]] // C5-E5-G5
+          : [[349.23, 0, 0.18]]; // F4 — a single soft tone, not harsh (no red/alarm design)
+
+      notes.forEach(([freq, offset, duration]) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.value = freq;
+        gain.gain.setValueAtTime(0.001, now + offset);
+        gain.gain.exponentialRampToValueAtTime(0.3, now + offset + 0.02);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + offset + duration);
+        osc.connect(gain).connect(ctx.destination);
+        osc.start(now + offset);
+        osc.stop(now + offset + duration + 0.02);
+      });
+
+      const totalDuration = Math.max(...notes.map(([, offset, duration]) => offset + duration));
+      setTimeout(() => ctx.close().catch(() => {}), (totalDuration + 0.1) * 1000);
+    } catch (e) {
+      console.log('Audio blocked', e);
+    }
   };
 
   useEffect(() => {
@@ -362,8 +390,10 @@ export default function Quiz() {
                         bgColor = 'bg-green-100 border-green-500 scale-105 shadow-lg shadow-green-200';
                         textColor = 'text-green-800';
                       } else if (isSelected && !isActuallyCorrect) {
-                        bgColor = 'bg-red-100 border-red-500 opacity-70 scale-95';
-                        textColor = 'text-red-800';
+                        // ui-design.md: không dùng màu đỏ khi bé làm sai — tông vàng ấm thay
+                        // vì đỏ gắn với "nguy hiểm/lỗi nghiêm trọng", không phù hợp trẻ nhỏ.
+                        bgColor = 'bg-gold-100 border-gold-600 opacity-70 scale-95';
+                        textColor = 'text-gold-600';
                       } else {
                         bgColor = 'bg-white border-cream-border opacity-50';
                       }
@@ -392,7 +422,7 @@ export default function Quiz() {
                           <motion.div
                             initial={{ scale: 0 }}
                             animate={{ scale: 1 }}
-                            className="absolute -top-2.5 -right-2.5 md:-top-4 md:-right-4 w-7 h-7 md:w-12 md:h-12 bg-red-500 text-white rounded-full flex items-center justify-center text-xs md:text-xl shadow-lg border-2 md:border-4 border-white"
+                            className="absolute -top-2.5 -right-2.5 md:-top-4 md:-right-4 w-7 h-7 md:w-12 md:h-12 bg-gold-600 text-white rounded-full flex items-center justify-center text-xs md:text-xl shadow-lg border-2 md:border-4 border-white"
                           >
                             ✗
                           </motion.div>
@@ -435,7 +465,7 @@ export default function Quiz() {
                      <motion.div
                        initial={{ opacity: 0, y: 10 }}
                        animate={{ opacity: 1, y: 0 }}
-                       className={`text-base sm:text-lg md:text-3xl font-bold px-4 py-2 md:px-8 md:py-4 rounded-xl md:rounded-2xl text-center ${correctness[currentQuestion] ? 'bg-green-100 text-green-600 border border-green-200' : 'bg-red-100 text-red-600 border border-red-200'}`}
+                       className={`text-base sm:text-lg md:text-3xl font-bold px-4 py-2 md:px-8 md:py-4 rounded-xl md:rounded-2xl text-center ${correctness[currentQuestion] ? 'bg-green-100 text-green-600 border border-green-200' : 'bg-gold-100 text-gold-600 border border-gold-600/30'}`}
                      >
                        {correctness[currentQuestion] ? 'Chính xác! 🎉' : `Sai rồi 😅. Đáp án đúng là: ${questions[currentQuestion].correct}`}
                      </motion.div>
@@ -520,12 +550,12 @@ export default function Quiz() {
 
                 if (isReview) {
                   if (correctness[idx] === true) bg = 'bg-green-100 text-green-600 border-green-500';
-                  else if (correctness[idx] === false) bg = 'bg-red-100 text-red-600 border-red-500';
+                  else if (correctness[idx] === false) bg = 'bg-gold-100 text-gold-600 border-gold-600';
                   else bg = 'bg-cream text-ink-muted border-cream-border opacity-60'; // Not answered
                 } else if (correctness[idx] === true) {
                   bg = 'bg-green-100 text-green-600 border-green-500';
                 } else if (correctness[idx] === false) {
-                  bg = 'bg-red-100 text-red-600 border-red-500';
+                  bg = 'bg-gold-100 text-gold-600 border-gold-600';
                 }
 
                 const isCurrent = currentQuestion === idx;
