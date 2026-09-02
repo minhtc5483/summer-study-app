@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { api } from '../../lib/api';
 import { Plus, Trash2, Edit2, Flame } from 'lucide-react';
 import StudentModal from './StudentModal';
@@ -13,6 +14,7 @@ interface Student {
 }
 
 export default function Students() {
+  const navigate = useNavigate();
   const [students, setStudents] = useState<Student[]>([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -122,17 +124,25 @@ export default function Students() {
           </div>
         ) : (
           students.map((student) => (
-            <div key={student.id} className="relative bg-white rounded-2xl shadow-sm border border-cream-border p-6 flex flex-col items-center">
+            <div
+              key={student.id}
+              onClick={() => navigate(`/parent/students/${student.id}/stats`)}
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => { if (e.key === 'Enter') navigate(`/parent/students/${student.id}/stats`); }}
+              title={`Xem thống kê của ${student.name}`}
+              className="relative bg-white rounded-2xl shadow-sm border border-cream-border p-6 flex flex-col items-center cursor-pointer hover:border-primary hover:shadow-md transition-all"
+            >
               <div className="absolute top-3 right-3 flex gap-1.5">
                 <button
-                  onClick={() => handleOpenModal(student)}
+                  onClick={(e) => { e.stopPropagation(); handleOpenModal(student); }}
                   title="Sửa thông tin"
                   className="w-8 h-8 flex items-center justify-center text-ink-muted bg-cream rounded-full hover:bg-cream-border transition-colors"
                 >
                   <Edit2 size={15} />
                 </button>
                 <button
-                  onClick={() => handleDelete(student.id)}
+                  onClick={(e) => { e.stopPropagation(); handleDelete(student.id); }}
                   title="Xóa học sinh"
                   className="w-8 h-8 flex items-center justify-center text-danger bg-red-50 rounded-full hover:bg-red-100 transition-colors"
                 >
