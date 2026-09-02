@@ -41,5 +41,8 @@
     "moduleDetection": "force",
     "skipLibCheck": true,
   },
-  "include": ["src/**/*"]
+  "include": ["src/**/*"],
+  // *.test.ts files are run directly from source by `tsx --test` (see package.json "test"
+  // script) — they don't need to be in the production build output.
+  "exclude": ["src/**/*.test.ts"]
 }
