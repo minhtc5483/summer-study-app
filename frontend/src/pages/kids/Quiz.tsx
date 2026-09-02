@@ -156,7 +156,10 @@ export default function Quiz() {
     const newStreak = isPassing ? (selectedStudent?.currentStreak || 0) + 1 : 0;
     
     if (selectedStudent) {
-      // Predict state to make UI snappy
+      // Predict state to make UI snappy while the request is in flight — the client's guess
+      // at both the score bonus (unconditional Math.floor(timeLeft/10)) and the streak
+      // (score > 0 ? +1 : 0) are both just approximations of what the server actually
+      // computes (accuracy-scaled bonus; day-based streak — see progressController.ts).
       setSelectedStudent({
         ...selectedStudent,
         totalScore: selectedStudent.totalScore + finalScore,
@@ -176,7 +179,7 @@ export default function Quiz() {
             };
           });
 
-        await api.post('/public/submit', {
+        const res = await api.post('/public/submit', {
           studentId: selectedStudent.id,
           questionsAttempted: questions.length,
           questionsCorrect: Object.values(correctness).filter(Boolean).length,
@@ -187,6 +190,20 @@ export default function Quiz() {
           timeSpent: timeSpent,
           wrongQuestions: wrongQuestions
         });
+
+        // Reconcile with the server's real numbers — the store this writes to is persisted
+        // to localStorage and otherwise never gets corrected. Left as the client's guess,
+        // it drifts a little further from the truth on every single exam (the guess above,
+        // any manual score adjustment a parent makes directly, a scoring rule that changes
+        // server-side, ...) and previously stayed wrong until the bé logged out and back in
+        // (which re-fetches the real totals from /public/students).
+        if (typeof res.data.totalScore === 'number') {
+          setSelectedStudent({
+            ...selectedStudent,
+            totalScore: res.data.totalScore,
+            currentStreak: res.data.newStreak ?? newStreak
+          });
+        }
       } catch (error) {
         console.error('Failed to save progress', error);
       }

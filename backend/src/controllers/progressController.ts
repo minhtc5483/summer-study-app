@@ -160,6 +160,7 @@ interface ApplyProgressResult {
   questionsAttempted: number;
   questionsCorrect: number;
   score: number;
+  totalScore: number;
 }
 
 // Shared write path for both the authenticated (/submit, parent-triggered) and public
@@ -194,7 +195,7 @@ async function applyProgress(
 
   const newStreak = computeStreak(student);
 
-  await prisma.student.update({
+  const updatedStudent = await prisma.student.update({
     where: { id: studentId },
     data: {
       totalScore: { increment: score },
@@ -213,7 +214,7 @@ async function applyProgress(
     });
   }
 
-  return { newStreak, questionsAttempted, questionsCorrect, score };
+  return { newStreak, questionsAttempted, questionsCorrect, score, totalScore: updatedStudent.totalScore };
 }
 
 export const saveProgress = async (req: AuthRequest, res: Response) => {
@@ -229,9 +230,9 @@ export const saveProgress = async (req: AuthRequest, res: Response) => {
       return res.status(403).json({ error: 'Unauthorized access to student' });
     }
 
-    const { newStreak } = await applyProgress(student, parsed.data);
+    const { newStreak, totalScore } = await applyProgress(student, parsed.data);
 
-    res.json({ message: 'Progress saved successfully', newStreak });
+    res.json({ message: 'Progress saved successfully', newStreak, totalScore });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'Server error' });
@@ -253,7 +254,7 @@ export const savePublicProgress = async (req: Request, res: Response) => {
       return res.status(404).json({ error: 'Student not found' });
     }
 
-    const { newStreak, questionsAttempted, questionsCorrect, score } = await applyProgress(student, parsed.data);
+    const { newStreak, questionsAttempted, questionsCorrect, score, totalScore } = await applyProgress(student, parsed.data);
 
     // Save ExamResult if an examId was provided — uses the server-verified score/counts,
     // not whatever the client sent. questionsAttempted/questionsCorrect are stored here so
@@ -293,7 +294,7 @@ export const savePublicProgress = async (req: Request, res: Response) => {
       }
     });
 
-    res.json({ message: 'Progress saved successfully', newStreak });
+    res.json({ message: 'Progress saved successfully', newStreak, totalScore });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'Server error' });
