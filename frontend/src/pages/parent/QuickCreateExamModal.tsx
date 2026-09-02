@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { api } from '../../lib/api';
-import { Bot, Users, Brain, Loader2, CalendarClock } from 'lucide-react';
+import { Bot, Users, Brain, Loader2, CalendarClock, Sparkles, Plus } from 'lucide-react';
 
 interface QuickCreateExamModalProps {
   isOpen: boolean;
@@ -13,15 +13,24 @@ interface QuickCreateExamModalProps {
 export default function QuickCreateExamModal({ isOpen, onClose, subjectId, subjectName, onSuccess }: QuickCreateExamModalProps) {
   const [students, setStudents] = useState<any[]>([]);
   const [topics, setTopics] = useState<any[]>([]);
+  const [grades, setGrades] = useState<{ id: string; name: string }[]>([]);
   const [selectedStudents, setSelectedStudents] = useState<string[]>([]);
   const [numberOfQuestions, setNumberOfQuestions] = useState(10);
   const [timeLimit, setTimeLimit] = useState(15);
-  
+
   // States for one-time creation
   const [dueDate, setDueDate] = useState<string>('');
   const [selectedTopicId, setSelectedTopicId] = useState<string>('');
   const [useInternetSearch, setUseInternetSearch] = useState(false);
   const [difficulty, setDifficulty] = useState<number | ''>('');
+
+  // AI topic suggestions — only meaningful once a grade is picked, since curriculum topics
+  // differ a lot between Lớp 1 and Lớp 2 and the model needs that to suggest anything useful.
+  const [suggestGrade, setSuggestGrade] = useState('');
+  const [topicSuggestions, setTopicSuggestions] = useState<string[]>([]);
+  const [suggestingTopics, setSuggestingTopics] = useState(false);
+  const [suggestError, setSuggestError] = useState('');
+  const [creatingTopicName, setCreatingTopicName] = useState<string | null>(null);
   
   // States for scheduling
   const [isScheduled, setIsScheduled] = useState(false);
@@ -35,7 +44,8 @@ export default function QuickCreateExamModal({ isOpen, onClose, subjectId, subje
     if (isOpen) {
       api.get('/students').then(res => setStudents(res.data)).catch(console.error);
       api.get(`/topics?subjectId=${subjectId}`).then(res => setTopics(res.data)).catch(console.error);
-      
+      api.get('/grades').then(res => setGrades(res.data)).catch(console.error);
+
       setSelectedStudents([]);
       setNumberOfQuestions(10);
       setTimeLimit(15);
@@ -47,8 +57,53 @@ export default function QuickCreateExamModal({ isOpen, onClose, subjectId, subje
       setDueDays(3);
       setError('');
       setProgress('');
+      setSuggestGrade('');
+      setTopicSuggestions([]);
+      setSuggestError('');
     }
   }, [isOpen, subjectId]);
+
+  const handleSuggestTopics = async () => {
+    if (!suggestGrade) {
+      setSuggestError('Chọn lớp trước đã nhé.');
+      return;
+    }
+    setSuggestError('');
+    setSuggestingTopics(true);
+    try {
+      const res = await api.post('/topics/suggest', { subjectId, grade: suggestGrade });
+      setTopicSuggestions(res.data.suggestions || []);
+    } catch (err: any) {
+      setSuggestError(err.response?.data?.error || 'Không gợi ý được, thử lại nhé.');
+    } finally {
+      setSuggestingTopics(false);
+    }
+  };
+
+  // A suggestion chip either matches a topic that already exists (just select it) or
+  // doesn't (create it first, via the same endpoint "Thêm Chủ Đề" in Kho Bài Tập uses, then
+  // select the new one).
+  const handlePickSuggestedTopic = async (name: string) => {
+    const existing = topics.find(
+      (t) => t.name.trim().toLowerCase() === name.trim().toLowerCase() && t.grade === suggestGrade
+    );
+    if (existing) {
+      setSelectedTopicId(existing.id);
+      return;
+    }
+
+    setCreatingTopicName(name);
+    setSuggestError('');
+    try {
+      const res = await api.post('/topics', { subjectId, name, grade: suggestGrade });
+      setTopics(prev => [...prev, res.data]);
+      setSelectedTopicId(res.data.id);
+    } catch (err: any) {
+      setSuggestError(err.response?.data?.error || 'Không tạo được chủ đề này, thử lại nhé.');
+    } finally {
+      setCreatingTopicName(null);
+    }
+  };
 
   const toggleStudent = (id: string) => {
     setSelectedStudents(prev => 
@@ -154,7 +209,7 @@ export default function QuickCreateExamModal({ isOpen, onClose, subjectId, subje
             
             <div className="mb-4">
               <label className="block text-xs font-medium text-ink-muted mb-1">Chủ đề tập trung (Tùy chọn)</label>
-              <select 
+              <select
                 value={selectedTopicId}
                 onChange={e => setSelectedTopicId(e.target.value)}
                 className="w-full px-4 py-3 rounded-xl border border-cream-border focus:ring-2 focus:ring-primary font-bold text-ink bg-white"
@@ -164,6 +219,62 @@ export default function QuickCreateExamModal({ isOpen, onClose, subjectId, subje
                   <option key={t.id} value={t.id}>{t.name}</option>
                 ))}
               </select>
+
+              <div className="mt-2 flex items-center gap-2">
+                <select
+                  value={suggestGrade}
+                  onChange={e => setSuggestGrade(e.target.value)}
+                  className="px-3 py-2 rounded-xl border border-cream-border text-sm text-ink bg-white"
+                >
+                  <option value="">Chọn lớp...</option>
+                  {grades.map(g => (
+                    <option key={g.id} value={g.name}>{g.name}</option>
+                  ))}
+                </select>
+                <button
+                  type="button"
+                  onClick={handleSuggestTopics}
+                  disabled={suggestingTopics}
+                  className="flex items-center gap-2 px-3 py-2 bg-gold-100 text-gold-600 border border-gold-100 rounded-xl hover:bg-gold-600 hover:text-white transition-all text-sm font-semibold disabled:opacity-50"
+                >
+                  {suggestingTopics ? <Loader2 size={16} className="animate-spin" /> : <Sparkles size={16} />}
+                  Gợi ý chủ đề (AI)
+                </button>
+              </div>
+
+              {suggestError && <p className="text-xs text-danger font-medium mt-2">{suggestError}</p>}
+
+              {topicSuggestions.length > 0 && (
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {topicSuggestions.map(name => {
+                    const existing = topics.find(
+                      t => t.name.trim().toLowerCase() === name.trim().toLowerCase() && t.grade === suggestGrade
+                    );
+                    const isSelected = !!existing && existing.id === selectedTopicId;
+                    const isCreating = creatingTopicName === name;
+                    return (
+                      <button
+                        key={name}
+                        type="button"
+                        onClick={() => handlePickSuggestedTopic(name)}
+                        disabled={isCreating}
+                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium border transition-all disabled:opacity-50 ${
+                          isSelected
+                            ? 'bg-primary text-white border-primary'
+                            : 'bg-white text-ink-muted border-cream-border hover:border-primary hover:text-primary'
+                        }`}
+                      >
+                        {isCreating ? (
+                          <Loader2 size={14} className="animate-spin" />
+                        ) : !existing ? (
+                          <Plus size={14} />
+                        ) : null}
+                        {name}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
             </div>
 
             <div className="mb-4">

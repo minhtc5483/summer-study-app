@@ -60,7 +60,7 @@ export function toParentFacingError(err: any): Error {
   return new Error(err?.message || 'Có lỗi xảy ra khi tạo đề bằng AI.');
 }
 
-async function generateJson<T>(prompt: string, responseSchema: any, retries = 3): Promise<T> {
+export async function generateJson<T>(prompt: string, responseSchema: any, retries = 3): Promise<T> {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {
     throw new Error('Chưa cấu hình GEMINI_API_KEY trên server.');
@@ -228,4 +228,36 @@ Trả về mảng ID của các câu hỏi bạn đã chọn.`;
   });
 
   return exam;
+}
+
+const topicSuggestionSchema = { type: Type.ARRAY, items: { type: Type.STRING } };
+
+// Suggests curriculum-aligned topic names for a subject+grade, so a parent picking "Chủ đề
+// tập trung" in Tạo Đề Nhanh AI has real ideas to choose from instead of a free-text box or
+// an empty dropdown when nothing's been added yet. Returns plain names — the caller decides
+// whether each one matches an existing Topic or needs to be created.
+export async function suggestTopicNames(
+  subjectName: string,
+  grade: string,
+  existingNames: string[]
+): Promise<string[]> {
+  const avoidList = existingNames.length > 0 ? existingNames.join(', ') : 'chưa có chủ đề nào';
+  const prompt = `Bạn là một chuyên gia giáo dục tiểu học Việt Nam. Hãy liệt kê 6 chủ đề học tập tiêu biểu, bám sát chương trình sách giáo khoa hiện hành (GDPT 2018), cho môn ${subjectName} dành cho học sinh ${grade}.
+Mỗi chủ đề là một cụm từ ngắn gọn, dưới 6 từ, đúng thuật ngữ dùng trong sách giáo khoa (ví dụ: "Phép cộng phạm vi 20", "So sánh phân số", "Đọc hiểu đoạn văn ngắn").
+KHÔNG được lặp lại các chủ đề đã có sẵn sau đây: ${avoidList}.`;
+
+  const names = await generateJson<string[]>(prompt, topicSuggestionSchema);
+
+  // Bộ lọc an toàn ở phía server: dù đã dặn trong prompt, vẫn có thể AI lặp lại tên đã có.
+  const existingLower = new Set(existingNames.map((n) => n.trim().toLowerCase()));
+  const seen = new Set<string>();
+  const cleaned: string[] = [];
+  for (const raw of names || []) {
+    const name = String(raw || '').trim();
+    const key = name.toLowerCase();
+    if (!name || key.length > 60 || existingLower.has(key) || seen.has(key)) continue;
+    seen.add(key);
+    cleaned.push(name);
+  }
+  return cleaned.slice(0, 8);
 }

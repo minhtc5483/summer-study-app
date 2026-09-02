@@ -6,7 +6,7 @@ import { authenticate } from './middlewares/auth';
 import { requireManage } from './middlewares/manageAccess';
 import { requireKidsAccess } from './middlewares/kidsAccess';
 import { upload } from './middlewares/upload';
-import { authRateLimit } from './middlewares/rateLimit';
+import { authRateLimit, aiRateLimit } from './middlewares/rateLimit';
 
 const router = Router();
 
@@ -42,7 +42,7 @@ router.put('/students/:id/pin', authenticate, requireManage, setStudentPin);
 router.delete('/students/:id', authenticate, requireManage, deleteStudent);
 
 import { getSubjects, createSubject, updateSubject, deleteSubject } from './controllers/subjectController';
-import { getTopics, createTopic } from './controllers/topicController';
+import { getTopics, createTopic, suggestTopics } from './controllers/topicController';
 import { getGrades, createGrade, deleteGrade } from './controllers/gradeController';
 import { getQuestions, createQuestion, importQuestions, importPDF } from './controllers/questionController';
 import { saveProgress, savePublicProgress } from './controllers/progressController';
@@ -67,6 +67,7 @@ router.put('/subjects/:id', authenticate, requireManage, updateSubject);
 router.delete('/subjects/:id', authenticate, requireManage, deleteSubject);
 router.get('/topics', authenticate, requireManage, getTopics);
 router.post('/topics', authenticate, requireManage, createTopic);
+router.post('/topics/suggest', aiRateLimit, authenticate, requireManage, suggestTopics);
 
 import { getExams, getExamById, createExam, updateExam, deleteExam } from './controllers/examController';
 import { enqueueQuickCreateExam, getAiExamJob } from './controllers/aiExamJobController';
