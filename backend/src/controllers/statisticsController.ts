@@ -232,3 +232,81 @@ export const getActivityLog = async (req: AuthRequest, res: Response) => {
     res.status(500).json({ error: 'Server error' });
   }
 };
+
+// Full right/wrong breakdown behind one activity-log row or "vừa nộp bài" notification —
+// the question text, the bé's own answer, and the correct one, per question. Answers are
+// keyed by question index (see gradeExamSubmission in progressController.ts, which is the
+// only place that writes ExamResult.answers) rather than question id, so questions are
+// re-joined here in the same order the exam was graded in.
+export const getExamResultDetail = async (req: AuthRequest, res: Response) => {
+  try {
+    const parentId = req.user!.id;
+    const id = req.params.id as string;
+
+    const result = await prisma.examResult.findFirst({
+      where: { id, student: { parentId } },
+      include: {
+        student: { select: { id: true, name: true, avatar: true } },
+        exam: {
+          include: {
+            topic: { include: { subject: true } },
+            questions: { include: { question: true } }
+          }
+        }
+      }
+    });
+
+    if (!result) {
+      return res.status(404).json({ error: 'Không tìm thấy kết quả bài làm này.' });
+    }
+
+    let answers: Record<string, string> = {};
+    try {
+      answers = result.answers ? JSON.parse(result.answers) : {};
+    } catch {
+      answers = {};
+    }
+
+    const questions = result.exam.questions.map((eq, idx) => {
+      let text = '';
+      let options: string[] | undefined;
+      let correctAnswer: string | undefined;
+      try {
+        const parsed = JSON.parse(eq.question.content);
+        text = parsed.text || '';
+        options = parsed.options;
+        correctAnswer = parsed.correct;
+      } catch {
+        text = eq.question.content;
+      }
+
+      const userAnswer = answers[String(idx)];
+      return {
+        index: idx + 1,
+        text,
+        options,
+        correctAnswer,
+        userAnswer: userAnswer ?? null,
+        isCorrect: userAnswer !== undefined && correctAnswer !== undefined && userAnswer === correctAnswer
+      };
+    });
+
+    res.json({
+      id: result.id,
+      student: result.student,
+      examName: result.exam.name,
+      subjectName: result.exam.topic?.subject?.name || 'Khác',
+      topicName: result.exam.topic?.name || null,
+      score: result.score,
+      questionsAttempted: result.questionsAttempted ?? questions.length,
+      questionsCorrect: result.questionsCorrect ?? questions.filter((q) => q.isCorrect).length,
+      timeSpent: result.timeSpent,
+      timeLimit: result.exam.timeLimit,
+      createdAt: result.createdAt,
+      questions
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Server error' });
+  }
+};

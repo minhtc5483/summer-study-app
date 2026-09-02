@@ -2,6 +2,7 @@
 import { useAuthStore } from '../store/useAuthStore';
 import { useManageAccessStore } from '../store/useManageAccessStore';
 import { ManagePinLock, ManagePinSetupPrompt } from './parent/ManagePinGate';
+import ExamResultDetailModal from './parent/ExamResultDetailModal';
 import { Navigate, Outlet, NavLink } from 'react-router-dom';
 import { Users, LogOut, Settings, BarChart, BookOpen, Bell, CheckCircle2, GraduationCap, Menu, X } from 'lucide-react';
 import { useState, useEffect } from 'react';
@@ -20,6 +21,8 @@ interface AppNotification {
   message: string;
   isRead: boolean;
   createdAt: string;
+  // Only set on "vừa nộp bài" notifications — lets the row open the right/wrong breakdown.
+  examResultId?: string | null;
 }
 
 export default function ParentDashboard() {
@@ -27,6 +30,7 @@ export default function ParentDashboard() {
   const manageToken = useManageAccessStore((s) => s.manageToken);
   const [notifications, setNotifications] = useState<AppNotification[]>([]);
   const [showNotifications, setShowNotifications] = useState(false);
+  const [openExamResultId, setOpenExamResultId] = useState<string | null>(null);
   // null while we're still asking the server whether this parent has a management PIN.
   const [hasManagePin, setHasManagePin] = useState<boolean | null>(null);
   const [setupSkipped, setSetupSkipped] = useState(false);
@@ -212,33 +216,51 @@ export default function ParentDashboard() {
                     </div>
                   ) : (
                     <div className="divide-y divide-cream-border">
-                      {notifications.map(notif => (
-                        <div 
-                          key={notif.id} 
-                          className={`p-4 transition-colors ${notif.isRead ? 'bg-white opacity-70' : 'bg-terracotta-100/50'}`}
-                        >
-                          <div className="flex justify-between items-start gap-3">
-                            <div className="flex-1">
-                              <h4 className={`text-sm ${notif.isRead ? 'font-medium text-slate-700' : 'font-bold text-slate-900'}`}>
-                                {notif.title}
-                              </h4>
-                              <p className="text-xs text-slate-600 mt-1">{notif.message}</p>
-                              <p className="text-[10px] text-slate-400 mt-2">
-                                {new Date(notif.createdAt).toLocaleString('vi-VN')}
-                              </p>
+                      {notifications.map(notif => {
+                        const hasDetail = !!notif.examResultId;
+                        const openDetail = () => {
+                          if (!hasDetail) return;
+                          if (!notif.isRead) markAsRead(notif.id);
+                          setOpenExamResultId(notif.examResultId!);
+                          setShowNotifications(false);
+                        };
+                        return (
+                          <div
+                            key={notif.id}
+                            role={hasDetail ? 'button' : undefined}
+                            tabIndex={hasDetail ? 0 : undefined}
+                            onClick={openDetail}
+                            onKeyDown={(e) => { if (hasDetail && e.key === 'Enter') openDetail(); }}
+                            className={`p-4 transition-colors ${notif.isRead ? 'bg-white opacity-70' : 'bg-terracotta-100/50'} ${hasDetail ? 'cursor-pointer hover:bg-cream' : ''}`}
+                          >
+                            <div className="flex justify-between items-start gap-3">
+                              <div className="flex-1">
+                                <h4 className={`text-sm ${notif.isRead ? 'font-medium text-slate-700' : 'font-bold text-slate-900'}`}>
+                                  {notif.title}
+                                </h4>
+                                <p className="text-xs text-slate-600 mt-1">{notif.message}</p>
+                                <div className="flex items-center gap-2 mt-2">
+                                  <p className="text-[10px] text-slate-400">
+                                    {new Date(notif.createdAt).toLocaleString('vi-VN')}
+                                  </p>
+                                  {hasDetail && (
+                                    <span className="text-[10px] text-primary font-bold">Xem chi tiết →</span>
+                                  )}
+                                </div>
+                              </div>
+                              {!notif.isRead && (
+                                <button
+                                  onClick={(e) => { e.stopPropagation(); markAsRead(notif.id); }}
+                                  className="text-primary hover:text-primary-dark shrink-0"
+                                  title="Đánh dấu đã đọc"
+                                >
+                                  <CheckCircle2 size={18} />
+                                </button>
+                              )}
                             </div>
-                            {!notif.isRead && (
-                              <button 
-                                onClick={() => markAsRead(notif.id)}
-                                className="text-primary hover:text-primary-dark"
-                                title="Đánh dấu đã đọc"
-                              >
-                                <CheckCircle2 size={18} />
-                              </button>
-                            )}
                           </div>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   )}
                 </div>
@@ -251,6 +273,10 @@ export default function ParentDashboard() {
           <Outlet />
         </div>
       </main>
+
+      {openExamResultId && (
+        <ExamResultDetailModal examResultId={openExamResultId} onClose={() => setOpenExamResultId(null)} />
+      )}
     </div>
   );
 }

@@ -122,7 +122,24 @@ export default function Students() {
           </div>
         ) : (
           students.map((student) => (
-            <div key={student.id} className="bg-white rounded-2xl shadow-sm border border-cream-border p-6 flex flex-col items-center">
+            <div key={student.id} className="relative bg-white rounded-2xl shadow-sm border border-cream-border p-6 flex flex-col items-center">
+              <div className="absolute top-3 right-3 flex gap-1.5">
+                <button
+                  onClick={() => handleOpenModal(student)}
+                  title="Sửa thông tin"
+                  className="w-8 h-8 flex items-center justify-center text-ink-muted bg-cream rounded-full hover:bg-cream-border transition-colors"
+                >
+                  <Edit2 size={15} />
+                </button>
+                <button
+                  onClick={() => handleDelete(student.id)}
+                  title="Xóa học sinh"
+                  className="w-8 h-8 flex items-center justify-center text-danger bg-red-50 rounded-full hover:bg-red-100 transition-colors"
+                >
+                  <Trash2 size={15} />
+                </button>
+              </div>
+
               <div className="w-24 h-24 rounded-full border-4 border-terracotta-100 overflow-hidden bg-cream mb-4 shadow-sm flex items-center justify-center">
                 {student.avatar ? (
                   <img src={student.avatar} alt={student.name} className="w-full h-full object-cover" />
@@ -134,7 +151,7 @@ export default function Students() {
               <span className="px-3 py-1 bg-terracotta-100 text-primary-dark text-sm font-medium rounded-full mt-2">
                 {student.grade}
               </span>
-              
+
               <div className="mt-6 flex items-center gap-4 w-full border-t border-cream-border pt-4">
                 <div className="flex-1 text-center border-r border-cream-border">
                   <div className="text-xs text-ink-muted font-medium">ĐIỂM</div>
@@ -146,21 +163,6 @@ export default function Students() {
                     {student.currentStreak} <Flame size={14} />
                   </div>
                 </div>
-              </div>
-
-              <div className="flex w-full gap-2 mt-6">
-                <button
-                  onClick={() => handleOpenModal(student)}
-                  className="flex-1 flex justify-center py-2 text-ink-muted bg-cream rounded-lg hover:bg-cream-border transition-colors"
-                >
-                  <Edit2 size={18} />
-                </button>
-                <button
-                  onClick={() => handleDelete(student.id)}
-                  className="flex-1 flex justify-center py-2 text-danger bg-red-50 rounded-lg hover:bg-red-100 transition-colors"
-                >
-                  <Trash2 size={18} />
-                </button>
               </div>
             </div>
           ))

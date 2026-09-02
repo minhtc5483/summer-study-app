@@ -46,7 +46,7 @@ import { getTopics, createTopic, suggestTopics } from './controllers/topicContro
 import { getGrades, createGrade, deleteGrade } from './controllers/gradeController';
 import { getQuestions, createQuestion, importQuestions, importPDF } from './controllers/questionController';
 import { saveProgress, savePublicProgress } from './controllers/progressController';
-import { getStatistics, getStudentDetailedStats, getActivityLog } from './controllers/statisticsController';
+import { getStatistics, getStudentDetailedStats, getActivityLog, getExamResultDetail } from './controllers/statisticsController';
 import { exportData } from './controllers/dataController';
 import { getRewards, exchangePoints } from './controllers/rewardController';
 import { getNotifications, markAsRead } from './controllers/notificationController';
@@ -109,6 +109,7 @@ router.post('/progress', authenticate, requireManage, saveProgress); // keep old
 // Statistics
 router.get('/statistics', authenticate, requireManage, getStatistics);
 router.get('/statistics/activity-log', authenticate, requireManage, getActivityLog);
+router.get('/statistics/exam-results/:id', authenticate, requireManage, getExamResultDetail);
 router.get('/statistics/students/:studentId/details', authenticate, requireManage, getStudentDetailedStats);
 
 // Rewards & Point Exchange

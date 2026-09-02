@@ -149,6 +149,12 @@ model Notification {
   message   String
   isRead    Boolean  @default(false)
   createdAt DateTime @default(now())
+
+  // Set only for "bé vừa nộp bài" notifications, so clicking one can open the full
+  // right/wrong breakdown. SetNull (not Cascade) so if the underlying exam is later deleted,
+  // the notification survives as a plain, no-longer-clickable record instead of vanishing.
+  examResultId String?
+  examResult   ExamResult? @relation(fields: [examResultId], references: [id], onDelete: SetNull)
 }
 
 model ExamResult {
@@ -164,6 +170,7 @@ model ExamResult {
 
   student    Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
   exam       Exam     @relation(fields: [examId], references: [id], onDelete: Cascade)
+  notifications Notification[]
 
   @@unique([studentId, examId])
 }

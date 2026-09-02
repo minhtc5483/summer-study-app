@@ -249,8 +249,9 @@ export const savePublicProgress = async (req: Request, res: Response) => {
     // Save ExamResult if an examId was provided — uses the server-verified score/counts,
     // not whatever the client sent. questionsAttempted/questionsCorrect are stored here so
     // the parent's activity log can show a correct/wrong breakdown per submission.
+    let examResultId: string | undefined;
     if (examId) {
-      await prisma.examResult.upsert({
+      const examResult = await prisma.examResult.upsert({
         where: { studentId_examId: { studentId, examId } },
         update: {
           score,
@@ -269,14 +270,17 @@ export const savePublicProgress = async (req: Request, res: Response) => {
           questionsCorrect
         }
       });
+      examResultId = examResult.id;
     }
 
-    // Notify parent
+    // Notify parent — linked to the ExamResult (when there is one) so tapping the
+    // notification can open the full right/wrong breakdown instead of just this summary line.
     await prisma.notification.create({
       data: {
         parentId: student.parentId,
         title: `🎉 ${student.name} vừa nộp bài!`,
-        message: `Bé đạt được ${score} điểm với ${questionsCorrect}/${questionsAttempted} câu đúng.`
+        message: `Bé đạt được ${score} điểm với ${questionsCorrect}/${questionsAttempted} câu đúng.`,
+        examResultId
       }
     });
 
