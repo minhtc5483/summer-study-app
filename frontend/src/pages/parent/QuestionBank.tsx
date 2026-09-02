@@ -21,12 +21,18 @@ interface Topic {
   description: string | null;
 }
 
+interface ExamStudent {
+  id: string;
+  name: string;
+  avatar: string | null;
+}
+
 interface Exam {
   id: string;
   topicId: string;
   name: string;
   createdAt: string;
-  students: Array<{id: string, name: string, avatar: string | null}>;
+  students: ExamStudent[];
   _count: {
     questions: number;
   };
@@ -36,7 +42,11 @@ export default function QuestionBank() {
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [topics, setTopics] = useState<Topic[]>([]);
   const [exams, setExams] = useState<Exam[]>([]);
+  const [students, setStudents] = useState<ExamStudent[]>([]);
   const [selectedSubject, setSelectedSubject] = useState<Subject | null>(null);
+  // "<examId>:<studentId>" while a click-to-assign toggle's request is in flight, so a
+  // second click on the same avatar before the first request lands can't fire twice.
+  const [togglingAssignment, setTogglingAssignment] = useState<string | null>(null);
   
   // Topic creation
   const [isCreatingTopic, setIsCreatingTopic] = useState(false);
@@ -55,15 +65,17 @@ export default function QuestionBank() {
 
   const fetchData = async () => {
     try {
-      const [subjRes, topicRes, examRes] = await Promise.all([
+      const [subjRes, topicRes, examRes, studentRes] = await Promise.all([
         api.get('/subjects'),
         api.get('/topics'),
-        api.get('/exams')
+        api.get('/exams'),
+        api.get('/students')
       ]);
       setSubjects(subjRes.data);
       setTopics(topicRes.data);
       setExams(examRes.data);
-      
+      setStudents(studentRes.data);
+
       if (subjRes.data.length > 0 && !selectedSubject) {
         setSelectedSubject(subjRes.data[0]);
       }
@@ -108,6 +120,33 @@ export default function QuestionBank() {
     } catch (error) {
       console.error('Failed to delete exam', error);
       alert('Không thể xóa đề bài');
+    }
+  };
+
+  // Click a student's avatar on an exam card to assign/unassign them, instead of having to
+  // open "Sửa đề" just to change who it's given to. Updates the card immediately (so the
+  // click feels instant) and rolls back if the request fails.
+  const handleToggleStudentForExam = async (exam: Exam, student: ExamStudent) => {
+    const key = `${exam.id}:${student.id}`;
+    if (togglingAssignment) return;
+
+    const isAssigned = exam.students.some(s => s.id === student.id);
+    const nextStudents = isAssigned
+      ? exam.students.filter(s => s.id !== student.id)
+      : [...exam.students, student];
+
+    setTogglingAssignment(key);
+    setExams(prev => prev.map(e => (e.id === exam.id ? { ...e, students: nextStudents } : e)));
+
+    try {
+      await api.put(`/exams/${exam.id}`, { studentIds: nextStudents.map(s => s.id) });
+    } catch (error) {
+      console.error('Failed to toggle exam assignment', error);
+      // Đảo lại thay đổi lạc quan vì request thất bại.
+      setExams(prev => prev.map(e => (e.id === exam.id ? { ...e, students: exam.students } : e)));
+      alert('Không thể cập nhật, thử lại nhé.');
+    } finally {
+      setTogglingAssignment(null);
     }
   };
 
@@ -267,26 +306,42 @@ export default function QuestionBank() {
                                 </span>
                               </div>
                               
-                              <div className="mt-4 pt-3 border-t border-cream-border flex items-center justify-between">
-                                <div className="flex -space-x-2 overflow-hidden">
-                                  {exam.students.length === 0 ? (
-                                    <span className="text-xs text-ink-muted italic">Chưa giao cho ai</span>
-                                  ) : (
-                                    exam.students.map(s => (
-                                      <img 
-                                        key={s.id}
-                                        src={s.avatar ? s.avatar : 'https://ui-avatars.com/api/?name=' + s.name}
-                                        alt={s.name}
-                                        title={s.name}
-                                        className="inline-block h-8 w-8 rounded-full ring-2 ring-white object-cover bg-cream"
-                                      />
-                                    ))
-                                  )}
-                                </div>
-                                {exam.students.length > 0 && (
-                                  <span className="text-xs font-semibold text-ink-muted flex items-center gap-1">
-                                    <Users size={12} /> Đã giao ({exam.students.length})
-                                  </span>
+                              <div className="mt-4 pt-3 border-t border-cream-border">
+                                {students.length === 0 ? (
+                                  <span className="text-xs text-ink-muted italic">Chưa có bé nào. Thêm bé ở mục Học Sinh.</span>
+                                ) : (
+                                  <>
+                                    <div className="flex flex-wrap gap-2">
+                                      {students.map(student => {
+                                        const isAssigned = exam.students.some(s => s.id === student.id);
+                                        const isToggling = togglingAssignment === `${exam.id}:${student.id}`;
+                                        return (
+                                          <button
+                                            key={student.id}
+                                            type="button"
+                                            onClick={() => handleToggleStudentForExam(exam, student)}
+                                            disabled={isToggling}
+                                            title={isAssigned ? `Bỏ giao cho ${student.name}` : `Giao cho ${student.name}`}
+                                            className={`rounded-full transition-all disabled:opacity-50 ${
+                                              isAssigned
+                                                ? 'ring-2 ring-primary ring-offset-2 ring-offset-white'
+                                                : 'ring-2 ring-transparent opacity-40 grayscale hover:opacity-80 hover:grayscale-0'
+                                            }`}
+                                          >
+                                            <img
+                                              src={student.avatar ? student.avatar : 'https://ui-avatars.com/api/?name=' + student.name}
+                                              alt={student.name}
+                                              className="h-8 w-8 rounded-full object-cover bg-cream pointer-events-none"
+                                            />
+                                          </button>
+                                        );
+                                      })}
+                                    </div>
+                                    <span className="mt-2 text-xs font-semibold text-ink-muted flex items-center gap-1">
+                                      <Users size={12} />
+                                      {exam.students.length > 0 ? `Đã giao (${exam.students.length})` : 'Chưa giao cho ai — bấm vào ảnh bé để giao'}
+                                    </span>
+                                  </>
                                 )}
                               </div>
                             </div>
