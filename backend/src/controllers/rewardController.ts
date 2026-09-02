@@ -42,6 +42,16 @@ BADGES.push(
   { id: 'streak_30', name: 'Vô Địch', description: 'Học 30 ngày liên tục', type: 'streak', requirement: 30, icon: '🏆', color: 'bg-blue-100 text-blue-600' }
 );
 
+// Same "which badges has this score/streak earned" check needed by three different screens
+// (the kids student picker, the parent's student cards, and the stats dashboard) — was
+// copy-pasted at each call site.
+export const getEarnedBadges = (totalScore: number, currentStreak: number) =>
+  BADGES.filter((badge) => {
+    if (badge.type === 'score' && totalScore >= badge.requirement) return true;
+    if (badge.type === 'streak' && currentStreak >= badge.requirement) return true;
+    return false;
+  });
+
 export const getRewards = async (req: Request, res: Response) => {
   try {
     const studentId = req.params.studentId as string;

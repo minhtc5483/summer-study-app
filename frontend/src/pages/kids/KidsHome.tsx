@@ -4,6 +4,7 @@ import { Trophy, Star, Flame, Lock, Play, ShoppingBag } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useStudentStore } from '../../store/useStudentStore';
 import { api } from '../../lib/api';
+import { getExamCardColor } from '../../lib/examCardColors';
 
 interface Badge {
   id: string;
@@ -49,11 +50,6 @@ export default function KidsHome() {
     if (!selectedStudent) {
       navigate('/');
       return;
-    }
-
-    // Default select ALL subjects
-    if (selectedSubjectId === null) {
-      setSelectedSubjectId('ALL');
     }
 
     // Fetch Badges
@@ -264,12 +260,11 @@ export default function KidsHome() {
                   });
 
                   const sortedExams = [...pendingExams, ...completedExams];
-                  const colors = ['#E8734A', '#7FA885', '#CA8A04', '#C2503A', '#4F7857'];
 
                   return sortedExams.map((exam, index) => {
                     const isCompleted = exam.examResults && exam.examResults.length > 0;
                     const result = isCompleted ? exam.examResults![0] : null;
-                    const bgColor = isCompleted ? '#C9B8A3' : colors[index % colors.length];
+                    const bgColor = getExamCardColor(index, !!isCompleted);
 
                     return (
                       <Link key={exam.id} to={`/kids/quiz/${exam.id}${isCompleted ? '?mode=review' : ''}`}>

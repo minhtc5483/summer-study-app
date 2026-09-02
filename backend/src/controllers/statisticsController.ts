@@ -1,7 +1,7 @@
 import { Response } from 'express';
 import { prisma } from '../index';
 import { AuthRequest } from '../middlewares/auth';
-import { BADGES } from './rewardController';
+import { getEarnedBadges } from './rewardController';
 
 export const getStatistics = async (req: AuthRequest, res: Response) => {
   try {
@@ -38,11 +38,7 @@ export const getStatistics = async (req: AuthRequest, res: Response) => {
         totalCorrect += p.questionsCorrect;
       });
 
-      const earnedBadges = BADGES.filter(badge => {
-        if (badge.type === 'score' && totalScore >= badge.requirement) return true;
-        if (badge.type === 'streak' && student.currentStreak >= badge.requirement) return true;
-        return false;
-      });
+      const earnedBadges = getEarnedBadges(totalScore, student.currentStreak);
 
       return {
         studentId: student.id,

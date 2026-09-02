@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useStudentStore } from '../../store/useStudentStore';
 import { api } from '../../lib/api';
+import { getExamCardColor } from '../../lib/examCardColors';
 import { motion } from 'framer-motion';
 import { ArrowLeft, Star, Play } from 'lucide-react';
 
@@ -91,8 +92,7 @@ export default function SubjectExams() {
                 const isCompleted = exam.examResults && exam.examResults.length > 0;
                 const result = isCompleted ? exam.examResults![0] : null;
 
-                const colors = ['#E8734A', '#7FA885', '#CA8A04', '#C2503A', '#4F7857'];
-                const bgColor = isCompleted ? '#C9B8A3' : colors[index % colors.length]; // Xám cho đề đã làm
+                const bgColor = getExamCardColor(index, !!isCompleted);
 
                 return (
                   <Link key={exam.id} to={`/kids/quiz/${exam.id}${isCompleted ? '?mode=review' : ''}`}>

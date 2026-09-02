@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "tsx --test src/**/*.test.ts",
     "dev": "tsx watch src/index.ts",
     "build": "tsc",
     "start:prod": "node dist/index.js"
@@ -15,7 +15,6 @@
   "type": "commonjs",
   "dependencies": {
     "@google/genai": "^2.19.0",
-    "@google/generative-ai": "^0.24.1",
     "@prisma/client": "^5.22.0",
     "bcryptjs": "^2.4.3",
     "cors": "^2.8.6",
@@ -37,7 +36,6 @@
     "@types/node": "^26.1.1",
     "@types/node-cron": "^3.0.11",
     "@types/sharp": "^0.31.1",
-    "nodemon": "^3.1.14",
     "prisma": "^5.22.0",
     "ts-node": "^10.9.2",
     "tsx": "^4.23.0",
