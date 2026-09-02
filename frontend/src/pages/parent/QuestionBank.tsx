@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { api } from '../../lib/api';
 import { Folder, Upload, Plus, BookOpen, Trash2, Users, Edit2 } from 'lucide-react';
 import ImportModal from './ImportModal';
@@ -39,6 +40,10 @@ interface Exam {
 }
 
 export default function QuestionBank() {
+  // Lets other pages (Tổng Quan's "Lịch AI" tab, ...) link straight into a subject here
+  // instead of just naming it as plain text — e.g. /parent/question-bank?subjectId=xxx.
+  const [searchParams] = useSearchParams();
+  const linkedSubjectId = searchParams.get('subjectId');
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [topics, setTopics] = useState<Topic[]>([]);
   const [exams, setExams] = useState<Exam[]>([]);
@@ -77,7 +82,8 @@ export default function QuestionBank() {
       setStudents(studentRes.data);
 
       if (subjRes.data.length > 0 && !selectedSubject) {
-        setSelectedSubject(subjRes.data[0]);
+        const linked = linkedSubjectId ? subjRes.data.find((s: Subject) => s.id === linkedSubjectId) : null;
+        setSelectedSubject(linked || subjRes.data[0]);
       }
     } catch (error) {
       console.error('Failed to fetch data', error);
@@ -301,9 +307,13 @@ export default function QuestionBank() {
                                     </button>
                                   </div>
                                 </div>
-                                <span className="inline-block px-2 py-1 bg-terracotta-100 text-primary-dark text-xs font-bold rounded">
+                                <button
+                                  onClick={() => handleEditExam(exam.id, topic)}
+                                  title="Xem/sửa danh sách câu hỏi"
+                                  className="inline-block px-2 py-1 bg-terracotta-100 text-primary-dark text-xs font-bold rounded hover:bg-primary hover:text-white transition-colors"
+                                >
                                   {exam._count.questions} câu hỏi
-                                </span>
+                                </button>
                               </div>
                               
                               <div className="mt-4 pt-3 border-t border-cream-border">

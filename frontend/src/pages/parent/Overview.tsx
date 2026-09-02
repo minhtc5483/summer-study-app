@@ -4,6 +4,7 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import { Users, Target, Brain, Award, Flame, CalendarClock, Trash2, CheckCircle, Clock, CheckCircle2, XCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
+import ExamResultDetailModal from './ExamResultDetailModal';
 
 type TabKey = 'overview' | 'schedules' | 'exchanges' | 'log';
 
@@ -40,6 +41,7 @@ export default function Overview() {
   const [activityLog, setActivityLog] = useState<ActivityLogEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<TabKey>('overview');
+  const [openExamResultId, setOpenExamResultId] = useState<string | null>(null);
 
   useEffect(() => {
     let isMounted = true;
@@ -122,10 +124,14 @@ export default function Overview() {
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-white p-6 rounded-2xl shadow-sm border border-cream-border flex items-center gap-4"
+          onClick={() => navigate('/parent/students')}
+          role="button"
+          tabIndex={0}
+          title="Xem danh sách học sinh"
+          className="bg-white p-6 rounded-2xl shadow-sm border border-cream-border flex items-center gap-4 cursor-pointer hover:border-primary hover:shadow-md transition-all"
         >
           <div className="w-14 h-14 bg-terracotta-100 rounded-xl flex items-center justify-center text-primary-dark">
             <Users size={28} />
@@ -136,7 +142,7 @@ export default function Overview() {
           </div>
         </motion.div>
 
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
@@ -151,11 +157,15 @@ export default function Overview() {
           </div>
         </motion.div>
 
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
-          className="bg-white p-6 rounded-2xl shadow-sm border border-cream-border flex items-center gap-4"
+          onClick={() => setActiveTab('log')}
+          role="button"
+          tabIndex={0}
+          title="Xem nhật ký từng bài đã làm"
+          className="bg-white p-6 rounded-2xl shadow-sm border border-cream-border flex items-center gap-4 cursor-pointer hover:border-primary hover:shadow-md transition-all"
         >
           <div className="w-14 h-14 bg-gold-100 rounded-xl flex items-center justify-center text-gold-600">
             <Brain size={28} />
@@ -349,7 +359,13 @@ export default function Overview() {
             <tbody className="divide-y divide-cream-border">
               {aiSchedules.map((schedule) => (
                 <tr key={schedule.id} className="hover:bg-cream transition-colors">
-                  <td className="py-4 px-6 font-bold text-ink">{schedule.subject?.name}</td>
+                  <td
+                    onClick={() => schedule.subject?.id && navigate(`/parent/question-bank?subjectId=${schedule.subject.id}`)}
+                    title={`Mở môn ${schedule.subject?.name} trong Kho Bài Tập`}
+                    className="py-4 px-6 font-bold text-ink cursor-pointer hover:text-primary hover:underline"
+                  >
+                    {schedule.subject?.name}
+                  </td>
                   <td className="py-4 px-6 text-ink-muted">{schedule.topic?.name || 'Tất cả'}</td>
                   <td className="py-4 px-6 text-ink-muted">
                     {schedule.numberOfQuestions} câu / {schedule.timeLimit} phút
@@ -405,8 +421,12 @@ export default function Overview() {
             <tbody className="divide-y divide-cream-border">
               {pointExchanges.map((exchange) => (
                 <tr key={exchange.id} className="hover:bg-cream transition-colors">
-                  <td className="py-4 px-6 font-bold text-ink flex items-center gap-3">
-                    <img 
+                  <td
+                    onClick={() => navigate(`/parent/students/${exchange.student.id}/stats`)}
+                    title={`Xem thống kê của ${exchange.student.name}`}
+                    className="py-4 px-6 font-bold text-ink flex items-center gap-3 cursor-pointer hover:text-primary"
+                  >
+                    <img
                       src={exchange.student.avatar ? exchange.student.avatar : `https://ui-avatars.com/api/?name=${exchange.student.name}`}
                       alt={exchange.student.name}
                       className="w-8 h-8 rounded-full"
@@ -476,7 +496,12 @@ export default function Overview() {
                 const minutes = entry.timeSpent !== null ? Math.floor(entry.timeSpent / 60) : null;
                 const seconds = entry.timeSpent !== null ? entry.timeSpent % 60 : null;
                 return (
-                  <tr key={entry.id} className="hover:bg-cream transition-colors">
+                  <tr
+                    key={entry.id}
+                    onClick={() => setOpenExamResultId(entry.id)}
+                    title="Xem chi tiết bài làm"
+                    className="hover:bg-cream transition-colors cursor-pointer"
+                  >
                     <td className="py-4 px-6 font-medium text-ink flex items-center gap-3">
                       <img
                         src={entry.student.avatar ? entry.student.avatar : `https://ui-avatars.com/api/?name=${entry.student.name}`}
@@ -490,7 +515,7 @@ export default function Overview() {
                     </td>
                     <td className="py-4 px-6 text-ink-muted">
                       <div>{entry.subjectName}</div>
-                      <div className="text-xs text-ink-muted/70">{entry.examName}</div>
+                      <div className="text-xs text-primary font-semibold">{entry.examName} · Xem chi tiết →</div>
                     </td>
                     <td className="py-4 px-6">
                       <span className="flex items-center gap-1 font-bold text-secondary-dark">
@@ -520,6 +545,10 @@ export default function Overview() {
         </div>
       </div>
       </>
+      )}
+
+      {openExamResultId && (
+        <ExamResultDetailModal examResultId={openExamResultId} onClose={() => setOpenExamResultId(null)} />
       )}
     </div>
   );
