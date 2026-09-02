@@ -11,6 +11,16 @@ export const api = axios.create({
 const isPublicRequest = (url?: string) => !!url && url.startsWith('/public') && url !== '/public/verify-pin';
 const isAuthEndpoint = (url?: string) => !!url && /^\/auth\/(login|register|refresh)/.test(url);
 
+// These endpoints return 401 to mean "the secret you just typed is wrong", never "your
+// session token is stale" — the caller is already logged in (has a valid access token) and
+// is confirming a PIN or password inline. Routing that 401 through the refresh-then-retry
+// dance below still fails for the exact same reason (wrong secret, not a bad token), and the
+// dance's fallback is a full logout — so typing a wrong PIN/password used to silently boot
+// the parent back to the login screen instead of showing "Sai mã PIN" / "Mật khẩu không
+// đúng" inline. Found while adding the "quên mã PIN" recovery form and reproduced on the
+// already-shipped manage-pin verify screen too.
+const isCredentialCheckEndpoint = (url?: string) => !!url && /^\/auth\/(manage-pin(\/verify)?|password)$/.test(url);
+
 interface RetriableRequestConfig extends AxiosRequestConfig {
   _retriedAfterRefresh?: boolean;
 }
@@ -89,6 +99,10 @@ api.interceptors.response.use(
       if (isPublicRequest(originalRequest?.url)) {
         // PIN token missing/expired — clear it so the PIN prompt reappears.
         useKidsAccessStore.getState().clearPinToken();
+        return Promise.reject(error);
+      }
+
+      if (isCredentialCheckEndpoint(originalRequest?.url)) {
         return Promise.reject(error);
       }
 
