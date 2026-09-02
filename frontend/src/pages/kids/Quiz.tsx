@@ -534,7 +534,18 @@ export default function Quiz() {
               </button>
             ) : (
               <button
-                onClick={finishQuiz}
+                onClick={() => {
+                  // The server re-grades and ignores an empty submission's score either way
+                  // (see progressController.ts), but a stray tap here otherwise ends the exam
+                  // with zero warning — this just catches the "tapped too early" case.
+                  const answeredCount = Object.keys(answers).length;
+                  if (answeredCount === 0) {
+                    if (!window.confirm('Bé chưa trả lời câu nào. Nộp bài luôn nhé?')) return;
+                  } else if (answeredCount < questions.length) {
+                    if (!window.confirm(`Bé mới trả lời ${answeredCount}/${questions.length} câu. Nộp bài luôn nhé?`)) return;
+                  }
+                  finishQuiz();
+                }}
                 className="w-full md:w-auto px-5 py-2.5 md:px-8 md:py-3 text-sm md:text-base bg-gradient-to-r from-primary to-primary-dark text-white font-bold rounded-xl md:rounded-2xl whitespace-nowrap hover:shadow-lg hover:scale-105 transition-all shadow-md shrink-0"
               >
                 Nộp Bài

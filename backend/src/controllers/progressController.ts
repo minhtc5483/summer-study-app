@@ -79,14 +79,23 @@ async function gradeExamSubmission(
     }
   });
 
-  // Speed bonus mirrors the client's own formula (Math.floor(timeLeft / 10)), but is
-  // recomputed here from the exam's real time limit and the reported time spent so it
-  // can't be inflated past what the exam's time limit actually allows.
+  // Speed bonus mirrors the client's own formula (Math.floor(timeLeft / 10)), recomputed
+  // here from the exam's real time limit and the reported time spent so it can't be
+  // inflated past what the exam's time limit actually allows.
+  //
+  // It's also scaled by accuracy (questionsCorrect / total), not paid out in full on raw
+  // elapsed time alone. Un-scaled, this was exploitable: the "Nộp Bài" button has no
+  // requirement to answer anything, so tapping it the instant an exam opens reports
+  // timeSpent ≈ 0 — maximum "remaining time" — and paid the full bonus (e.g. ~90 points on
+  // a 15-minute exam) for a blank submission with 0 correct answers, repeatable in seconds.
+  // Scaling means 0 correct now earns 0 bonus, same as it earns 0 base score.
   let timeBonus = 0;
-  if (exam.timeLimit && exam.timeLimit > 0 && typeof timeSpent === 'number') {
+  if (exam.timeLimit && exam.timeLimit > 0 && typeof timeSpent === 'number' && exam.questions.length > 0) {
     const timeLimitSeconds = exam.timeLimit * 60;
     const remaining = Math.max(timeLimitSeconds - timeSpent, 0);
-    timeBonus = Math.floor(Math.min(remaining, timeLimitSeconds) / 10);
+    const rawBonus = Math.floor(Math.min(remaining, timeLimitSeconds) / 10);
+    const accuracy = questionsCorrect / exam.questions.length;
+    timeBonus = Math.floor(rawBonus * accuracy);
   }
 
   return {
